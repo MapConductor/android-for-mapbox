@@ -1,30 +1,31 @@
-# ArcGIS SDK for MapConductor Android
+# MapBox SDK for MapConductor Android
 
 ## Description
 
 MapConductor provides a unified API for Android Jetpack Compose.
-You can use Google Maps view with Jetpack Compose, but you can also switch to other Maps SDKs (such as Mapbox, HERE, and so on), anytimes.
+You can use Mapbox view with Jetpack Compose, but you can also switch to other Maps SDKs (such as MapLibre, HERE, and so on), anytimes.
 
-Even you use the wrapper API, but you can still access to the native ArcGIS view if you want.
+Even you use the wrapper API, but you can still access to the native Mapbox view if you want.
 
 ## Setup
 
-https://docs-android.mapconductor.com/setup/arcgis/
+https://docs-android.mapconductor.com/setup/mapbox/
 
 ## Usage
 
 ```kotlin
 @Composable
 fun MapView(modifier: Modififer = Modififer) {
-    val state = rememberArcGISMapViewState(
-        cameraPosition =
-            MapCameraPosition(
-                position = GeoPoint.fromLatLong(0.0, 0.0),
-                zoom = 5.0,
-            ),
-    )
+    val state =
+        rememberMapboxMapViewState(
+            cameraPosition =
+                MapCameraPosition(
+                    position = GeoPoint.fromLatLong(0.0, 0.0),
+                    zoom = 3.0,
+                ),
+        )
 
-    ArcGISMapView(
+    MapboxMapView(
         modifier = modifier,
         state = state,
     ) {
@@ -33,4 +34,4 @@ fun MapView(modifier: Modififer = Modififer) {
 }
 ```
 
-![](docs/images/basic-setup-arcgis.png)
+![](docs/images/basic-setup-mapbox.png)
