@@ -71,8 +71,8 @@ fun MapView(modifier: Modifier = Modifier) {
 fun MapExample() {
     val initCameraPosition = MapCameraPosition(
         position = GeoPoint(
-            latitude = 35.6762,
-            longitude = 139.6503
+            latitude = 38.90662,
+            longitude = -77.044434,
         ),
         zoom = 17.0,
         tilt = 60.0,
@@ -129,12 +129,15 @@ fun InfoBubbleExample() {
     ) }
 
     MapboxMapView(...) {
-        Marker(markerState)
-        InfoBubble(
-            marker = it,
-        ) {
-            Text("Hello, world!")
+        selectedMarker?.let {
+            InfoBubble(
+                marker = it,
+            ) {
+                Text("Hello, world!")
+            }
         }
+
+        Marker(markerState)
     }
 }
 ```
@@ -175,6 +178,7 @@ fun PolylineExample() {
     val polylineState = remember { PolylineState(
             points = airports,
             strokeColor = Color.Blue.copy(alpha = 0.5f),
+            geodesic = true,
         ) }
 
     MapboxMapView(...) {
