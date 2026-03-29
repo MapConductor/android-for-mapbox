@@ -57,7 +57,7 @@ kotlin {
 }
 
 dependencies {
-    implementation(findProject(":mapconductor-for-mapbox") ?: project(":"))
+    implementation(findProject(":android-for-mapbox") ?: project(":"))
     implementation(libs.mapbox.android)
 
     implementation(libs.androidx.activity.compose)

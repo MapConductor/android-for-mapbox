@@ -82,8 +82,8 @@ dependencies {
 
     // Mapbox SDK
     compileOnly(libs.mapbox.android)
-    if (findProject(":mapconductor-core") != null) {
-        implementation(project(":mapconductor-core"))
+    if (findProject(":android-sdk-core") != null) {
+        implementation(project(":android-sdk-core"))
     } else {
         implementation("com.mapconductor:core:$libraryVersion")
     }

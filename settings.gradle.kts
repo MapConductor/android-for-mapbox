@@ -32,5 +32,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "mapconductor-for-mapbox"
+rootProject.name = "android-for-mapbox"
 include(":sample-app")
