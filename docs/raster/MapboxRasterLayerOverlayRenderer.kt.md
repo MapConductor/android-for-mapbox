@@ -1,7 +1,3 @@
-Of course! Here is the high-quality SDK documentation for the provided code snippet.
-
----
-
 # MapboxRasterLayerOverlayRenderer
 
 ## Signature
@@ -15,11 +11,18 @@ class MapboxRasterLayerOverlayRenderer(
 
 ## Description
 
-The `MapboxRasterLayerOverlayRenderer` is responsible for rendering and managing raster tile overlays on a Mapbox map. It acts as a bridge between the abstract `RasterLayerEntityInterface` and the concrete Mapbox SDK, handling the lifecycle of raster layers, including their creation, updates, and removal.
+The `MapboxRasterLayerOverlayRenderer` is responsible for rendering and managing raster tile
+overlays on a Mapbox map. It acts as a bridge between the abstract `RasterLayerEntityInterface` and
+the concrete Mapbox SDK, handling the lifecycle of raster layers, including their creation, updates,
+and removal.
 
-This renderer translates different types of raster data sources (`UrlTemplate`, `TileJson`, `ArcGisService`) into Mapbox-compatible sources and layers. It also manages the visual properties of layers, such as opacity and visibility, and ensures they are stacked correctly according to their `zIndex`.
+This renderer translates different types of raster data sources (`UrlTemplate`, `TileJson`,
+`ArcGisService`) into Mapbox-compatible sources and layers. It also manages the visual properties of
+layers, such as opacity and visibility, and ensures they are stacked correctly according to their
+`zIndex`.
 
-A key feature is its special handling for "marker tile" layers (identified by the `marker-tile-` prefix in their ID), which are strategically placed below map markers to avoid obscuring them.
+A key feature is its special handling for "marker tile" layers (identified by the `marker-tile-`
+prefix in their ID), which are strategically placed below map markers to avoid obscuring them.
 
 ## Constructor
 
@@ -38,10 +41,14 @@ Initializes a new instance of the `MapboxRasterLayerOverlayRenderer`.
 
 ### Parameters
 
-| Parameter   | Type                | Description                                                                                             |
-| :---------- | :------------------ | :------------------------------------------------------------------------------------------------------ |
-| `holder`    | `MapboxMapViewHolder` | The view holder that contains the `MapboxMap` instance where layers will be rendered.                   |
-| `coroutine` | `CoroutineScope`    | The coroutine scope used for executing asynchronous operations. Defaults to `CoroutineScope(Dispatchers.Main)`. |
+- `holder`
+    - Type: `MapboxMapViewHolder`
+    - Description: The view holder that contains the `MapboxMap` instance where layers will be
+                   rendered.
+- `coroutine`
+    - Type: `CoroutineScope`
+    - Description: The coroutine scope used for executing asynchronous operations. Defaults to
+                   `CoroutineScope(Dispatchers.Main)`.
 
 ---
 
@@ -59,19 +66,22 @@ override suspend fun onAdd(
 
 ### Description
 
-Adds a list of new raster layers to the map. For each item in the `data` list, this method creates a corresponding Mapbox `rasterSource` and `rasterLayer`. After adding the layers, it rebuilds the stacking order of all non-marker raster layers to respect their `zIndex` properties.
+Adds a list of new raster layers to the map. For each item in the `data` list, this method creates a
+corresponding Mapbox `rasterSource` and `rasterLayer`. After adding the layers, it rebuilds the
+stacking order of all non-marker raster layers to respect their `zIndex` properties.
 
 ### Parameters
 
-| Parameter | Type                                                              | Description                                                              |
-| :-------- | :---------------------------------------------------------------- | :----------------------------------------------------------------------- |
-| `data`    | `List<RasterLayerOverlayRendererInterface.AddParamsInterface>` | A list of `AddParamsInterface` objects, each defining a raster layer to add. |
+- `data`
+    - Type: `List<RasterLayerOverlayRendererInterface.AddParamsInterface>`
+    - Description: A list of `AddParamsInterface` objects, each defining a raster layer to add.
 
 ### Returns
 
 **Type:** `List<MapboxRasterLayerHandle?>`
 
-A list of `MapboxRasterLayerHandle` objects corresponding to the newly created layers. If a layer fails to be created, its entry in the list will be `null`.
+A list of `MapboxRasterLayerHandle` objects corresponding to the newly created layers. If a layer
+fails to be created, its entry in the list will be `null`.
 
 ## onChange
 
@@ -87,13 +97,17 @@ override suspend fun onChange(
 
 Processes updates for a list of existing raster layers.
 
-If a layer's `source` has changed, the old Mapbox source and layer are removed and new ones are created. If only properties like `opacity` or `visible` have changed, the existing Mapbox layer is updated in place for better performance. After processing all changes, it rebuilds the stacking order of non-marker raster layers.
+If a layer's `source` has changed, the old Mapbox source and layer are removed and new ones are
+created. If only properties like `opacity` or `visible` have changed, the existing Mapbox layer is
+updated in place for better performance. After processing all changes, it rebuilds the stacking
+order of non-marker raster layers.
 
 ### Parameters
 
-| Parameter | Type                                                                                    | Description                                                                                             |
-| :-------- | :-------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------ |
-| `data`    | `List<RasterLayerOverlayRendererInterface.ChangeParamsInterface<MapboxRasterLayerHandle>>` | A list of `ChangeParamsInterface` objects, each containing the previous and current state of a layer. |
+- `data`
+    - Type: `List<RasterLayerOverlayRendererInterface.ChangeParamsInterface<MapboxRasterLayerHandle>>`
+    - Description: A list of `ChangeParamsInterface` objects, each containing the previous and
+                   current state of a layer.
 
 ### Returns
 
@@ -111,13 +125,15 @@ override suspend fun onRemove(data: List<RasterLayerEntityInterface<MapboxRaster
 
 ### Description
 
-Removes a list of raster layers from the map. For each layer entity provided, this method removes its associated Mapbox layer and source from the map style. After removal, it rebuilds the stacking order of the remaining non-marker raster layers.
+Removes a list of raster layers from the map. For each layer entity provided, this method removes
+its associated Mapbox layer and source from the map style. After removal, it rebuilds the stacking
+order of the remaining non-marker raster layers.
 
 ### Parameters
 
-| Parameter | Type                                                      | Description                               |
-| :-------- | :-------------------------------------------------------- | :---------------------------------------- |
-| `data`    | `List<RasterLayerEntityInterface<MapboxRasterLayerHandle>>` | A list of layer entities to be removed. |
+- `data`
+    - Type: `List<RasterLayerEntityInterface<MapboxRasterLayerHandle>>`
+    - Description: A list of layer entities to be removed.
 
 ### Returns
 
@@ -133,7 +149,8 @@ override suspend fun onPostProcess()
 
 ### Description
 
-A lifecycle method from the `RasterLayerOverlayRendererInterface`. In this implementation, it is a no-op and performs no actions.
+A lifecycle method from the `RasterLayerOverlayRendererInterface`. In this implementation, it is a
+no-op and performs no actions.
 
 ### Parameters
 
@@ -160,20 +177,26 @@ data class MapboxRasterLayerHandle(
 
 ### Description
 
-A data class that serves as a handle for a raster layer managed by the `MapboxRasterLayerOverlayRenderer`. It encapsulates the unique identifiers for the underlying Mapbox `rasterSource` and `rasterLayer`, which are necessary for interacting with the layer via the Mapbox SDK.
+A data class that serves as a handle for a raster layer managed by the
+`MapboxRasterLayerOverlayRenderer`. It encapsulates the unique identifiers for the underlying Mapbox
+`rasterSource` and `rasterLayer`, which are necessary for interacting with the layer via the Mapbox
+SDK.
 
 ### Parameters
 
-| Parameter  | Type     | Description                               |
-| :--------- | :------- | :---------------------------------------- |
-| `sourceId` | `String` | The unique ID for the Mapbox `rasterSource`. |
-| `layerId`  | `String` | The unique ID for the Mapbox `rasterLayer`.  |
+- `sourceId`
+    - Type: `String`
+    - Description: The unique ID for the Mapbox `rasterSource`.
+- `layerId`
+    - Type: `String`
+    - Description: The unique ID for the Mapbox `rasterLayer`.
 
 ---
 
 # Example
 
-The following example demonstrates how to instantiate the `MapboxRasterLayerOverlayRenderer` and use it to add a new raster layer from a URL template.
+The following example demonstrates how to instantiate the `MapboxRasterLayerOverlayRenderer` and use
+it to add a new raster layer from a URL template.
 
 ```kotlin
 import com.mapconductor.core.raster.*

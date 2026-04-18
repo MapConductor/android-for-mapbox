@@ -1,6 +1,10 @@
 # MapboxCircleOverlayRenderer
 
-The `MapboxCircleOverlayRenderer` class is a concrete implementation of `AbstractCircleOverlayRenderer` designed specifically for the Mapbox Maps SDK. It is responsible for rendering and managing circle overlays on a Mapbox map. This class translates abstract `CircleEntityInterface` objects into visual `Feature` objects that can be displayed on a map layer, handling their creation, updates, and removal.
+The `MapboxCircleOverlayRenderer` class is a concrete implementation of
+`AbstractCircleOverlayRenderer` designed specifically for the Mapbox Maps SDK. It is responsible for
+rendering and managing circle overlays on a Mapbox map. This class translates abstract
+`CircleEntityInterface` objects into visual `Feature` objects that can be displayed on a map layer,
+handling their creation, updates, and removal.
 
 ## Constructor
 
@@ -20,16 +24,27 @@ class MapboxCircleOverlayRenderer(
 
 ### Description
 
-Initializes a new instance of the `MapboxCircleOverlayRenderer`. This renderer links the circle data managed by a `CircleManagerInterface` to a visual representation on the map using a `MapboxCircleLayer`.
+Initializes a new instance of the `MapboxCircleOverlayRenderer`. This renderer links the circle data
+managed by a `CircleManagerInterface` to a visual representation on the map using a
+`MapboxCircleLayer`.
 
 ### Parameters
 
-| Parameter       | Type                                           | Description                                                                                                                            |
-| :-------------- | :--------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------- |
-| `layer`         | `MapboxCircleLayer`                            | The layer configuration that defines the source and layer IDs for rendering circles on the map. Defaults to a standard configuration.    |
-| `circleManager` | `CircleManagerInterface<MapboxActualCircle>`   | The manager that holds the state and collection of all circle entities to be rendered.                                                 |
-| `holder`        | `MapboxMapViewHolder`                          | The view holder that provides access to the underlying Mapbox `Map` instance.                                                          |
-| `coroutine`     | `CoroutineScope`                               | The coroutine scope used to launch asynchronous operations, such as drawing circles on the map. Defaults to `CoroutineScope(Dispatchers.Main)`. |
+- `layer`
+    - Type: `MapboxCircleLayer`
+    - Description: The layer configuration that defines the source and layer IDs for rendering
+                   circles on the map. Defaults to a standard configuration.
+- `circleManager`
+    - Type: `CircleManagerInterface<MapboxActualCircle>`
+    - Description: The manager that holds the state and collection of all circle entities to be
+                   rendered.
+- `holder`
+    - Type: `MapboxMapViewHolder`
+    - Description: The view holder that provides access to the underlying Mapbox `Map` instance.
+- `coroutine`
+    - Type: `CoroutineScope`
+    - Description: The coroutine scope used to launch asynchronous operations, such as drawing
+                   circles on the map. Defaults to `CoroutineScope(Dispatchers.Main)`.
 
 ---
 
@@ -45,19 +60,23 @@ override suspend fun createCircle(state: CircleState): MapboxActualCircle?
 
 #### Description
 
-Asynchronously creates a new Mapbox `Feature` (which is type-aliased as `MapboxActualCircle`) based on the provided `CircleState`. The method constructs a GeoJSON `Feature` with a `Point` geometry and a `JsonObject` containing all the necessary style properties for rendering the circle, such as radius, colors, stroke width, and z-index. It also calculates a latitude correction factor for geodesic circles to ensure accurate rendering at different latitudes.
+Asynchronously creates a new Mapbox `Feature` (which is type-aliased as `MapboxActualCircle`) based
+on the provided `CircleState`. The method constructs a GeoJSON `Feature` with a `Point` geometry and
+a `JsonObject` containing all the necessary style properties for rendering the circle, such as
+radius, colors, stroke width, and z-index. It also calculates a latitude correction factor for
+geodesic circles to ensure accurate rendering at different latitudes.
 
 #### Parameters
 
-| Parameter | Type          | Description                                                                                             |
-| :-------- | :------------ | :------------------------------------------------------------------------------------------------------ |
-| `state`   | `CircleState` | An object containing the complete set of properties for the new circle, including its center, radius, and visual styles. |
+- `state`
+    - Type: `CircleState`
+    - Description: An object containing the complete set of properties for the new circle, including
+                   its center, radius, and visual styles.
 
 #### Returns
 
-| Type                 | Description                                                                                                                            |
-| :------------------- | :------------------------------------------------------------------------------------------------------------------------------------- |
-| `MapboxActualCircle?` | A Mapbox `Feature` representing the newly created circle. The current implementation always returns a valid feature. |
+`MapboxActualCircle?` — A Mapbox `Feature` representing the newly created circle. The current
+implementation always returns a valid feature.
 
 ### removeCircle
 
@@ -69,13 +88,15 @@ override suspend fun removeCircle(entity: CircleEntityInterface<MapboxActualCirc
 
 #### Description
 
-Asynchronously removes a circle's corresponding `Feature` from the map's GeoJSON source. The feature to be removed is identified using a unique ID derived from the `CircleEntityInterface`'s state.
+Asynchronously removes a circle's corresponding `Feature` from the map's GeoJSON source. The feature
+to be removed is identified using a unique ID derived from the `CircleEntityInterface`'s state.
 
 #### Parameters
 
-| Parameter | Type                                     | Description                                                                                             |
-| :-------- | :--------------------------------------- | :------------------------------------------------------------------------------------------------------ |
-| `entity`  | `CircleEntityInterface<MapboxActualCircle>` | The circle entity to be removed from the map. The renderer uses its ID to find and delete the feature. |
+- `entity`
+    - Type: `CircleEntityInterface<MapboxActualCircle>`
+    - Description: The circle entity to be removed from the map. The renderer uses its ID to find
+                   and delete the feature.
 
 ### updateCircleProperties
 
@@ -91,21 +112,26 @@ override suspend fun updateCircleProperties(
 
 #### Description
 
-Asynchronously updates the properties of an existing circle. This method functions by creating a completely new `Feature` with the updated properties from the `current` entity state. This new feature is intended to replace the old one in the GeoJSON source, ensuring the visual representation on the map reflects the latest state.
+Asynchronously updates the properties of an existing circle. This method functions by creating a
+completely new `Feature` with the updated properties from the `current` entity state. This new
+feature is intended to replace the old one in the GeoJSON source, ensuring the visual representation
+on the map reflects the latest state.
 
 #### Parameters
 
-| Parameter | Type                                     | Description                                                                                             |
-| :-------- | :--------------------------------------- | :------------------------------------------------------------------------------------------------------ |
-| `circle`  | `MapboxActualCircle`                     | The existing Mapbox `Feature` that is being updated.                                                    |
-| `current` | `CircleEntityInterface<MapboxActualCircle>` | The circle entity containing the new, updated state.                                                    |
-| `prev`    | `CircleEntityInterface<MapboxActualCircle>` | The circle entity representing the state before the update.                                             |
+- `circle`
+    - Type: `MapboxActualCircle`
+    - Description: The existing Mapbox `Feature` that is being updated.
+- `current`
+    - Type: `CircleEntityInterface<MapboxActualCircle>`
+    - Description: The circle entity containing the new, updated state.
+- `prev`
+    - Type: `CircleEntityInterface<MapboxActualCircle>`
+    - Description: The circle entity representing the state before the update.
 
 #### Returns
 
-| Type                 | Description                                                                                                                            |
-| :------------------- | :------------------------------------------------------------------------------------------------------------------------------------- |
-| `MapboxActualCircle?` | A new Mapbox `Feature` containing the updated properties for the circle. |
+`MapboxActualCircle?` — A new Mapbox `Feature` containing the updated properties for the circle.
 
 ### onPostProcess
 
@@ -117,13 +143,18 @@ override suspend fun onPostProcess()
 
 #### Description
 
-A lifecycle method invoked after all individual create, update, and remove operations in a given cycle have been processed. It retrieves the complete list of current circle features from the `circleManager` and launches a coroutine to redraw them on the `MapboxCircleLayer`, applying all changes to the map in a single, batched update.
+A lifecycle method invoked after all individual create, update, and remove operations in a given
+cycle have been processed. It retrieves the complete list of current circle features from the
+`circleManager` and launches a coroutine to redraw them on the `MapboxCircleLayer`, applying all
+changes to the map in a single, batched update.
 
 ---
 
 ## Example
 
-The following example demonstrates how to instantiate the `MapboxCircleOverlayRenderer`. In a real-world application, this renderer would typically be managed by a higher-level component that orchestrates map interactions.
+The following example demonstrates how to instantiate the `MapboxCircleOverlayRenderer`. In a
+real-world application, this renderer would typically be managed by a higher-level component that
+orchestrates map interactions.
 
 ```kotlin
 import com.mapconductor.mapbox.circle.MapboxCircleLayer

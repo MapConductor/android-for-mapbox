@@ -1,14 +1,15 @@
-Of course! Here is the high-quality SDK documentation for the provided code snippet.
-
----
-
 # Class `MapboxGroundImageOverlayRenderer`
 
 ## Description
 
-The `MapboxGroundImageOverlayRenderer` class is responsible for managing the lifecycle of ground image overlays on a Mapbox map. It handles the creation, updating, and removal of these overlays by interfacing with the Mapbox Maps SDK.
+The `MapboxGroundImageOverlayRenderer` class is responsible for managing the lifecycle of ground
+image overlays on a Mapbox map. It handles the creation, updating, and removal of these overlays by
+interfacing with the Mapbox Maps SDK.
 
-This renderer operates by creating a `RasterLayer` for each ground image. The image data is served as tiles through a `LocalTileServer`, which this class configures and manages. It efficiently handles updates by detecting changes and applying only the necessary modifications to the map style, such as replacing the tile source or simply adjusting layer opacity.
+This renderer operates by creating a `RasterLayer` for each ground image. The image data is served
+as tiles through a `LocalTileServer`, which this class configures and manages. It efficiently
+handles updates by detecting changes and applying only the necessary modifications to the map style,
+such as replacing the tile source or simply adjusting layer opacity.
 
 This class extends `AbstractGroundImageOverlayRenderer<MapboxActualGroundImage>`.
 
@@ -30,11 +31,17 @@ Creates a new instance of the `MapboxGroundImageOverlayRenderer`.
 
 ### Parameters
 
-| Parameter  | Type                  | Description                                                                                             |
-| :--------- | :-------------------- | :------------------------------------------------------------------------------------------------------ |
-| `holder`   | `MapboxMapViewHolder` | The view holder that provides access to the Mapbox `Map` instance.                                      |
-| `tileServer` | `LocalTileServer`     | The local server used to generate and serve image tiles for the ground overlay's raster source.         |
-| `coroutine`  | `CoroutineScope`      | The coroutine scope for executing asynchronous operations. Defaults to `CoroutineScope(Dispatchers.Main)`. |
+- `holder`
+    - Type: `MapboxMapViewHolder`
+    - Description: The view holder that provides access to the Mapbox `Map` instance.
+- `tileServer`
+    - Type: `LocalTileServer`
+    - Description: The local server used to generate and serve image tiles for the ground overlay's
+                   raster source.
+- `coroutine`
+    - Type: `CoroutineScope`
+    - Description: The coroutine scope for executing asynchronous operations. Defaults to
+                   `CoroutineScope(Dispatchers.Main)`.
 
 ## Methods
 
@@ -48,17 +55,21 @@ override suspend fun createGroundImage(state: GroundImageState): MapboxActualGro
 
 #### Description
 
-Asynchronously creates and displays a new ground image overlay on the map. This method sets up a `GroundImageTileProvider`, registers it with the `LocalTileServer`, and then adds a corresponding raster source and layer to the Mapbox map's style.
+Asynchronously creates and displays a new ground image overlay on the map. This method sets up a
+`GroundImageTileProvider`, registers it with the `LocalTileServer`, and then adds a corresponding
+raster source and layer to the Mapbox map's style.
 
 #### Parameters
 
-| Parameter | Type             | Description                                                                                             |
-| :-------- | :--------------- | :------------------------------------------------------------------------------------------------------ |
-| `state`   | `GroundImageState` | An object containing the initial configuration for the ground image, including its ID, bounds, and image. |
+- `state`
+    - Type: `GroundImageState`
+    - Description: An object containing the initial configuration for the ground image, including
+                   its ID, bounds, and image.
 
 #### Returns
 
-A `MapboxActualGroundImage` handle for the newly created overlay, which contains identifiers for the map source and layer. Returns `null` if the creation fails.
+A `MapboxActualGroundImage` handle for the newly created overlay, which contains identifiers for the
+map source and layer. Returns `null` if the creation fails.
 
 ---
 
@@ -76,22 +87,30 @@ override suspend fun updateGroundImageProperties(
 
 #### Description
 
-Asynchronously updates an existing ground image overlay based on changes between its previous and current states. The method performs an efficient diff to determine what changed:
-- If the image content, bounds, or tile size have changed, the underlying tile provider and Mapbox source/layer are recreated.
-- If only the opacity has changed, the `raster-opacity` property of the existing layer is updated, which is more performant.
+Asynchronously updates an existing ground image overlay based on changes between its previous and
+current states. The method performs an efficient diff to determine what changed:
+- If the image content, bounds, or tile size have changed, the underlying tile provider and Mapbox
+  source/layer are recreated.
+- If only the opacity has changed, the `raster-opacity` property of the existing layer is updated,
+  which is more performant.
 - If no relevant properties have changed, no action is taken.
 
 #### Parameters
 
-| Parameter     | Type                                                  | Description                                                              |
-| :------------ | :---------------------------------------------------- | :----------------------------------------------------------------------- |
-| `groundImage` | `MapboxActualGroundImage`                             | The current handle for the ground image on the map.                      |
-| `current`     | `GroundImageEntityInterface<MapboxActualGroundImage>` | The entity representing the new, updated state of the ground image.      |
-| `prev`        | `GroundImageEntityInterface<MapboxActualGroundImage>` | The entity representing the previous state, used for comparison.         |
+- `groundImage`
+    - Type: `MapboxActualGroundImage`
+    - Description: The current handle for the ground image on the map.
+- `current`
+    - Type: `GroundImageEntityInterface<MapboxActualGroundImage>`
+    - Description: The entity representing the new, updated state of the ground image.
+- `prev`
+    - Type: `GroundImageEntityInterface<MapboxActualGroundImage>`
+    - Description: The entity representing the previous state, used for comparison.
 
 #### Returns
 
-An updated `MapboxActualGroundImage` handle reflecting the changes. If no properties were changed, the original `groundImage` handle is returned.
+An updated `MapboxActualGroundImage` handle reflecting the changes. If no properties were changed,
+the original `groundImage` handle is returned.
 
 ---
 
@@ -105,19 +124,22 @@ override suspend fun removeGroundImage(entity: GroundImageEntityInterface<Mapbox
 
 #### Description
 
-Asynchronously removes a ground image overlay from the map. This method cleans up all associated resources by removing the raster layer and source from the map style and unregistering the tile provider from the `LocalTileServer`.
+Asynchronously removes a ground image overlay from the map. This method cleans up all associated
+resources by removing the raster layer and source from the map style and unregistering the tile
+provider from the `LocalTileServer`.
 
 #### Parameters
 
-| Parameter | Type                                                  | Description                                                        |
-| :-------- | :---------------------------------------------------- | :----------------------------------------------------------------- |
-| `entity`  | `GroundImageEntityInterface<MapboxActualGroundImage>` | The entity containing the handle of the ground image to be removed. |
+- `entity`
+    - Type: `GroundImageEntityInterface<MapboxActualGroundImage>`
+    - Description: The entity containing the handle of the ground image to be removed.
 
 ---
 
 ## Example
 
-The following example demonstrates how to instantiate and use the `MapboxGroundImageOverlayRenderer` to manage a ground image on the map.
+The following example demonstrates how to instantiate and use the `MapboxGroundImageOverlayRenderer`
+to manage a ground image on the map.
 
 ```kotlin
 import com.mapbox.maps.MapboxMap

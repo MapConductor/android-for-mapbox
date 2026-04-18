@@ -1,6 +1,4 @@
-# SDK Documentation: MapboxRasterLayerController
-
-## `MapboxRasterLayerController`
+# MapboxRasterLayerController
 
 **Signature**
 ```kotlin
@@ -12,7 +10,10 @@ class MapboxRasterLayerController(
 
 ### Description
 
-A controller responsible for managing and rendering raster layers on a Mapbox map. This class extends the generic `RasterLayerController` and integrates it with Mapbox-specific rendering logic. It orchestrates the lifecycle of raster layers, bridging the abstract layer management with the concrete rendering implementation provided by `MapboxRasterLayerOverlayRenderer`.
+A controller responsible for managing and rendering raster layers on a Mapbox map. This class
+extends the generic `RasterLayerController` and integrates it with Mapbox-specific rendering logic.
+It orchestrates the lifecycle of raster layers, bridging the abstract layer management with the
+concrete rendering implementation provided by `MapboxRasterLayerOverlayRenderer`.
 
 ### Constructor
 
@@ -20,10 +21,14 @@ Creates an instance of `MapboxRasterLayerController`.
 
 #### Parameters
 
-| Parameter | Type | Description |
-|---|---|---|
-| `rasterLayerManager` | `RasterLayerManagerInterface<MapboxRasterLayerHandle>` | The manager for raster layer entities. It handles the registration and tracking of layers. Defaults to a new `RasterLayerManager` instance. |
-| `renderer` | `MapboxRasterLayerOverlayRenderer` | The Mapbox-specific renderer responsible for drawing the raster layers on the map. |
+- `rasterLayerManager`
+    - Type: `RasterLayerManagerInterface<MapboxRasterLayerHandle>`
+    - Description: The manager for raster layer entities. It handles the registration and tracking
+                   of layers. Defaults to a new `RasterLayerManager` instance.
+- `renderer`
+    - Type: `MapboxRasterLayerOverlayRenderer`
+    - Description: The Mapbox-specific renderer responsible for drawing the raster layers on the
+                   map.
 
 ---
 
@@ -38,7 +43,9 @@ suspend fun reapplyStyle()
 
 ### Description
 
-Reloads and re-renders all managed raster layers to apply updated styling. This function is essential for scenarios where layer style properties have been modified but are not automatically reflected on the map.
+Reloads and re-renders all managed raster layers to apply updated styling. This function is
+essential for scenarios where layer style properties have been modified but are not automatically
+reflected on the map.
 
 It works by:
 1.  Retrieving the current state of all managed layers.
@@ -58,7 +65,8 @@ This method does not return a value.
 
 ### Example
 
-The following example demonstrates how to call `reapplyStyle()` within a coroutine scope after modifying layer properties.
+The following example demonstrates how to call `reapplyStyle()` within a coroutine scope after
+modifying layer properties.
 
 ```kotlin
 import kotlinx.coroutines.launch

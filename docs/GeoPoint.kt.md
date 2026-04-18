@@ -1,6 +1,8 @@
 # Mapbox GeoJSON Interoperability
 
-This document provides a reference for the extension functions that facilitate conversion between `com.mapconductor.core.features.GeoPoint` and `com.mapbox.geojson.Point` objects. These utilities streamline the process of using MapConductor Core types with the Mapbox SDK.
+This document provides a reference for the extension functions that facilitate conversion between
+`com.mapconductor.core.features.GeoPoint` and `com.mapbox.geojson.Point` objects. These utilities
+streamline the process of using MapConductor Core types with the Mapbox SDK.
 
 ---
 
@@ -16,13 +18,13 @@ fun GeoPoint.toPoint(): Point
 
 ### Description
 
-This extension function is called on a `GeoPoint` instance. It creates a new Mapbox `Point` object using the `latitude`, `longitude`, and `altitude` from the source `GeoPoint`. This is useful when you need to pass a MapConductor location to a Mapbox SDK function that expects a `Point`.
+This extension function is called on a `GeoPoint` instance. It creates a new Mapbox `Point` object
+using the `latitude`, `longitude`, and `altitude` from the source `GeoPoint`. This is useful when
+you need to pass a MapConductor location to a Mapbox SDK function that expects a `Point`.
 
 ### Returns
 
-| Type | Description |
-|---|---|
-| `Point` | A new Mapbox `Point` object with the same coordinate values. |
+`Point` — A new Mapbox `Point` object with the same coordinate values.
 
 ### Example
 
@@ -57,19 +59,19 @@ fun GeoPoint.Companion.from(point: Point): GeoPoint
 
 ### Description
 
-This extension function on the `GeoPoint.Companion` object acts as a factory method. It takes a Mapbox `Point` and constructs a `GeoPoint` with the corresponding `latitude`, `longitude`, and `altitude`.
+This extension function on the `GeoPoint.Companion` object acts as a factory method. It takes a
+Mapbox `Point` and constructs a `GeoPoint` with the corresponding `latitude`, `longitude`, and
+`altitude`.
 
 ### Parameters
 
-| Parameter | Type | Description |
-|---|---|---|
-| `point` | `Point` | The Mapbox `Point` object to convert. |
+- `point`
+    - Type: `Point`
+    - Description: The Mapbox `Point` object to convert.
 
 ### Returns
 
-| Type | Description |
-|---|---|
-| `GeoPoint` | A new `GeoPoint` instance with coordinate values from the source `Point`. |
+`GeoPoint` — A new `GeoPoint` instance with coordinate values from the source `Point`.
 
 ### Example
 
@@ -104,15 +106,15 @@ fun Point.toGeoPoint(): GeoPoint
 
 ### Description
 
-This extension function is called on a Mapbox `Point` instance. It creates a new `GeoPoint` using the `latitude` and `longitude` from the source `Point`.
+This extension function is called on a Mapbox `Point` instance. It creates a new `GeoPoint` using
+the `latitude` and `longitude` from the source `Point`.
 
-**Note:** This conversion does not preserve the altitude. The resulting `GeoPoint` will have a default altitude value. If altitude is important, use `GeoPoint.Companion.from(point)` instead.
+**Note:** This conversion does not preserve the altitude. The resulting `GeoPoint` will have a
+default altitude value. If altitude is important, use `GeoPoint.Companion.from(point)` instead.
 
 ### Returns
 
-| Type | Description |
-|---|---|
-| `GeoPoint` | A new `GeoPoint` instance. |
+`GeoPoint` — A new `GeoPoint` instance.
 
 ### Example
 

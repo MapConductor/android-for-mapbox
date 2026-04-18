@@ -1,14 +1,15 @@
-Of course! Here is the high-quality SDK documentation for the provided code snippet.
-
----
-
 # MapboxMapViewController
 
 ## Description
 
-The `MapboxMapViewController` is the primary class for programmatic interaction with the map. It serves as a central controller for managing map overlays (like markers, polygons, and polylines), handling user gestures and map events, and controlling the map's camera. An instance of this class orchestrates various specialized controllers for different feature types, providing a unified API for map manipulation.
+The `MapboxMapViewController` is the primary class for programmatic interaction with the map. It
+serves as a central controller for managing map overlays (like markers, polygons, and polylines),
+handling user gestures and map events, and controlling the map's camera. An instance of this class
+orchestrates various specialized controllers for different feature types, providing a unified API
+for map manipulation.
 
-Since the constructor is `internal`, you will typically obtain an instance of this controller through a map view setup or a factory, rather than creating it directly.
+Since the constructor is `internal`, you will typically obtain an instance of this controller
+through a map view setup or a factory, rather than creating it directly.
 
 ---
 
@@ -22,7 +23,8 @@ suspend fun clearOverlays()
 ```
 
 **Description**
-Asynchronously removes all overlays (markers, polylines, polygons, ground images, circles, and raster layers) from the map.
+Asynchronously removes all overlays (markers, polylines, polygons, ground images, circles, and
+raster layers) from the map.
 
 **Example**
 ```kotlin
@@ -47,9 +49,9 @@ suspend fun compositionMarkers(data: List<MarkerState>)
 Adds a collection of markers to the map.
 
 **Parameters**
-| Parameter | Type | Description |
-|---|---|---|
-| `data` | `List<MarkerState>` | A list of `MarkerState` objects to be added to the map. |
+- `data`
+    - Type: `List<MarkerState>`
+    - Description: A list of `MarkerState` objects to be added to the map.
 
 #### Other Composition Methods
 Similar methods are available for other overlay types:
@@ -63,7 +65,8 @@ Similar methods are available for other overlay types:
 
 ### Overlay Updates
 
-These methods update a single existing overlay on the map. The overlay is identified by the `id` within its `State` object.
+These methods update a single existing overlay on the map. The overlay is identified by the `id`
+within its `State` object.
 
 #### updateMarker
 
@@ -72,12 +75,13 @@ These methods update a single existing overlay on the map. The overlay is identi
 suspend fun updateMarker(state: MarkerState)
 ```
 **Description**
-Updates an existing marker on the map based on its `id`. If a marker with the same `id` exists, its properties are updated.
+Updates an existing marker on the map based on its `id`. If a marker with the same `id` exists, its
+properties are updated.
 
 **Parameters**
-| Parameter | Type | Description |
-|---|---|---|
-| `state` | `MarkerState` | The `MarkerState` object containing the updated properties. |
+- `state`
+    - Type: `MarkerState`
+    - Description: The `MarkerState` object containing the updated properties.
 
 #### Other Update Methods
 Similar methods are available for other overlay types:
@@ -103,14 +107,12 @@ fun hasMarker(state: MarkerState): Boolean
 Checks if a marker with the same ID as the provided `MarkerState` exists on the map.
 
 **Parameters**
-| Parameter | Type | Description |
-|---|---|---|
-| `state` | `MarkerState` | The `MarkerState` object whose ID is used for the check. |
+- `state`
+    - Type: `MarkerState`
+    - Description: The `MarkerState` object whose ID is used for the check.
 
 **Returns**
-| Type | Description |
-|---|---|
-| `Boolean` | Returns `true` if the marker exists, `false` otherwise. |
+`Boolean` — Returns `true` if the marker exists, `false` otherwise.
 
 #### Other Existence Check Methods
 Similar methods are available for other overlay types:
@@ -134,14 +136,14 @@ fun moveCamera(position: MapCameraPosition)
 Instantly moves the map's camera to the specified position without animation.
 
 **Parameters**
-| Parameter | Type | Description |
-|---|---|---|
-| `position` | `MapCameraPosition` | The target camera position, including target, zoom, bearing, and tilt. |
+- `position`
+    - Type: `MapCameraPosition`
+    - Description: The target camera position, including target, zoom, bearing, and tilt.
 
 **Example**
 ```kotlin
 val newPosition = MapCameraPosition(
-    target = GeoPoint(40.7128, -74.0060), // New York City
+    position = GeoPoint(40.7128, -74.0060), // New York City
     zoom = 12.0
 )
 mapViewController.moveCamera(newPosition)
@@ -154,18 +156,21 @@ mapViewController.moveCamera(newPosition)
 fun animateCamera(position: MapCameraPosition, duration: Long)
 ```
 **Description**
-Animates the map's camera from its current position to the specified position over a given duration. This uses a "fly-to" animation that provides a smooth, cinematic transition.
+Animates the map's camera from its current position to the specified position over a given duration.
+This uses a "fly-to" animation that provides a smooth, cinematic transition.
 
 **Parameters**
-| Parameter | Type | Description |
-|---|---|---|
-| `position` | `MapCameraPosition` | The target camera position. |
-| `duration` | `Long` | The duration of the animation in milliseconds. |
+- `position`
+    - Type: `MapCameraPosition`
+    - Description: The target camera position.
+- `duration`
+    - Type: `Long`
+    - Description: The duration of the animation in milliseconds.
 
 **Example**
 ```kotlin
 val targetPosition = MapCameraPosition(
-    target = GeoPoint(34.0522, -118.2437), // Los Angeles
+    position = GeoPoint(34.0522, -118.2437), // Los Angeles
     zoom = 14.0,
     tilt = 30.0
 )
@@ -183,12 +188,13 @@ mapViewController.animateCamera(targetPosition, duration = 2000L) // 2-second an
 fun setMapDesignType(value: MapboxDesignType)
 ```
 **Description**
-Sets the map's style (e.g., Standard, Satellite, Streets). This operation is asynchronous and will cause the map style to reload, which may re-trigger style-loaded listeners.
+Sets the map's style (e.g., Standard, Satellite, Streets). This operation is asynchronous and will
+cause the map style to reload, which may re-trigger style-loaded listeners.
 
 **Parameters**
-| Parameter | Type | Description |
-|---|---|---|
-| `value` | `MapboxDesignType` | The desired map design type to apply. |
+- `value`
+    - Type: `MapboxDesignType`
+    - Description: The desired map design type to apply.
 
 #### setMapDesignTypeChangeListener
 
@@ -197,18 +203,21 @@ Sets the map's style (e.g., Standard, Satellite, Streets). This operation is asy
 fun setMapDesignTypeChangeListener(listener: MapboxMapDesignTypeChangeHandler)
 ```
 **Description**
-Registers a listener that gets notified whenever the map's design type changes, for example, after a new style has been loaded.
+Registers a listener that gets notified whenever the map's design type changes, for example, after a
+new style has been loaded.
 
 **Parameters**
-| Parameter | Type | Description |
-|---|---|---|
-| `listener` | `MapboxMapDesignTypeChangeHandler` | A callback function that receives the new `MapboxDesignType` after a style change. |
+- `listener`
+    - Type: `MapboxMapDesignTypeChangeHandler`
+    - Description: A callback function that receives the new `MapboxDesignType` after a style
+                   change.
 
 ---
 
 ### Advanced Marker Customization
 
-These methods are for advanced use cases, such as implementing a custom marker rendering or interaction strategy.
+These methods are for advanced use cases, such as implementing a custom marker rendering or
+interaction strategy.
 
 #### createMarkerRenderer
 
@@ -217,17 +226,17 @@ These methods are for advanced use cases, such as implementing a custom marker r
 fun createMarkerRenderer(strategy: MarkerRenderingStrategyInterface<MapboxActualMarker>): MarkerOverlayRendererInterface<MapboxActualMarker>
 ```
 **Description**
-Creates a new marker overlay renderer based on a custom rendering strategy. This allows for complete control over how markers are drawn on the map.
+Creates a new marker overlay renderer based on a custom rendering strategy. This allows for complete
+control over how markers are drawn on the map.
 
 **Parameters**
-| Parameter | Type | Description |
-|---|---|---|
-| `strategy` | `MarkerRenderingStrategyInterface<MapboxActualMarker>` | The custom strategy defining marker management and rendering logic. |
+- `strategy`
+    - Type: `MarkerRenderingStrategyInterface<MapboxActualMarker>`
+    - Description: The custom strategy defining marker management and rendering logic.
 
 **Returns**
-| Type | Description |
-|---|---|
-| `MarkerOverlayRendererInterface<MapboxActualMarker>` | A new renderer instance configured with the provided strategy. |
+`MarkerOverlayRendererInterface<MapboxActualMarker>` — A new renderer instance configured with the
+provided strategy.
 
 #### createMarkerEventController
 
@@ -236,18 +245,19 @@ Creates a new marker overlay renderer based on a custom rendering strategy. This
 fun createMarkerEventController(controller: StrategyMarkerController<MapboxActualMarker>, renderer: MarkerOverlayRendererInterface<MapboxActualMarker>): MarkerEventControllerInterface<MapboxActualMarker>
 ```
 **Description**
-Creates a new marker event controller that links a strategy controller with a renderer. This is used to define custom marker interaction handling (clicks, drags, etc.).
+Creates a new marker event controller that links a strategy controller with a renderer. This is used
+to define custom marker interaction handling (clicks, drags, etc.).
 
 **Parameters**
-| Parameter | Type | Description |
-|---|---|---|
-| `controller` | `StrategyMarkerController<MapboxActualMarker>` | The strategy controller that manages the marker logic. |
-| `renderer` | `MarkerOverlayRendererInterface<MapboxActualMarker>` | The renderer responsible for drawing the markers managed by the controller. |
+- `controller`
+    - Type: `StrategyMarkerController<MapboxActualMarker>`
+    - Description: The strategy controller that manages the marker logic.
+- `renderer`
+    - Type: `MarkerOverlayRendererInterface<MapboxActualMarker>`
+    - Description: The renderer responsible for drawing the markers managed by the controller.
 
 **Returns**
-| Type | Description |
-|---|---|
-| `MarkerEventControllerInterface<MapboxActualMarker>` | A new event controller instance. |
+`MarkerEventControllerInterface<MapboxActualMarker>` — A new event controller instance.
 
 #### registerMarkerEventController
 
@@ -256,18 +266,21 @@ Creates a new marker event controller that links a strategy controller with a re
 fun registerMarkerEventController(controller: MarkerEventControllerInterface<MapboxActualMarker>)
 ```
 **Description**
-Registers a custom marker event controller with the map view. Once registered, the map will delegate marker-related events to this controller, enabling custom interaction behaviors.
+Registers a custom marker event controller with the map view. Once registered, the map will delegate
+marker-related events to this controller, enabling custom interaction behaviors.
 
 **Parameters**
-| Parameter | Type | Description |
-|---|---|---|
-| `controller` | `MarkerEventControllerInterface<MapboxActualMarker>` | The custom event controller to register. |
+- `controller`
+    - Type: `MarkerEventControllerInterface<MapboxActualMarker>`
+    - Description: The custom event controller to register.
 
 ---
 
 ### Deprecated Event Listeners
 
-The following methods for setting global event listeners are deprecated. It is recommended to set event handlers directly on the state object for each individual overlay (e.g., `MarkerState.onClick`, `PolygonState.onClick`).
+The following methods for setting global event listeners are deprecated. It is recommended to set
+event handlers directly on the state object for each individual overlay (e.g.,
+`MarkerState.onClick`, `PolygonState.onClick`).
 
 - `setOnCircleClickListener(listener: OnCircleEventHandler?)`
   - **Deprecated:** Use `CircleState.onClick` instead.

@@ -1,16 +1,15 @@
-Of course! Here is the high-quality SDK documentation for the provided code snippet.
-
----
-
-### `MapboxGroundImageHandle`
+# `MapboxGroundImageHandle`
 
 A data class that serves as a handle for a ground image overlay on a Mapbox map.
 
-This class encapsulates all the necessary identifiers and components required to manage a specific ground image instance, including its associated route, version, cache key, and the underlying Mapbox source and layer IDs.
+This class encapsulates all the necessary identifiers and components required to manage a specific
+ground image instance, including its associated route, version, cache key, and the underlying Mapbox
+source and layer IDs.
 
-As a Kotlin `data class`, it automatically provides helpful methods like `equals()`, `hashCode()`, `toString()`, and `copy()`.
+As a Kotlin `data class`, it automatically provides helpful methods like `equals()`, `hashCode()`,
+`toString()`, and `copy()`.
 
-### Signature
+# Signature
 
 ```kotlin
 data class MapboxGroundImageHandle(
@@ -23,20 +22,34 @@ data class MapboxGroundImageHandle(
 )
 ```
 
-### Parameters
+# Parameters
 
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `routeId` | `String` | The unique identifier for the route associated with the ground image. |
-| `generation` | `Long` | A version number, often a timestamp, used to distinguish between different generations or updates of the same ground image. |
-| `cacheKey` | `String` | A unique key used for caching the ground image tiles and associated data. |
-| `sourceId` | `String` | The ID of the Mapbox `ImageSource` used to supply the image data for the overlay. |
-| `layerId` | `String` | The ID of the Mapbox `RasterLayer` used to render the ground image on the map. |
-| `tileProvider` | `GroundImageTileProvider` | The provider instance responsible for fetching and supplying the image tiles for the overlay. |
+- `routeId`
+    - Type: `String`
+    - Description: The unique identifier for the route associated with the ground image.
+- `generation`
+    - Type: `Long`
+    - Description: A version number, often a timestamp, used to distinguish between different
+                   generations or updates of the same ground image.
+- `cacheKey`
+    - Type: `String`
+    - Description: A unique key used for caching the ground image tiles and associated data.
+- `sourceId`
+    - Type: `String`
+    - Description: The ID of the Mapbox `ImageSource` used to supply the image data for the overlay.
+- `layerId`
+    - Type: `String`
+    - Description: The ID of the Mapbox `RasterLayer` used to render the ground image on the map.
+- `tileProvider`
+    - Type: `GroundImageTileProvider`
+    - Description: The provider instance responsible for fetching and supplying the image tiles for
+                   the overlay.
 
-### Example
+# Example
 
-The following example demonstrates how to create an instance of `MapboxGroundImageHandle`. This handle can then be used by other parts of the application to manage the lifecycle of the ground image on the map.
+The following example demonstrates how to create an instance of `MapboxGroundImageHandle`. This
+handle can then be used by other parts of the application to manage the lifecycle of the ground
+image on the map.
 
 ```kotlin
 import com.mapconductor.core.groundimage.GroundImageTileProvider

@@ -1,14 +1,18 @@
-### `MapboxCircleLayer` Class
+# `MapboxCircleLayer` Class
 
-#### Description
+## Description
 
-The `MapboxCircleLayer` class encapsulates the creation and management of a Mapbox `CircleLayer` and its corresponding `GeoJsonSource`. It is specifically designed to render circles on a map that maintain a constant real-world radius (in meters) regardless of the map's zoom level. This is achieved by using a complex Mapbox expression that dynamically calculates the pixel radius based on the current zoom.
+The `MapboxCircleLayer` class encapsulates the creation and management of a Mapbox `CircleLayer` and
+its corresponding `GeoJsonSource`. It is specifically designed to render circles on a map that
+maintain a constant real-world radius (in meters) regardless of the map's zoom level. This is
+achieved by using a complex Mapbox expression that dynamically calculates the pixel radius based on
+the current zoom.
 
 This class simplifies the process of adding data-driven, realistically-scaled circles to your map.
 
-#### Constructor
+## Constructor
 
-##### Signature
+### Signature
 
 ```kotlin
 MapboxCircleLayer(
@@ -17,36 +21,42 @@ MapboxCircleLayer(
 )
 ```
 
-##### Description
+### Description
 
-Creates a new instance of `MapboxCircleLayer`, initializing the underlying GeoJSON source and circle layer with the provided unique identifiers.
+Creates a new instance of `MapboxCircleLayer`, initializing the underlying GeoJSON source and circle
+layer with the provided unique identifiers.
 
-##### Parameters
+### Parameters
 
-| Parameter  | Type     | Description                                        |
-|------------|----------|----------------------------------------------------|
-| `sourceId` | `String` | A unique identifier for the `GeoJsonSource`.       |
-| `layerId`  | `String` | A unique identifier for the `CircleLayer`.         |
+- `sourceId`
+    - Type: `String`
+    - Description: A unique identifier for the `GeoJsonSource`.
+- `layerId`
+    - Type: `String`
+    - Description: A unique identifier for the `CircleLayer`.
 
 ---
 
-### Properties
+# Properties
 
-#### `layer`
+## `layer`
 
-The configured Mapbox `CircleLayer` instance. This layer is ready to be added to a `Style`. Its visual properties, such as color, stroke, and radius, are data-driven, meaning they are determined by the properties of the GeoJSON features supplied to the `source`.
+The configured Mapbox `CircleLayer` instance. This layer is ready to be added to a `Style`. Its
+visual properties, such as color, stroke, and radius, are data-driven, meaning they are determined
+by the properties of the GeoJSON features supplied to the `source`.
 
-##### Signature
+### Signature
 
 ```kotlin
 val layer: CircleLayer
 ```
 
-#### `source`
+## `source`
 
-The `GeoJsonSource` that provides the data for the `layer`. You must add this source to the map's `Style` before adding the `layer`. The `draw()` method updates the data within this source.
+The `GeoJsonSource` that provides the data for the `layer`. You must add this source to the map's
+`Style` before adding the `layer`. The `draw()` method updates the data within this source.
 
-##### Signature
+### Signature
 
 ```kotlin
 val source: GeoJsonSource
@@ -54,52 +64,69 @@ val source: GeoJsonSource
 
 ---
 
-### Methods
+# Methods
 
-#### `draw`
+## `draw`
 
-Updates the map by drawing a new set of circles. This method takes a list of circle entities, converts them into a GeoJSON `FeatureCollection`, and applies it to the layer's `GeoJsonSource`. Any previously drawn circles from this layer are replaced.
+Updates the map by drawing a new set of circles. This method takes a list of circle entities,
+converts them into a GeoJSON `FeatureCollection`, and applies it to the layer's `GeoJsonSource`. Any
+previously drawn circles from this layer are replaced.
 
-##### Signature
+### Signature
 
 ```kotlin
 fun draw(entities: List<CircleEntityInterface<MapboxActualCircle>>)
 ```
 
-##### Parameters
+### Parameters
 
-| Parameter  | Type                                                      | Description                                                                                                                            |
-|------------|-----------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
-| `entities` | `List<CircleEntityInterface<MapboxActualCircle>>` | A list of entity objects representing the circles to be drawn on the map. Each entity must contain a `MapboxActualCircle` (GeoJSON Feature). |
+- `entities`
+    - Type: `List<CircleEntityInterface<MapboxActualCircle>>`
+    - Description: A list of entity objects representing the circles to be drawn on the map. Each
+                   entity must contain a `MapboxActualCircle` (GeoJSON Feature).
 
 ---
 
-### Nested Objects
+# Nested Objects
 
-#### `Prop`
+## `Prop`
 
-An object that holds constant string keys for the properties of the GeoJSON features. These keys are used to link feature data to the layer's style attributes. When creating the GeoJSON features for your circles, you must add properties using these keys to control their appearance.
+An object that holds constant string keys for the properties of the GeoJSON features. These keys are
+used to link feature data to the layer's style attributes. When creating the GeoJSON features for
+your circles, you must add properties using these keys to control their appearance.
 
-##### Signature
+### Signature
 
 ```kotlin
 object Prop
 ```
 
-##### Properties
+### Properties
 
-| Property              | Type     | Description                                                                                             |
-|-----------------------|----------|---------------------------------------------------------------------------------------------------------|
-| `RADIUS`              | `String` | The key for the circle's radius in meters.                                                              |
-| `LATITUDE_CORRECTION` | `String` | The key for the latitude correction factor, used for accurate radius scaling at different latitudes.      |
-| `FILL_COLOR`          | `String` | The key for the circle's fill color (e.g., `"#FF0000"`).                                                 |
-| `STROKE_COLOR`        | `String` | The key for the circle's stroke (outline) color.                                                        |
-| `STROKE_WIDTH`        | `String` | The key for the circle's stroke width in pixels.                                                        |
-| `Z_INDEX`             | `String` | The key for the circle's sort key, which influences rendering order. Higher values are drawn on top.      |
+- `RADIUS`
+    - Type: `String`
+    - Description: The key for the circle's radius in meters.
+- `LATITUDE_CORRECTION`
+    - Type: `String`
+    - Description: The key for the latitude correction factor, used for accurate radius scaling at
+                   different latitudes.
+- `FILL_COLOR`
+    - Type: `String`
+    - Description: The key for the circle's fill color (e.g., `"#FF0000"`).
+- `STROKE_COLOR`
+    - Type: `String`
+    - Description: The key for the circle's stroke (outline) color.
+- `STROKE_WIDTH`
+    - Type: `String`
+    - Description: The key for the circle's stroke width in pixels.
+- `Z_INDEX`
+    - Type: `String`
+    - Description: The key for the circle's sort key, which influences rendering order. Higher
+                   values are drawn on top.
 
 ---
 
-### Example
+# Example
 
 Here is an example of how to initialize `MapboxCircleLayer`, add it to a map, and draw circles.
 

@@ -1,8 +1,12 @@
 # MapboxMapViewHolder
 
-A view holder class that encapsulates Mapbox's `MapView` and `MapboxMap` objects. It acts as a bridge between the MapConductor core library and the Mapbox SDK, providing essential functionalities like coordinate transformations and lifecycle management.
+A view holder class that encapsulates Mapbox's `MapView` and `MapboxMap` objects. It acts as a
+bridge between the MapConductor core library and the Mapbox SDK, providing essential functionalities
+like coordinate transformations and lifecycle management.
 
-This class implements `MapViewHolderInterface<MapView, MapboxMap>` and `MapboxLifecycleObserver`. Upon initialization, it automatically registers itself as a lifecycle observer for the provided `MapView`.
+This class implements `MapViewHolderInterface<MapView, MapboxMap>` and `MapboxLifecycleObserver`.
+Upon initialization, it automatically registers itself as a lifecycle observer for the provided
+`MapView`.
 
 ```kotlin
 class MapboxMapViewHolder(
@@ -26,10 +30,12 @@ Creates an instance of `MapboxMapViewHolder`.
 
 ### Parameters
 
-| Parameter | Type        | Description                                     |
-| :-------- | :---------- | :---------------------------------------------- |
-| `mapView` | `MapView`   | The Mapbox `MapView` instance.                  |
-| `map`     | `MapboxMap` | The `MapboxMap` instance associated with the `mapView`. |
+- `mapView`
+    - Type: `MapView`
+    - Description: The Mapbox `MapView` instance.
+- `map`
+    - Type: `MapboxMap`
+    - Description: The `MapboxMap` instance associated with the `mapView`.
 
 ---
 
@@ -45,19 +51,18 @@ override fun toScreenOffset(position: GeoPointInterface): Offset?
 
 #### Description
 
-Converts a geographical coordinate (`GeoPointInterface`) to a screen pixel `Offset` relative to the top-left corner of the map view.
+Converts a geographical coordinate (`GeoPointInterface`) to a screen pixel `Offset` relative to the
+top-left corner of the map view.
 
 #### Parameters
 
-| Parameter  | Type                | Description                      |
-| :--------- | :------------------ | :------------------------------- |
-| `position` | `GeoPointInterface` | The geographical point to convert. |
+- `position`
+    - Type: `GeoPointInterface`
+    - Description: The geographical point to convert.
 
 #### Returns
 
-| Type       | Description                                                              |
-| :--------- | :----------------------------------------------------------------------- |
-| `Offset?`  | The corresponding `Offset` on the screen, or `null` if the conversion fails. |
+`Offset?` — The corresponding `Offset` on the screen, or `null` if the conversion fails.
 
 ---
 
@@ -71,19 +76,18 @@ override fun fromScreenOffsetSync(offset: Offset): GeoPoint?
 
 #### Description
 
-Synchronously converts a screen pixel `Offset` to its corresponding geographical coordinate (`GeoPoint`).
+Synchronously converts a screen pixel `Offset` to its corresponding geographical coordinate
+(`GeoPoint`).
 
 #### Parameters
 
-| Parameter | Type     | Description                  |
-| :-------- | :------- | :--------------------------- |
-| `offset`  | `Offset` | The screen offset to convert. |
+- `offset`
+    - Type: `Offset`
+    - Description: The screen offset to convert.
 
 #### Returns
 
-| Type        | Description                                                              |
-| :---------- | :----------------------------------------------------------------------- |
-| `GeoPoint?` | The corresponding `GeoPoint`, or `null` if the conversion fails. |
+`GeoPoint?` — The corresponding `GeoPoint`, or `null` if the conversion fails.
 
 ---
 
@@ -97,19 +101,18 @@ fun fromScreenOffset(coordinate: ScreenCoordinate): GeoPoint?
 
 #### Description
 
-Converts a Mapbox `ScreenCoordinate` object to its corresponding geographical coordinate (`GeoPoint`).
+Converts a Mapbox `ScreenCoordinate` object to its corresponding geographical coordinate
+(`GeoPoint`).
 
 #### Parameters
 
-| Parameter    | Type               | Description                       |
-| :----------- | :----------------- | :-------------------------------- |
-| `coordinate` | `ScreenCoordinate` | The `ScreenCoordinate` to convert. |
+- `coordinate`
+    - Type: `ScreenCoordinate`
+    - Description: The `ScreenCoordinate` to convert.
 
 #### Returns
 
-| Type        | Description                                                              |
-| :---------- | :----------------------------------------------------------------------- |
-| `GeoPoint?` | The corresponding `GeoPoint`, or `null` if the conversion fails. |
+`GeoPoint?` — The corresponding `GeoPoint`, or `null` if the conversion fails.
 
 ---
 
@@ -123,25 +126,26 @@ override suspend fun fromScreenOffset(offset: Offset): GeoPoint?
 
 #### Description
 
-Asynchronously converts a screen pixel `Offset` to its corresponding geographical coordinate (`GeoPoint`). This is the suspend function override from the `MapViewHolderInterface`.
+Asynchronously converts a screen pixel `Offset` to its corresponding geographical coordinate
+(`GeoPoint`). This is the suspend function override from the `MapViewHolderInterface`.
 
 #### Parameters
 
-| Parameter | Type     | Description                  |
-| :-------- | :------- | :--------------------------- |
-| `offset`  | `Offset` | The screen offset to convert. |
+- `offset`
+    - Type: `Offset`
+    - Description: The screen offset to convert.
 
 #### Returns
 
-| Type        | Description                                                              |
-| :---------- | :----------------------------------------------------------------------- |
-| `GeoPoint?` | The corresponding `GeoPoint`, or `null` if the conversion fails. |
+`GeoPoint?` — The corresponding `GeoPoint`, or `null` if the conversion fails.
 
 ---
 
 ### Lifecycle Methods
 
-The following methods are part of the `MapboxLifecycleObserver` interface. They are automatically called by the Mapbox SDK's lifecycle plugin. In this class, they are currently empty implementations (no-op).
+The following methods are part of the `MapboxLifecycleObserver` interface. They are automatically
+called by the Mapbox SDK's lifecycle plugin. In this class, they are currently empty implementations
+(no-op).
 
 -   `onDestroy()`
 -   `onLowMemory()`

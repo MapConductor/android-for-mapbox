@@ -1,6 +1,9 @@
 # Mapbox Camera Conversion Utilities
 
-This document provides an overview of the Kotlin extension functions used for converting between Mapbox-specific camera objects (`CameraOptions`, `CameraState`, `CameraChanged`) and a generic `MapCameraPosition` data class. These utilities help in creating a platform-agnostic camera management layer.
+This document provides an overview of the Kotlin extension functions used for converting between
+Mapbox-specific camera objects (`CameraOptions`, `CameraState`, `CameraChanged`) and a generic
+`MapCameraPosition` data class. These utilities help in creating a platform-agnostic camera
+management layer.
 
 ---
 
@@ -8,7 +11,9 @@ This document provides an overview of the Kotlin extension functions used for co
 
 Converts a `CameraChanged` event object into a `CameraOptions` object.
 
-**Note:** Despite its name, this function returns `CameraOptions`, not `MapCameraPosition`. It serves as a helper to extract camera properties from a `CameraChanged` event. It also converts the zoom level from the Mapbox scale to the Google Maps scale.
+**Note:** Despite its name, this function returns `CameraOptions`, not `MapCameraPosition`. It
+serves as a helper to extract camera properties from a `CameraChanged` event. It also converts the
+zoom level from the Mapbox scale to the Google Maps scale.
 
 #### Signature
 ```kotlin
@@ -16,9 +21,9 @@ fun CameraChanged.toMapCameraPosition(): CameraOptions
 ```
 
 #### Parameters
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| **(receiver)** | `CameraChanged` | The `CameraChanged` event object from which to extract camera state. |
+- **(receiver)**
+    - Type: `CameraChanged`
+    - Description: The `CameraChanged` event object from which to extract camera state.
 
 #### Returns
 A `CameraOptions` object containing the camera properties from the `CameraChanged` event.
@@ -38,7 +43,9 @@ val cameraChangedListener = CameraChanged { cameraChangedEvent ->
 
 ### `MapCameraPosition.toCameraOptions()`
 
-Converts a generic `MapCameraPosition` object into a Mapbox-specific `CameraOptions` object. This is useful for applying a defined camera position to the Mapbox map. The function converts the zoom level from the Google Maps scale to the Mapbox scale.
+Converts a generic `MapCameraPosition` object into a Mapbox-specific `CameraOptions` object. This is
+useful for applying a defined camera position to the Mapbox map. The function converts the zoom
+level from the Google Maps scale to the Mapbox scale.
 
 **Note:** The conversion for `paddings` is currently unimplemented (`TODO` in the source code).
 
@@ -48,9 +55,9 @@ fun MapCameraPosition.toCameraOptions(): CameraOptions
 ```
 
 #### Parameters
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| **(receiver)** | `MapCameraPosition` | The source `MapCameraPosition` object to convert. |
+- **(receiver)**
+    - Type: `MapCameraPosition`
+    - Description: The source `MapCameraPosition` object to convert.
 
 #### Returns
 A `CameraOptions` object that can be used with `MapboxMap.setCamera()`.
@@ -74,7 +81,9 @@ val cameraOptions = mapCameraPosition.toCameraOptions()
 
 ### `MapCameraPosition.toCameraState()`
 
-Converts a `MapCameraPosition` object into a Mapbox `CameraState` object. `CameraState` represents a snapshot of the map's camera properties. This function converts the zoom level from the Google Maps scale to the Mapbox scale and initializes padding to zero.
+Converts a `MapCameraPosition` object into a Mapbox `CameraState` object. `CameraState` represents a
+snapshot of the map's camera properties. This function converts the zoom level from the Google Maps
+scale to the Mapbox scale and initializes padding to zero.
 
 #### Signature
 ```kotlin
@@ -82,9 +91,9 @@ fun MapCameraPosition.toCameraState(): CameraState
 ```
 
 #### Parameters
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| **(receiver)** | `MapCameraPosition` | The source `MapCameraPosition` object to convert. |
+- **(receiver)**
+    - Type: `MapCameraPosition`
+    - Description: The source `MapCameraPosition` object to convert.
 
 #### Returns
 A `CameraState` object representing the given camera position.
@@ -107,7 +116,10 @@ println("Created CameraState with center: ${cameraState.center}")
 
 ### `MapCameraPosition.Companion.from()`
 
-A factory function that creates a `MapCameraPosition` instance from any object that implements the `MapCameraPositionInterface`. This provides a standardized way to convert different camera position representations into a concrete `MapCameraPosition`. If the input object is already a `MapCameraPosition`, it is returned directly to avoid redundant object creation.
+A factory function that creates a `MapCameraPosition` instance from any object that implements the
+`MapCameraPositionInterface`. This provides a standardized way to convert different camera position
+representations into a concrete `MapCameraPosition`. If the input object is already a
+`MapCameraPosition`, it is returned directly to avoid redundant object creation.
 
 #### Signature
 ```kotlin
@@ -115,9 +127,9 @@ fun MapCameraPosition.Companion.from(cameraPosition: MapCameraPositionInterface)
 ```
 
 #### Parameters
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `cameraPosition` | `MapCameraPositionInterface` | An object conforming to the `MapCameraPositionInterface`. |
+- `cameraPosition`
+    - Type: `MapCameraPositionInterface`
+    - Description: An object conforming to the `MapCameraPositionInterface`.
 
 #### Returns
 A `MapCameraPosition` instance based on the provided interface implementation.
@@ -146,7 +158,10 @@ println("Converted to MapCameraPosition with zoom: ${mapCameraPosition.zoom}")
 
 ### `CameraOptions.toMapCameraPosition()`
 
-Converts a Mapbox `CameraOptions` object into a generic `MapCameraPosition` object. This is useful for abstracting camera details away from the Mapbox SDK. The function handles nullable properties in `CameraOptions` by providing sensible defaults and converts the zoom level from the Mapbox scale to the Google Maps scale.
+Converts a Mapbox `CameraOptions` object into a generic `MapCameraPosition` object. This is useful
+for abstracting camera details away from the Mapbox SDK. The function handles nullable properties in
+`CameraOptions` by providing sensible defaults and converts the zoom level from the Mapbox scale to
+the Google Maps scale.
 
 #### Signature
 ```kotlin
@@ -154,9 +169,9 @@ fun CameraOptions.toMapCameraPosition(): MapCameraPosition
 ```
 
 #### Parameters
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| **(receiver)** | `CameraOptions` | The source Mapbox `CameraOptions` object. |
+- **(receiver)**
+    - Type: `CameraOptions`
+    - Description: The source Mapbox `CameraOptions` object.
 
 #### Returns
 A new `MapCameraPosition` object populated with data from the `CameraOptions`.
@@ -178,7 +193,9 @@ println("Converted to MapCameraPosition with zoom: ${mapCameraPosition.zoom}")
 
 ### `CameraState.toMapCameraPosition()`
 
-Converts a Mapbox `CameraState` object into a generic `MapCameraPosition`. This allows you to capture the current state of the Mapbox map's camera and store it in a platform-agnostic format. The zoom level is converted from the Mapbox scale to the Google Maps scale.
+Converts a Mapbox `CameraState` object into a generic `MapCameraPosition`. This allows you to
+capture the current state of the Mapbox map's camera and store it in a platform-agnostic format. The
+zoom level is converted from the Mapbox scale to the Google Maps scale.
 
 #### Signature
 ```kotlin
@@ -186,9 +203,9 @@ fun CameraState.toMapCameraPosition(): MapCameraPosition
 ```
 
 #### Parameters
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| **(receiver)** | `CameraState` | The source Mapbox `CameraState` object. |
+- **(receiver)**
+    - Type: `CameraState`
+    - Description: The source Mapbox `CameraState` object.
 
 #### Returns
 A new `MapCameraPosition` object representing the camera's state.

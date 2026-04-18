@@ -1,6 +1,9 @@
 # MapboxPolylineLayer
 
-The `MapboxPolylineLayer` class encapsulates the creation and management of a data-driven polyline layer for Mapbox Maps. It simplifies the process of rendering collections of polylines by managing the underlying `GeoJsonSource` and `LineLayer`, allowing for dynamic styling based on feature properties.
+The `MapboxPolylineLayer` class encapsulates the creation and management of a data-driven polyline
+layer for Mapbox Maps. It simplifies the process of rendering collections of polylines by managing
+the underlying `GeoJsonSource` and `LineLayer`, allowing for dynamic styling based on feature
+properties.
 
 ## Signature
 
@@ -13,9 +16,13 @@ class MapboxPolylineLayer(
 
 ## Description
 
-This class provides a convenient abstraction for displaying polylines on a Mapbox map. Upon instantiation, it creates a `GeoJsonSource` to hold the polyline data and a `LineLayer` to control its visual representation.
+This class provides a convenient abstraction for displaying polylines on a Mapbox map. Upon
+instantiation, it creates a `GeoJsonSource` to hold the polyline data and a `LineLayer` to control
+its visual representation.
 
-The layer is pre-configured for data-driven styling of color, width, and drawing order (z-index). This means you can control the appearance of each individual polyline by setting properties on its corresponding GeoJSON feature.
+The layer is pre-configured for data-driven styling of color, width, and drawing order (z-index).
+This means you can control the appearance of each individual polyline by setting properties on its
+corresponding GeoJSON feature.
 
 ## Constructor
 
@@ -23,16 +30,19 @@ Initializes a new instance of the `MapboxPolylineLayer`.
 
 ### Parameters
 
-| Parameter | Type   | Description                                          |
-| :-------- | :----- | :--------------------------------------------------- |
-| `sourceId`  | `String` | A unique identifier for the underlying `GeoJsonSource`. |
-| `layerId`   | `String` | A unique identifier for the `LineLayer`.             |
+- `sourceId`
+    - Type: `String`
+    - Description: A unique identifier for the underlying `GeoJsonSource`.
+- `layerId`
+    - Type: `String`
+    - Description: A unique identifier for the `LineLayer`.
 
 ## Nested Objects
 
 ### `Prop`
 
-A companion object that holds constant string keys for data-driven styling properties. These keys are used to retrieve style values from the properties of each GeoJSON feature.
+A companion object that holds constant string keys for data-driven styling properties. These keys
+are used to retrieve style values from the properties of each GeoJSON feature.
 
 #### Signature
 
@@ -42,11 +52,18 @@ object Prop
 
 #### Properties
 
-| Property       | Type   | Description                                                                                             |
-| :------------- | :----- | :------------------------------------------------------------------------------------------------------ |
-| `STROKE_COLOR` | `String` | The key for the feature property that defines the polyline's stroke color (e.g., `"#FF0000"`).          |
-| `STROKE_WIDTH` | `String` | The key for the feature property that defines the polyline's stroke width in pixels (e.g., `5.0`).      |
-| `Z_INDEX`      | `String` | The key for the feature property that defines the polyline's sort key, controlling its drawing order. |
+- `STROKE_COLOR`
+    - Type: `String`
+    - Description: The key for the feature property that defines the polyline's stroke color (e.g.,
+                   `"#FF0000"`).
+- `STROKE_WIDTH`
+    - Type: `String`
+    - Description: The key for the feature property that defines the polyline's stroke width in
+                   pixels (e.g., `5.0`).
+- `Z_INDEX`
+    - Type: `String`
+    - Description: The key for the feature property that defines the polyline's sort key,
+                   controlling its drawing order.
 
 ## Properties
 
@@ -62,7 +79,8 @@ val source: GeoJsonSource
 
 #### Description
 
-This source is configured with the `sourceId` provided in the constructor. You can update the polylines displayed on the map by updating this source's data using the `draw()` method.
+This source is configured with the `sourceId` provided in the constructor. You can update the
+polylines displayed on the map by updating this source's data using the `draw()` method.
 
 ### `layer`
 
@@ -76,12 +94,14 @@ val layer: LineLayer
 
 #### Description
 
-This layer is configured to render data from the `source`. It has the following default and data-driven styles:
+This layer is configured to render data from the `source`. It has the following default and
+data-driven styles:
 -   **`lineJoin`**: `LineJoin.ROUND` (for smooth corners)
 -   **`lineCap`**: `LineCap.ROUND` (for rounded line ends)
 -   **`lineColor`**: Dynamically set from the feature's `strokeColor` property.
 -   **`lineWidth`**: Dynamically set from the feature's `strokeWidth` property.
--   **`lineSortKey`**: Dynamically set from the feature's `zIndex` property to control stacking order.
+-   **`lineSortKey`**: Dynamically set from the feature's `zIndex` property to control stacking
+  order.
 
 ## Methods
 
@@ -106,7 +126,8 @@ fun draw(entities: List<PolylineEntityInterface<MapboxActualPolyline>>)
 
 ## Example
 
-The following example demonstrates how to instantiate `MapboxPolylineLayer`, add it to a map, create styled polyline data, and draw it.
+The following example demonstrates how to instantiate `MapboxPolylineLayer`, add it to a map, create
+styled polyline data, and draw it.
 
 ```kotlin
 import com.mapbox.geojson.Feature

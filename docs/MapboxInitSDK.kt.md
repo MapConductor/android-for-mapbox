@@ -1,5 +1,3 @@
-Of course! Here is the high-quality SDK documentation for the provided code snippet.
-
 # MapboxInitSDK()
 
 ## Signature
@@ -10,15 +8,20 @@ fun MapboxInitSDK(context: Context)
 
 ## Description
 
-Initializes the Mapbox SDK with the required access token. This function must be called once before using any other Mapbox components, such as maps or navigation services.
+Initializes the Mapbox SDK with the required access token. This function must be called once before
+using any other Mapbox components, such as maps or navigation services.
 
-The function retrieves your Mapbox access token from the application's `AndroidManifest.xml` metadata. It then sets this token globally for the SDK to use. It is highly recommended to call this function in your `Application` class's `onCreate()` method to ensure the SDK is initialized as early as possible.
+The function retrieves your Mapbox access token from the application's `AndroidManifest.xml`
+metadata. It then sets this token globally for the SDK to use. It is highly recommended to call this
+function in your `Application` class's `onCreate()` method to ensure the SDK is initialized as early
+as possible.
 
 ## Parameters
 
-| Parameter | Type    | Description                                                                                                                            |
-| :-------- | :------ | :------------------------------------------------------------------------------------------------------------------------------------- |
-| `context` | `Context` | The application context. It is used to access the app's metadata to find the `MAPBOX_ACCESS_TOKEN`. Using an `ApplicationContext` is recommended. |
+- `context`
+    - Type: `Context`
+    - Description: The application context. It is used to access the app's metadata to find the
+                   `MAPBOX_ACCESS_TOKEN`. Using an `ApplicationContext` is recommended.
 
 ## Returns
 
@@ -26,13 +29,13 @@ This function does not return any value.
 
 ## Throws
 
-| Type        | Condition                                                                                             |
-| :---------- | :---------------------------------------------------------------------------------------------------- |
-| `Exception` | Thrown if the `<meta-data android:name="MAPBOX_ACCESS_TOKEN" ... />` is not found in `AndroidManifest.xml`. |
+`Exception` — Thrown if the `<meta-data android:name="MAPBOX_ACCESS_TOKEN" ... />` is not found in
+`AndroidManifest.xml`.
 
 ## Example
 
-To use this function, you must first add your access token to your `AndroidManifest.xml` file and then call `MapboxInitSDK()` from your `Application` class.
+To use this function, you must first add your access token to your `AndroidManifest.xml` file and
+then call `MapboxInitSDK()` from your `Application` class.
 
 **1. Add Access Token to `AndroidManifest.xml`**
 

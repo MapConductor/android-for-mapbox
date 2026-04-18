@@ -1,12 +1,13 @@
-Of course! Here is the high-quality SDK documentation for the provided code snippet.
-
 # Mapbox Marker Event Controllers
 
-This document provides a detailed reference for the `MapboxMarkerEventControllerInterface` and its implementations, which are responsible for managing marker interactions and events on a Mapbox map.
+This document provides a detailed reference for the `MapboxMarkerEventControllerInterface` and its
+implementations, which are responsible for managing marker interactions and events on a Mapbox map.
 
 ## `MapboxMarkerEventControllerInterface`
 
-An interface that defines the contract for controlling marker events and interactions within the Mapbox map environment. It provides a unified API for finding markers, handling selection, dispatching user interactions (clicks, drags), and setting up event listeners.
+An interface that defines the contract for controlling marker events and interactions within the
+Mapbox map environment. It provides a unified API for finding markers, handling selection,
+dispatching user interactions (clicks, drags), and setting up event listeners.
 
 ### Properties
 
@@ -32,13 +33,14 @@ fun find(position: GeoPointInterface): MarkerEntityInterface<MapboxActualMarker>
 
 **Parameters**
 
-| Parameter  | Type                | Description                                  |
-|------------|---------------------|----------------------------------------------|
-| `position` | `GeoPointInterface` | The geographic coordinate to search for a marker at. |
+- `position`
+    - Type: `GeoPointInterface`
+    - Description: The geographic coordinate to search for a marker at.
 
 **Returns**
 
-`MarkerEntityInterface<MapboxActualMarker>?`: The found marker entity or `null` if no marker exists at the specified position.
+`MarkerEntityInterface<MapboxActualMarker>?`: The found marker entity or `null` if no marker exists
+at the specified position.
 
 ---
 
@@ -52,12 +54,14 @@ fun getSelectedMarker(): MarkerEntityInterface<MapboxActualMarker>?
 
 **Returns**
 
-`MarkerEntityInterface<MapboxActualMarker>?`: The currently selected marker entity or `null` if no marker is selected.
+`MarkerEntityInterface<MapboxActualMarker>?`: The currently selected marker entity or `null` if no
+marker is selected.
 
 ---
 
 #### `setSelectedMarker()`
-Sets the specified marker entity as the currently selected one. To clear the current selection, pass `null`.
+Sets the specified marker entity as the currently selected one. To clear the current selection, pass
+`null`.
 
 **Signature**
 ```kotlin
@@ -66,14 +70,15 @@ fun setSelectedMarker(entity: MarkerEntityInterface<MapboxActualMarker>?)
 
 **Parameters**
 
-| Parameter | Type                                         | Description                                        |
-|-----------|----------------------------------------------|----------------------------------------------------|
-| `entity`  | `MarkerEntityInterface<MapboxActualMarker>?` | The marker entity to select, or `null` to deselect. |
+- `entity`
+    - Type: `MarkerEntityInterface<MapboxActualMarker>?`
+    - Description: The marker entity to select, or `null` to deselect.
 
 ---
 
 #### `dispatchClick()`
-Dispatches a marker click event. This is typically invoked by the map's internal gesture handlers when a marker is tapped.
+Dispatches a marker click event. This is typically invoked by the map's internal gesture handlers
+when a marker is tapped.
 
 **Signature**
 ```kotlin
@@ -82,9 +87,9 @@ fun dispatchClick(state: MarkerState)
 
 **Parameters**
 
-| Parameter | Type          | Description                               |
-|-----------|---------------|-------------------------------------------|
-| `state`   | `MarkerState` | The state of the marker at the time of the event. |
+- `state`
+    - Type: `MarkerState`
+    - Description: The state of the marker at the time of the event.
 
 ---
 
@@ -98,9 +103,9 @@ fun dispatchDragStart(state: MarkerState)
 
 **Parameters**
 
-| Parameter | Type          | Description                               |
-|-----------|---------------|-------------------------------------------|
-| `state`   | `MarkerState` | The state of the marker at the time of the event. |
+- `state`
+    - Type: `MarkerState`
+    - Description: The state of the marker at the time of the event.
 
 ---
 
@@ -114,9 +119,9 @@ fun dispatchDrag(state: MarkerState)
 
 **Parameters**
 
-| Parameter | Type          | Description                               |
-|-----------|---------------|-------------------------------------------|
-| `state`   | `MarkerState` | The state of the marker at the time of the event. |
+- `state`
+    - Type: `MarkerState`
+    - Description: The state of the marker at the time of the event.
 
 ---
 
@@ -130,9 +135,9 @@ fun dispatchDragEnd(state: MarkerState)
 
 **Parameters**
 
-| Parameter | Type          | Description                               |
-|-----------|---------------|-------------------------------------------|
-| `state`   | `MarkerState` | The state of the marker at the time of the event. |
+- `state`
+    - Type: `MarkerState`
+    - Description: The state of the marker at the time of the event.
 
 ---
 
@@ -146,9 +151,9 @@ fun setClickListener(listener: OnMarkerEventHandler?)
 
 **Parameters**
 
-| Parameter  | Type                   | Description                                                        |
-|------------|------------------------|--------------------------------------------------------------------|
-| `listener` | `OnMarkerEventHandler?` | The handler to be called on a marker click, or `null` to remove it. |
+- `listener`
+    - Type: `OnMarkerEventHandler?`
+    - Description: The handler to be called on a marker click, or `null` to remove it.
 
 ---
 
@@ -162,9 +167,9 @@ fun setDragStartListener(listener: OnMarkerEventHandler?)
 
 **Parameters**
 
-| Parameter  | Type                   | Description                                                              |
-|------------|------------------------|--------------------------------------------------------------------------|
-| `listener` | `OnMarkerEventHandler?` | The handler to be called when a marker drag starts, or `null` to remove it. |
+- `listener`
+    - Type: `OnMarkerEventHandler?`
+    - Description: The handler to be called when a marker drag starts, or `null` to remove it.
 
 ---
 
@@ -178,9 +183,9 @@ fun setDragListener(listener: OnMarkerEventHandler?)
 
 **Parameters**
 
-| Parameter  | Type                   | Description                                                              |
-|------------|------------------------|--------------------------------------------------------------------------|
-| `listener` | `OnMarkerEventHandler?` | The handler to be called during a marker drag, or `null` to remove it. |
+- `listener`
+    - Type: `OnMarkerEventHandler?`
+    - Description: The handler to be called during a marker drag, or `null` to remove it.
 
 ---
 
@@ -194,9 +199,9 @@ fun setDragEndListener(listener: OnMarkerEventHandler?)
 
 **Parameters**
 
-| Parameter  | Type                   | Description                                                            |
-|------------|------------------------|------------------------------------------------------------------------|
-| `listener` | `OnMarkerEventHandler?` | The handler to be called when a marker drag ends, or `null` to remove it. |
+- `listener`
+    - Type: `OnMarkerEventHandler?`
+    - Description: The handler to be called when a marker drag ends, or `null` to remove it.
 
 ---
 
@@ -210,9 +215,9 @@ fun setAnimateStartListener(listener: OnMarkerEventHandler?)
 
 **Parameters**
 
-| Parameter  | Type                   | Description                                                                  |
-|------------|------------------------|------------------------------------------------------------------------------|
-| `listener` | `OnMarkerEventHandler?` | The handler to be called when a marker animation starts, or `null` to remove it. |
+- `listener`
+    - Type: `OnMarkerEventHandler?`
+    - Description: The handler to be called when a marker animation starts, or `null` to remove it.
 
 ---
 
@@ -226,25 +231,32 @@ fun setAnimateEndListener(listener: OnMarkerEventHandler?)
 
 **Parameters**
 
-| Parameter  | Type                   | Description                                                                |
-|------------|------------------------|----------------------------------------------------------------------------|
-| `listener` | `OnMarkerEventHandler?` | The handler to be called when a marker animation ends, or `null` to remove it. |
+- `listener`
+    - Type: `OnMarkerEventHandler?`
+    - Description: The handler to be called when a marker animation ends, or `null` to remove it.
 
 ---
 
 ## Implementations
 
 ### `DefaultMapboxMarkerEventController`
-A default implementation of `MapboxMarkerEventControllerInterface`. It acts as a simple proxy, delegating all event handling and state management calls to an underlying `MapboxMarkerController`. This is the standard controller for basic marker management.
+A default implementation of `MapboxMarkerEventControllerInterface`. It acts as a simple proxy,
+delegating all event handling and state management calls to an underlying `MapboxMarkerController`.
+This is the standard controller for basic marker management.
 
 ### `StrategyMapboxMarkerEventController`
-An advanced implementation of `MapboxMarkerEventControllerInterface` designed to work with a `StrategyMarkerController`. This controller provides specialized behavior for marker selection and dragging, such as moving the selected marker to a dedicated "drag layer" for smoother interaction and visual separation. This is typically used in scenarios with complex rendering strategies like marker clustering.
+An advanced implementation of `MapboxMarkerEventControllerInterface` designed to work with a
+`StrategyMarkerController`. This controller provides specialized behavior for marker selection and
+dragging, such as moving the selected marker to a dedicated "drag layer" for smoother interaction
+and visual separation. This is typically used in scenarios with complex rendering strategies like
+marker clustering.
 
 ---
 
 ## Example
 
-The following example demonstrates how to use the `MapboxMarkerEventControllerInterface` to set listeners for marker click and drag events.
+The following example demonstrates how to use the `MapboxMarkerEventControllerInterface` to set
+listeners for marker click and drag events.
 
 ```kotlin
 // Assume 'mapController' is an instance of your main map controller

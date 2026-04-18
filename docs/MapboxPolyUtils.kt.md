@@ -1,8 +1,8 @@
-Excellent! Here is the high-quality SDK documentation for the provided Kotlin code snippet, formatted in Markdown.
-
 # Mapbox Feature Creation Utilities
 
-This document provides details on utility functions used to create Mapbox `Feature` objects for lines and polygons from `GeoPointInterface` data. These functions handle geodesic interpolation and antimeridian splitting.
+This document provides details on utility functions used to create Mapbox `Feature` objects for
+lines and polygons from `GeoPointInterface` data. These functions handle geodesic interpolation and
+antimeridian splitting.
 
 ---
 
@@ -23,25 +23,45 @@ internal fun createMapboxLines(
 ```
 
 ### Description
-This function generates a list of Mapbox `Feature` objects that represent a polyline defined by a sequence of geographical points. It can create either geodesic lines (which follow the curvature of the Earth) or linear rhumb lines.
+This function generates a list of Mapbox `Feature` objects that represent a polyline defined by a
+sequence of geographical points. It can create either geodesic lines (which follow the curvature of
+the Earth) or linear rhumb lines.
 
-The function automatically handles cases where the line crosses the antimeridian (180th meridian) by splitting it into multiple `Feature` objects. Each feature is assigned style properties such as stroke color, width, and z-index, which are used by the Mapbox style layer.
+The function automatically handles cases where the line crosses the antimeridian (180th meridian) by
+splitting it into multiple `Feature` objects. Each feature is assigned style properties such as
+stroke color, width, and z-index, which are used by the Mapbox style layer.
 
 ### Parameters
 
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `id` | `String` | A unique base identifier for the polyline. This is used to generate unique IDs for each resulting `Feature`. |
-| `points` | `List<GeoPointInterface>` | A list of geographical points that define the vertices of the polyline. |
-| `geodesic` | `Boolean` | If `true`, the line is drawn as a geodesic path (the shortest path on the Earth's surface). If `false`, it's a straight rhumb line. |
-| `strokeColor` | `Color` | The color of the polyline's stroke. |
-| `strokeWidth` | `Dp` | The width of the polyline's stroke, specified in density-independent pixels (`Dp`). |
-| `zIndex` | `Int` | *(Optional)* The drawing order of the line. Lines with a higher `zIndex` are drawn over those with a lower `zIndex`. Defaults to `0`. |
+- `id`
+    - Type: `String`
+    - Description: A unique base identifier for the polyline. This is used to generate unique IDs
+                   for each resulting `Feature`.
+- `points`
+    - Type: `List<GeoPointInterface>`
+    - Description: A list of geographical points that define the vertices of the polyline.
+- `geodesic`
+    - Type: `Boolean`
+    - Description: If `true`, the line is drawn as a geodesic path (the shortest path on the Earth's
+                   surface). If `false`, it's a straight rhumb line.
+- `strokeColor`
+    - Type: `Color`
+    - Description: The color of the polyline's stroke.
+- `strokeWidth`
+    - Type: `Dp`
+    - Description: The width of the polyline's stroke, specified in density-independent pixels
+                   (`Dp`).
+- `zIndex`
+    - Type: `Int`
+    - Description: *(Optional)* The drawing order of the line. Lines with a higher `zIndex` are
+                   drawn over those with a lower `zIndex`. Defaults to `0`.
 
 ### Returns
 **`List<Feature>`**
 
-A list of Mapbox `Feature` objects. If the polyline crosses the antimeridian, this list will contain multiple features, one for each segment. Each feature includes the line geometry and its style properties.
+A list of Mapbox `Feature` objects. If the polyline crosses the antimeridian, this list will contain
+multiple features, one for each segment. Each feature includes the line geometry and its style
+properties.
 
 ### Example
 
@@ -88,27 +108,47 @@ internal fun createMapboxPolygons(
 ```
 
 ### Description
-This function generates a list of Mapbox `Feature` objects for a polygon defined by an outer boundary and optional inner holes. It supports both geodesic and linear polygon edges.
+This function generates a list of Mapbox `Feature` objects for a polygon defined by an outer
+boundary and optional inner holes. It supports both geodesic and linear polygon edges.
 
-The function automatically closes the polygon's outer ring if the first and last points are not identical. It also handles polygons that cross the antimeridian by splitting them into multiple `Feature` objects.
+The function automatically closes the polygon's outer ring if the first and last points are not
+identical. It also handles polygons that cross the antimeridian by splitting them into multiple
+`Feature` objects.
 
-**Important:** Holes are only supported for polygons that do **not** cross the antimeridian. If the polygon is split, any provided holes will be ignored.
+**Important:** Holes are only supported for polygons that do **not** cross the antimeridian. If the
+polygon is split, any provided holes will be ignored.
 
 ### Parameters
 
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `id` | `String` | A unique base identifier for the polygon. This is used to generate unique IDs for each resulting `Feature`. |
-| `points` | `List<GeoPointInterface>` | A list of geographical points defining the outer boundary of the polygon. |
-| `holes` | `List<List<GeoPointInterface>>` | *(Optional)* A list of point lists, where each inner list defines a hole within the polygon. Ignored if the polygon crosses the antimeridian. Defaults to `emptyList()`. |
-| `geodesic` | `Boolean` | If `true`, the polygon edges are drawn as geodesic paths. If `false`, they are straight rhumb lines. |
-| `fillColor` | `Color` | The fill color of the polygon. |
-| `zIndex` | `Int` | The drawing order of the polygon. Polygons with a higher `zIndex` are drawn over those with a lower `zIndex`. |
+- `id`
+    - Type: `String`
+    - Description: A unique base identifier for the polygon. This is used to generate unique IDs for
+                   each resulting `Feature`.
+- `points`
+    - Type: `List<GeoPointInterface>`
+    - Description: A list of geographical points defining the outer boundary of the polygon.
+- `holes`
+    - Type: `List<List<GeoPointInterface>>`
+    - Description: *(Optional)* A list of point lists, where each inner list defines a hole within
+                   the polygon. Ignored if the polygon crosses the antimeridian. Defaults to
+                   `emptyList()`.
+- `geodesic`
+    - Type: `Boolean`
+    - Description: If `true`, the polygon edges are drawn as geodesic paths. If `false`, they are
+                   straight rhumb lines.
+- `fillColor`
+    - Type: `Color`
+    - Description: The fill color of the polygon.
+- `zIndex`
+    - Type: `Int`
+    - Description: The drawing order of the polygon. Polygons with a higher `zIndex` are drawn over
+                   those with a lower `zIndex`.
 
 ### Returns
 **`List<Feature>`**
 
-A list of Mapbox `Feature` objects. If the polygon crosses the antimeridian, this list will contain multiple features. Each feature includes the polygon geometry and its style properties.
+A list of Mapbox `Feature` objects. If the polygon crosses the antimeridian, this list will contain
+multiple features. Each feature includes the polygon geometry and its style properties.
 
 ### Example
 

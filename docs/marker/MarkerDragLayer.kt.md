@@ -1,12 +1,11 @@
-Of course! Here is the high-quality SDK documentation for the provided code snippet.
+# Class `MarkerDragLayer`
 
----
+Manages a dedicated map layer for rendering a single marker during a drag-and-drop operation. This
+class is responsible for updating the marker's position and redrawing it on the map as it's being
+moved, providing real-time visual feedback to the user.
 
-### Class `MarkerDragLayer`
-
-Manages a dedicated map layer for rendering a single marker during a drag-and-drop operation. This class is responsible for updating the marker's position and redrawing it on the map as it's being moved, providing real-time visual feedback to the user.
-
-It extends `MarkerLayer` and is designed to work with a specific `GeoJsonSource` that contains only the marker currently being dragged.
+It extends `MarkerLayer` and is designed to work with a specific `GeoJsonSource` that contains only
+the marker currently being dragged.
 
 **Constructor**
 
@@ -17,20 +16,24 @@ MarkerDragLayer(
 )
 ```
 
-#### Parameters
+## Parameters
 
-| Parameter  | Type     | Description                                                      |
-|------------|----------|------------------------------------------------------------------|
-| `sourceId` | `String` | The unique identifier for the `GeoJsonSource` associated with this layer. |
-| `layerId`  | `String` | The unique identifier for the map layer used to render the marker. |
+- `sourceId`
+    - Type: `String`
+    - Description: The unique identifier for the `GeoJsonSource` associated with this layer.
+- `layerId`
+    - Type: `String`
+    - Description: The unique identifier for the map layer used to render the marker.
 
 ---
 
-### Properties
+# Properties
 
-#### `selected`
+## `selected`
 
-The marker entity that is currently being dragged. When a user begins to drag a marker, assign the corresponding entity to this property. To clear the drag layer (e.g., when the drag operation is complete), set this property back to `null`.
+The marker entity that is currently being dragged. When a user begins to drag a marker, assign the
+corresponding entity to this property. To clear the drag layer (e.g., when the drag operation is
+complete), set this property back to `null`.
 
 **Signature**
 ```kotlin
@@ -39,11 +42,13 @@ var selected: MarkerEntityInterface<MapboxActualMarker>? = null
 
 ---
 
-### Methods
+# Methods
 
-#### `updatePosition`
+## `updatePosition`
 
-Updates the geographical coordinates of the `selected` marker entity. This method should be called continuously during a drag gesture (e.g., from a touch move event listener) to track the pointer's location.
+Updates the geographical coordinates of the `selected` marker entity. This method should be called
+continuously during a drag gesture (e.g., from a touch move event listener) to track the pointer's
+location.
 
 **Signature**
 ```kotlin
@@ -52,9 +57,9 @@ fun updatePosition(geoPoint: GeoPoint)
 
 **Parameters**
 
-| Parameter  | Type       | Description                               |
-|------------|------------|-------------------------------------------|
-| `geoPoint` | `GeoPoint` | The new geographical point for the marker. |
+- `geoPoint`
+    - Type: `GeoPoint`
+    - Description: The new geographical point for the marker.
 
 **Returns**
 
@@ -62,9 +67,12 @@ This method does not return any value.
 
 ---
 
-#### `draw`
+## `draw`
 
-Redraws the drag layer on the map to reflect the current state of the `selected` marker. This method converts the marker entity into a Mapbox `Feature` and updates the layer's underlying `GeoJsonSource`. If `selected` is `null`, it clears the source, effectively removing the marker from this layer.
+Redraws the drag layer on the map to reflect the current state of the `selected` marker. This method
+converts the marker entity into a Mapbox `Feature` and updates the layer's underlying
+`GeoJsonSource`. If `selected` is `null`, it clears the source, effectively removing the marker from
+this layer.
 
 This method should be called after `updatePosition` to render the marker's new position on the map.
 
@@ -79,9 +87,10 @@ This method does not return any value.
 
 ---
 
-### Example
+# Example
 
-The following example demonstrates the typical lifecycle of using `MarkerDragLayer` to handle a marker drag operation.
+The following example demonstrates the typical lifecycle of using `MarkerDragLayer` to handle a
+marker drag operation.
 
 ```kotlin
 // Assume 'dragLayer' is an initialized instance of MarkerDragLayer.

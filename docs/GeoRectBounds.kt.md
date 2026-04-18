@@ -1,6 +1,8 @@
 # Mapbox Interoperability Extensions
 
-This document provides details on the extension functions that facilitate conversion between `GeoRectBounds` and the Mapbox `CoordinateBounds` types. These utilities are essential for seamless integration with the Mapbox SDK.
+This document provides details on the extension functions that facilitate conversion between
+`GeoRectBounds` and the Mapbox `CoordinateBounds` types. These utilities are essential for seamless
+integration with the Mapbox SDK.
 
 ---
 
@@ -12,14 +14,16 @@ fun GeoRectBounds.toGeoBox(): CoordinateBounds?
 ```
 
 ### Description
-Converts a `GeoRectBounds` instance into a Mapbox `CoordinateBounds` object. This function is useful for passing custom bounding box definitions to Mapbox APIs that expect `CoordinateBounds`.
+Converts a `GeoRectBounds` instance into a Mapbox `CoordinateBounds` object. This function is useful
+for passing custom bounding box definitions to Mapbox APIs that expect `CoordinateBounds`.
 
-The function handles cases where the source `GeoRectBounds` might be incomplete. If either the `southWest` or `northEast` property of the `GeoRectBounds` is `null`, this function will return `null`.
+The function handles cases where the source `GeoRectBounds` might be incomplete. If either the
+`southWest` or `northEast` property of the `GeoRectBounds` is `null`, this function will return
+`null`.
 
 ### Returns
-| Type                 | Description                                                                                             |
-| -------------------- | ------------------------------------------------------------------------------------------------------- |
-| `CoordinateBounds?`  | The corresponding `CoordinateBounds` object, or `null` if the source `GeoRectBounds` is missing corner points. |
+`CoordinateBounds?` — The corresponding `CoordinateBounds` object, or `null` if the source
+`GeoRectBounds` is missing corner points.
 
 ### Example
 ```kotlin
@@ -65,14 +69,15 @@ fun CoordinateBounds.toGeoRectBounds(): GeoRectBounds
 ```
 
 ### Description
-Converts a Mapbox `CoordinateBounds` instance into a `GeoRectBounds` object. This is useful for translating bounding box information from the Mapbox SDK into the application's custom `GeoRectBounds` type.
+Converts a Mapbox `CoordinateBounds` instance into a `GeoRectBounds` object. This is useful for
+translating bounding box information from the Mapbox SDK into the application's custom
+`GeoRectBounds` type.
 
-This function assumes the source `CoordinateBounds` is always valid and contains non-null `southwest` and `northeast` points.
+This function assumes the source `CoordinateBounds` is always valid and contains non-null
+`southwest` and `northeast` points.
 
 ### Returns
-| Type            | Description                               |
-| --------------- | ----------------------------------------- |
-| `GeoRectBounds` | The newly created `GeoRectBounds` object. |
+`GeoRectBounds` — The newly created `GeoRectBounds` object.
 
 ### Example
 ```kotlin
