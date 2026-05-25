@@ -29,6 +29,7 @@ import com.mapconductor.core.groundimage.GroundImageEvent
 import com.mapconductor.core.groundimage.GroundImageState
 import com.mapconductor.core.groundimage.OnGroundImageEventHandler
 import com.mapconductor.core.map.MapCameraPosition
+import com.mapconductor.core.map.OnMapInitializedHandler
 import com.mapconductor.core.map.VisibleRegion
 import com.mapconductor.core.marker.MarkerEventControllerInterface
 import com.mapconductor.core.marker.MarkerOverlayRendererInterface
@@ -94,6 +95,7 @@ internal class MapboxMapViewController(
     private var markerDragEndListener: OnMarkerEventHandler? = null
     private var markerAnimateStartListener: OnMarkerEventHandler? = null
     private var markerAnimateEndListener: OnMarkerEventHandler? = null
+    private var involvedMapInitializedCallback: Boolean = false
 
     init {
         setupListeners()
@@ -178,9 +180,6 @@ internal class MapboxMapViewController(
             }
         }
         holder.map.subscribeStyleLoaded {
-            mapLoadedCallback?.invoke()
-            mapLoadedCallback = null
-
             holder.map.style?.let { style ->
                 // When style reloads, our runtime sources/layers/images are dropped.
                 // Reattach overlays and ensure marker images exist, then redraw.
@@ -237,6 +236,10 @@ internal class MapboxMapViewController(
         polygonController.clear()
         groundImageController.clear()
         rasterLayerController.clear()
+    }
+
+    override fun setMapInitializedListener(listener: OnMapInitializedHandler?) {
+        mapInitializedCallback = listener
     }
 
     override suspend fun compositionMarkers(data: List<MarkerState>) = markerController.add(data)
@@ -659,6 +662,10 @@ internal class MapboxMapViewController(
     // Trigger an initial camera update after the view and style are ready
     fun sendInitialCameraUpdate() {
         coroutine.launch {
+            if (!involvedMapInitializedCallback) {
+                involvedMapInitializedCallback = true
+                mapInitializedCallback?.invoke()
+            }
             val mapWidth = holder.mapView.width.toFloat()
             val mapHeight = holder.mapView.height.toFloat()
             if (mapWidth <= 0 || mapHeight <= 0) return@launch

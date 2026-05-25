@@ -63,57 +63,10 @@ fun MapboxMapView(
     sdkInitialize: (suspend (android.content.Context) -> Boolean)? = null,
     onMapLoaded: OnMapLoadedHandler? = null,
     onMapClick: OnMapEventHandler? = null,
+    onMapLongClick: OnMapEventHandler? = null,
     onCameraMoveStart: OnCameraMoveHandler? = null,
     onCameraMove: OnCameraMoveHandler? = null,
     onCameraMoveEnd: OnCameraMoveHandler? = null,
-    content: (@Composable MapboxMapViewScope.() -> Unit)? = null,
-) {
-    @Suppress("DEPRECATION")
-    MapboxMapView(
-        state = state,
-        modifier = modifier,
-        sdkInitialize = sdkInitialize,
-        markerTiling = markerTiling,
-        onMapLoaded = onMapLoaded,
-        onMapClick = onMapClick,
-        onCameraMoveStart = onCameraMoveStart,
-        onCameraMove = onCameraMove,
-        onCameraMoveEnd = onCameraMoveEnd,
-        onMarkerClick = null,
-        onMarkerDragStart = null,
-        onMarkerDrag = null,
-        onMarkerDragEnd = null,
-        onMarkerAnimateStart = null,
-        onMarkerAnimateEnd = null,
-        onCircleClick = null,
-        onPolylineClick = null,
-        onPolygonClick = null,
-        content = content,
-    )
-}
-
-@Suppress("DEPRECATION")
-@Deprecated("Use CircleState/PolylineState/PolygonState onClick instead.")
-@Composable
-fun MapboxMapView(
-    state: MapboxViewState,
-    modifier: Modifier = Modifier,
-    markerTiling: MarkerTilingOptions? = null,
-    sdkInitialize: (suspend (android.content.Context) -> Boolean)? = null,
-    onMapLoaded: OnMapLoadedHandler? = null,
-    onMapClick: OnMapEventHandler? = null,
-    onCameraMoveStart: OnCameraMoveHandler? = null,
-    onCameraMove: OnCameraMoveHandler? = null,
-    onCameraMoveEnd: OnCameraMoveHandler? = null,
-    onMarkerClick: OnMarkerEventHandler?,
-    onMarkerDragStart: OnMarkerEventHandler? = null,
-    onMarkerDrag: OnMarkerEventHandler? = null,
-    onMarkerDragEnd: OnMarkerEventHandler? = null,
-    onMarkerAnimateStart: OnMarkerEventHandler? = null,
-    onMarkerAnimateEnd: OnMarkerEventHandler? = null,
-    onCircleClick: OnCircleEventHandler? = null,
-    onPolylineClick: OnPolylineEventHandler? = null,
-    onPolygonClick: OnPolygonEventHandler? = null,
     content: (@Composable MapboxMapViewScope.() -> Unit)? = null,
 ) {
     val holderRef = remember { Ref<MapboxMapViewHolder>() }
@@ -216,15 +169,7 @@ fun MapboxMapView(
                     onCameraMoveEnd?.invoke(it)
                 }
                 mapController.setMapClickListener(onMapClick)
-                mapController.setOnCircleClickListener(onCircleClick)
-                mapController.setOnPolylineClickListener(onPolylineClick)
-                mapController.setOnPolygonClickListener(onPolygonClick)
-                mapController.setOnMarkerClickListener(onMarkerClick)
-                mapController.setOnMarkerDragStart(onMarkerDragStart)
-                mapController.setOnMarkerDrag(onMarkerDrag)
-                mapController.setOnMarkerDragEnd(onMarkerDragEnd)
-                mapController.setOnMarkerAnimateStart(onMarkerAnimateStart)
-                mapController.setOnMarkerAnimateEnd(onMarkerAnimateEnd)
+                mapController.setMapLongClickListener(onMapLongClick)
                 mapController.setMapDesignTypeChangeListener(state::onMapDesignTypeChange)
                 state.setController(mapController)
 
