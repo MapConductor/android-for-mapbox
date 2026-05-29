@@ -42,7 +42,7 @@ fun MapCameraPosition.toCameraOptions(): CameraOptions {
         // tilt < 0: Mapbox cannot represent an upward pitch directly.
         // Match the Google Maps workaround: keep the virtual eye direction by moving
         // the ground target forward and rendering with abs(tilt).
-        val tiltAbsDeg = abs(tilt).coerceIn(0.0, 60.0)
+        val tiltAbsDeg = abs(tilt).coerceIn(0.0, 90.0)
         val tiltAbsRad = Math.toRadians(tiltAbsDeg)
         val mapboxZoomForAltitude = ZoomAltitudeConverter.googleZoomToMapboxZoom(zoom)
         val altitude = converter.zoomLevelToAltitude(mapboxZoomForAltitude, position.latitude, 0.0)
@@ -52,7 +52,7 @@ fun MapCameraPosition.toCameraOptions(): CameraOptions {
                 tan(tiltAbsRad) *
                 NEGATIVE_TILT_TARGET_DISTANCE_SCALE
         val target = Spherical.computeOffset(position, distanceForward, bearing)
-        val adjustedZoom = zoom + NEGATIVE_TILT_ZOOM_OFFSET_AT_MAX_TILT * (tiltAbsDeg / 60.0)
+        val adjustedZoom = zoom + NEGATIVE_TILT_ZOOM_OFFSET_AT_MAX_TILT * (tiltAbsDeg / 90.0)
 
         return CameraOptions
             .Builder()
