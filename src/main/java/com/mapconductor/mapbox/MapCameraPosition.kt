@@ -1,5 +1,6 @@
 package com.mapconductor.mapbox
 
+import android.util.Log
 import com.mapbox.maps.CameraChanged
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.CameraState
@@ -46,18 +47,14 @@ fun MapCameraPosition.toCameraOptions(): CameraOptions {
         val tiltAbsRad = Math.toRadians(tiltAbsDeg)
         val mapboxZoomForAltitude = ZoomAltitudeConverter.googleZoomToMapboxZoom(zoom)
         val altitude = converter.zoomLevelToAltitude(mapboxZoomForAltitude, position.latitude, 0.0)
-        val distanceForward =
-            altitude *
-                cos(tiltAbsRad) *
-                tan(tiltAbsRad) *
-                NEGATIVE_TILT_TARGET_DISTANCE_SCALE
+        val distanceForward = altitude * tan(tiltAbsRad)
         val target = Spherical.computeOffset(position, distanceForward, bearing)
-        val adjustedZoom = zoom + NEGATIVE_TILT_ZOOM_OFFSET_AT_MAX_TILT * (tiltAbsDeg / 90.0)
+        val mapboxZoom = converter.altitudeToZoomLevel(altitude / cos(tiltAbsRad), target.latitude, 0.0)
 
         return CameraOptions
             .Builder()
             .center(target.toPoint())
-            .zoom(ZoomAltitudeConverter.googleZoomToMapboxZoom(adjustedZoom))
+            .zoom(mapboxZoom)
             .pitch(tiltAbsDeg)
             .bearing(bearing)
             // TODO:
