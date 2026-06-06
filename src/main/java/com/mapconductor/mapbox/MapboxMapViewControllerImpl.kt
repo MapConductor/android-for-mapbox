@@ -88,6 +88,7 @@ internal class MapboxMapViewController(
     private var activeDragController: MapboxMarkerEventControllerInterface? = null
 
     private val cameraUpdateToken = AtomicInteger(0)
+    private var lastLogicalCameraPosition: MapCameraPosition? = null
 
     private var markerClickListener: OnMarkerEventHandler? = null
     private var markerDragStartListener: OnMarkerEventHandler? = null
@@ -302,7 +303,7 @@ internal class MapboxMapViewController(
 
     private fun getMapCameraPosition(): MapCameraPosition? {
 //        val options = cameraChanged.toMapCameraPosition()
-        val camera = holder.map.cameraState.toMapCameraPosition()
+        val camera = readLogicalCameraPosition()
 
         val mapWidth = holder.mapView.width.toFloat()
         val mapHeight = holder.mapView.height.toFloat()
@@ -340,8 +341,15 @@ internal class MapboxMapViewController(
             camera.copy(
                 visibleRegion = visibleRegion,
             )
+        lastLogicalCameraPosition = mapCameraPosition
         return mapCameraPosition
     }
+
+    private fun readLogicalCameraPosition(): MapCameraPosition =
+        MapboxCameraStateSnapshot(
+            cameraState = holder.map.cameraState,
+            logicalTiltHint = lastLogicalCameraPosition?.tilt,
+        ).toMapCameraPosition()
 
     /**
      * Async version of getMapCameraPosition that can be called from background threads.
@@ -354,6 +362,7 @@ internal class MapboxMapViewController(
 
     override fun moveCamera(position: MapCameraPosition) {
         val cameraOptions = position.toCameraOptions()
+        lastLogicalCameraPosition = position
         coroutine.launch {
             holder.map.setCamera(cameraOptions)
         }
@@ -364,6 +373,7 @@ internal class MapboxMapViewController(
         duration: Long,
     ) {
         val targetCamera = position.toCameraOptions()
+        lastLogicalCameraPosition = position
 
         val animationOptions =
             MapAnimationOptions
@@ -381,7 +391,9 @@ internal class MapboxMapViewController(
                 }
 
                 override fun onAnimationCancel(animation: Animator) {
-                    cameraMoveCallback?.invoke(holder.map.cameraState.toMapCameraPosition())
+                    val mapCameraPosition = readLogicalCameraPosition()
+                    lastLogicalCameraPosition = mapCameraPosition
+                    cameraMoveCallback?.invoke(mapCameraPosition)
                 }
 
                 override fun onAnimationRepeat(animation: Animator) {
@@ -670,7 +682,7 @@ internal class MapboxMapViewController(
             val mapHeight = holder.mapView.height.toFloat()
             if (mapWidth <= 0 || mapHeight <= 0) return@launch
 
-            val camera = holder.map.cameraState.toMapCameraPosition()
+            val camera = readLogicalCameraPosition()
             val nearLeft = holder.fromScreenOffsetSync(Offset(0f, mapHeight)) ?: return@launch
             val nearRight = holder.fromScreenOffsetSync(Offset(mapWidth, mapHeight)) ?: return@launch
             val farLeft = holder.fromScreenOffsetSync(Offset(0f, 0f)) ?: return@launch
@@ -684,6 +696,7 @@ internal class MapboxMapViewController(
 
             val visibleRegion = VisibleRegion(bounds, nearLeft, nearRight, farLeft, farRight)
             val mapCameraPosition = camera.copy(visibleRegion = visibleRegion)
+            lastLogicalCameraPosition = mapCameraPosition
 
             backCoroutine.launch { notifyMapCameraPosition(mapCameraPosition) }
         }
