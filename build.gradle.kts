@@ -77,11 +77,11 @@ dependencies {
     implementation(libs.androidx.lifecycle.common.java8)
 
     // Mapbox SDK
-    implementation(libs.mapbox.android)
+    api(libs.mapbox.android)
     if (findProject(":android-sdk-core") != null) {
-        implementation(project(":android-sdk-core"))
+        api(project(":android-sdk-core"))
     } else {
-        implementation("com.mapconductor:core:$libraryVersion")
+        api("com.mapconductor:core:$libraryVersion")
     }
 
     testImplementation(libs.junit)
