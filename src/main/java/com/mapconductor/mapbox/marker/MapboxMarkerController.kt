@@ -16,7 +16,6 @@ import com.mapconductor.core.marker.MarkerState
 import com.mapconductor.core.marker.MarkerTileRasterLayerCallback
 import com.mapconductor.core.marker.MarkerTileRenderer
 import com.mapconductor.core.marker.MarkerTilingOptions
-import com.mapconductor.core.marker.TileRenderWasmEngine
 import com.mapconductor.core.raster.RasterLayerSource
 import com.mapconductor.core.raster.RasterLayerState
 import com.mapconductor.core.raster.TileScheme
@@ -308,7 +307,6 @@ class MapboxMarkerController private constructor(
                 cacheSizeBytes = markerTiling.cacheSize,
                 debugTileOverlay = markerTiling.debugTileOverlay,
                 iconScaleCallback = markerTiling.iconScaleCallback,
-                wasmEngine = TileRenderWasmEngine.createOrNull(ResourceProvider.getAppContext(), markerTiling.enableWasmAcceleration),
             )
         markerTileRenderer = tileRenderer
 
