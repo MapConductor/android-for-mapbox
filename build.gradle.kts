@@ -60,7 +60,6 @@ android {
     }
 }
 
-
 // Publishing configuration
 val libraryGroupId = project.findProperty("libraryGroupId") as String? ?: "com.mapconductor"
 val libraryArtifactId = "for-mapbox"
@@ -160,7 +159,6 @@ publishing {
                         ?: System.getenv("GITHUB_TOKEN")
             }
         }
-
     }
 }
 
@@ -182,4 +180,3 @@ if (project == rootProject) {
         }
     }
 }
-
