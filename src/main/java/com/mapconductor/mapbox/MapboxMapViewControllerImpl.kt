@@ -410,6 +410,25 @@ internal class MapboxMapViewController(
         }
     }
 
+    override fun fitBounds(
+        bounds: GeoRectBounds,
+        padding: Int,
+    ) {
+        val coordinateBounds = bounds.toGeoBox() ?: return
+        val edgeInsets =
+            com.mapbox.maps.EdgeInsets(
+                padding.toDouble(),
+                padding.toDouble(),
+                padding.toDouble(),
+                padding.toDouble(),
+            )
+        val cameraOptions = holder.map.cameraForCoordinateBounds(coordinateBounds, edgeInsets)
+        lastLogicalCameraPosition = cameraOptions.toMapCameraPosition()
+        coroutine.launch {
+            holder.map.setCamera(cameraOptions)
+        }
+    }
+
     override fun onMapLongClick(point: Point): Boolean {
         val touchPosition = point.toGeoPoint()
         markerEventControllers.forEach { controller ->
