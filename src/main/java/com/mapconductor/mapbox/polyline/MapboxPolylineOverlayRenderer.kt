@@ -10,7 +10,6 @@ import com.mapconductor.mapbox.MapboxMapViewHolder
 import com.mapconductor.mapbox.createMapboxLines
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 class MapboxPolylineOverlayRenderer(
     val layer: MapboxPolylineLayer,
@@ -60,11 +59,7 @@ class MapboxPolylineOverlayRenderer(
     }
 
     override suspend fun onPostProcess() {
-        // Redraw all polylines on the layer
-        val polylines = getAllPolylineEntities()
-        coroutine.launch {
-            layer.draw(polylines)
-        }
+        layer.draw(getAllPolylineEntities())
     }
 
     private fun getAllPolylineEntities(): List<PolylineEntityInterface<MapboxActualPolyline>> {

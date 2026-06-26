@@ -19,7 +19,6 @@ import com.mapconductor.mapbox.createMapboxPolygons
 import com.mapconductor.mapbox.raster.MapboxRasterLayerController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 class MapboxPolygonOverlayRenderer(
     val layer: MapboxPolygonLayer,
@@ -46,10 +45,7 @@ class MapboxPolygonOverlayRenderer(
     }
 
     override suspend fun onPostProcess() {
-        val polygons = getAllPolygonEntities()
-        coroutine.launch {
-            this@MapboxPolygonOverlayRenderer.layer.draw(polygons)
-        }
+        layer.draw(getAllPolygonEntities())
     }
 
     override suspend fun removePolygon(entity: PolygonEntityInterface<MapboxActualPolygon>) {
