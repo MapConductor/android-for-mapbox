@@ -3,6 +3,7 @@ package com.mapconductor.mapbox.circle
 import com.google.gson.JsonObject
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.Point
+import com.mapbox.geojson.Polygon
 import com.mapbox.maps.extension.style.sources.removeGeoJSONSourceFeatures
 import com.mapconductor.core.calculateZIndex
 import com.mapconductor.core.circle.AbstractCircleOverlayRenderer
@@ -14,7 +15,9 @@ import com.mapconductor.mapbox.MapboxActualCircle
 import com.mapconductor.mapbox.MapboxMapViewHolder
 import com.mapconductor.mapbox.toMapboxColorString
 import com.mapconductor.mapbox.toPoint
+import kotlin.math.PI
 import kotlin.math.cos
+import kotlin.math.sin
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -34,19 +37,10 @@ class MapboxCircleOverlayRenderer(
         layer.source.removeGeoJSONSourceFeatures(featureIds)
     }
 
-    override suspend fun createCircle(state: CircleState): MapboxActualCircle? {
-        val centerPoint = GeoPoint.from(state.center).toPoint()
-        val latitudeCorrection =
-            if (state.geodesic) {
-                cos(Math.toRadians(centerPoint.latitude()))
-            } else {
-                1.0
-            }
-        return Feature.fromGeometry(
-            Point.fromLngLat(centerPoint.longitude(), centerPoint.latitude()),
+    override suspend fun createCircle(state: CircleState): MapboxActualCircle? =
+        Feature.fromGeometry(
+            createCirclePolygon(state),
             JsonObject().apply {
-                addProperty(MapboxCircleLayer.Prop.LATITUDE_CORRECTION, latitudeCorrection)
-                addProperty(MapboxCircleLayer.Prop.RADIUS, state.radiusMeters)
                 addProperty(MapboxCircleLayer.Prop.FILL_COLOR, state.fillColor.toMapboxColorString())
                 addProperty(MapboxCircleLayer.Prop.STROKE_COLOR, state.strokeColor.toMapboxColorString())
                 addProperty(MapboxCircleLayer.Prop.STROKE_WIDTH, state.strokeWidth.value)
@@ -54,7 +48,6 @@ class MapboxCircleOverlayRenderer(
             },
             "circle-${state.id}",
         )
-    }
 
     override suspend fun updateCircleProperties(
         circle: MapboxActualCircle,
@@ -62,18 +55,9 @@ class MapboxCircleOverlayRenderer(
         prev: CircleEntityInterface<MapboxActualCircle>,
     ): MapboxActualCircle? {
         val state = current.state
-        val centerPoint = GeoPoint.from(state.center).toPoint()
-        val latitudeCorrection =
-            if (state.geodesic) {
-                cos(Math.toRadians(centerPoint.latitude()))
-            } else {
-                1.0
-            }
         return Feature.fromGeometry(
-            Point.fromLngLat(centerPoint.longitude(), centerPoint.latitude()),
+            createCirclePolygon(state),
             JsonObject().apply {
-                addProperty(MapboxCircleLayer.Prop.LATITUDE_CORRECTION, latitudeCorrection)
-                addProperty(MapboxCircleLayer.Prop.RADIUS, state.radiusMeters)
                 addProperty(MapboxCircleLayer.Prop.FILL_COLOR, state.fillColor.toMapboxColorString())
                 addProperty(MapboxCircleLayer.Prop.STROKE_COLOR, state.strokeColor.toMapboxColorString())
                 addProperty(MapboxCircleLayer.Prop.STROKE_WIDTH, state.strokeWidth.value)
@@ -84,15 +68,28 @@ class MapboxCircleOverlayRenderer(
     }
 
     override suspend fun onPostProcess() {
-        val circles = getAllCircleEntities()
+        val circles = circleManager.allEntities()
         coroutine.launch {
             layer.draw(circles)
         }
     }
 
-    private fun getAllCircleEntities(): List<CircleEntityInterface<MapboxActualCircle>> {
-        // This would need access to the polyline manager
-        // For now, we'll implement a simple workaround
-        return circleManager.allEntities()
+    private fun createCirclePolygon(state: CircleState): Polygon {
+        val center = GeoPoint.from(state.center).toPoint()
+        val lat = center.latitude()
+        val lng = center.longitude()
+        val segments = 64
+        val latCorrection = if (state.geodesic) cos(Math.toRadians(lat)) else 1.0
+        val metersPerDegree = 111320.0
+
+        val ring = (0 until segments).map { i ->
+            val angle = 2.0 * PI * i / segments
+            val deltaLat = state.radiusMeters / metersPerDegree * cos(angle)
+            val deltaLng = state.radiusMeters / (metersPerDegree * latCorrection) * sin(angle)
+            Point.fromLngLat(lng + deltaLng, lat + deltaLat)
+        }.toMutableList()
+        ring.add(ring.first())
+
+        return Polygon.fromLngLats(listOf(ring))
     }
 }

@@ -101,8 +101,8 @@ internal class MapboxMapViewController(
     init {
         setupListeners()
         registerController(markerController)
-        registerController(polygonController)
         registerController(polylineController)
+        registerController(polygonController)
         registerController(groundImageController)
         registerController(circleController)
         registerController(rasterLayerController)
@@ -150,9 +150,10 @@ internal class MapboxMapViewController(
         style.addSource(polygonController.polylineOverlay.layer.source)
         style.addSource(polygonController.polygonOverlay.layer.source)
 
-        // Circle
+        // Circle fill (fill pass) then stroke (line pass) — both below general polyline
         style.addSource(circleController.renderer.layer.source)
-        style.addLayer(circleController.renderer.layer.layer)
+        style.addLayer(circleController.renderer.layer.fillLayer)
+        style.addLayer(circleController.renderer.layer.strokeLayer)
 
         // Polyline (general)
         style.addSource(polylineController.renderer.layer.source)
