@@ -43,7 +43,7 @@ class MapboxCircleOverlayRenderer(
             JsonObject().apply {
                 addProperty(MapboxCircleLayer.Prop.FILL_COLOR, state.fillColor.toMapboxColorString())
                 addProperty(MapboxCircleLayer.Prop.STROKE_COLOR, state.strokeColor.toMapboxColorString())
-                addProperty(MapboxCircleLayer.Prop.STROKE_WIDTH, state.strokeWidth.value)
+                addProperty(MapboxCircleLayer.Prop.STROKE_WIDTH, state.strokeWidth)
                 addProperty(MapboxCircleLayer.Prop.Z_INDEX, state.zIndex ?: calculateZIndex(state.center))
             },
             "circle-${state.id}",
@@ -60,7 +60,7 @@ class MapboxCircleOverlayRenderer(
             JsonObject().apply {
                 addProperty(MapboxCircleLayer.Prop.FILL_COLOR, state.fillColor.toMapboxColorString())
                 addProperty(MapboxCircleLayer.Prop.STROKE_COLOR, state.strokeColor.toMapboxColorString())
-                addProperty(MapboxCircleLayer.Prop.STROKE_WIDTH, state.strokeWidth.value)
+                addProperty(MapboxCircleLayer.Prop.STROKE_WIDTH, state.strokeWidth)
                 addProperty(MapboxCircleLayer.Prop.Z_INDEX, state.zIndex ?: calculateZIndex(state.center))
             },
             "circle-${state.id}",

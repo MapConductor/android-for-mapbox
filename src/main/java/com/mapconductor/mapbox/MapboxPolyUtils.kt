@@ -1,7 +1,5 @@
 package com.mapconductor.mapbox
 
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.Dp
 import com.google.gson.JsonObject
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.LineString
@@ -19,8 +17,8 @@ internal fun createMapboxLines(
     id: String,
     points: List<GeoPointInterface>,
     geodesic: Boolean,
-    strokeColor: Color,
-    strokeWidth: Dp,
+    strokeColor: Int,
+    strokeWidth: Float,
     zIndex: Int = 0,
 ): List<Feature> {
     val geoPoints: List<GeoPointInterface> =
@@ -37,7 +35,7 @@ internal fun createMapboxLines(
             LineString.fromLngLats(points),
             JsonObject().apply {
                 addProperty(MapboxPolylineLayer.Prop.STROKE_COLOR, strokeColor.toMapboxColorString())
-                addProperty(MapboxPolylineLayer.Prop.STROKE_WIDTH, strokeWidth.value)
+                addProperty(MapboxPolylineLayer.Prop.STROKE_WIDTH, strokeWidth)
                 addProperty("zIndex", zIndex)
                 addProperty("id", id)
             },
@@ -51,7 +49,7 @@ internal fun createMapboxPolygons(
     points: List<GeoPointInterface>,
     holes: List<List<GeoPointInterface>> = emptyList(),
     geodesic: Boolean,
-    fillColor: Color,
+    fillColor: Int,
     zIndex: Int,
 ): List<Feature> {
     val geoPoints: List<GeoPointInterface> =

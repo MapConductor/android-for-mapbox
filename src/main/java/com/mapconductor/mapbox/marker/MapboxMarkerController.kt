@@ -92,7 +92,7 @@ class MapboxMarkerController private constructor(
         val markerScreen = renderer.holder.toScreenOffset(nearest.state.position) ?: return null
 
         val tolerancePx =
-            Settings.Default.tapTolerance.value
+            Settings.Default.tapTolerance
                 .toDouble() *
                 ResourceProvider.getDensity().toDouble()
 

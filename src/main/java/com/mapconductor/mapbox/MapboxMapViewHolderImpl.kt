@@ -1,6 +1,6 @@
 package com.mapconductor.mapbox
 
-import androidx.compose.ui.geometry.Offset
+import android.graphics.PointF
 import com.mapbox.maps.MapView
 import com.mapbox.maps.MapboxLifecycleObserver
 import com.mapbox.maps.MapboxMap
@@ -21,23 +21,20 @@ class MapboxMapViewHolder(
         this.mapView.lifecycle.registerLifecycleObserver(this.mapView, this)
     }
 
-    override fun toScreenOffset(position: GeoPointInterface): Offset? {
+    override fun toScreenOffset(position: GeoPointInterface): PointF? {
         val pixel =
             map.pixelForCoordinate(
                 coordinate = GeoPoint.from(position).toPoint(),
             )
-        return Offset(
-            x = pixel.x.toFloat(),
-            y = pixel.y.toFloat(),
-        )
+        return PointF(pixel.x.toFloat(), pixel.y.toFloat())
     }
 
-    override fun fromScreenOffsetSync(offset: Offset): GeoPoint? =
+    override fun fromScreenOffsetSync(offset: PointF): GeoPoint? =
         map.coordinateForPixel(ScreenCoordinate(offset.x.toDouble(), offset.y.toDouble())).toGeoPoint()
 
     fun fromScreenOffset(coordinate: ScreenCoordinate): GeoPoint? = map.coordinateForPixel(coordinate).toGeoPoint()
 
-    override suspend fun fromScreenOffset(offset: Offset): GeoPoint? =
+    override suspend fun fromScreenOffset(offset: PointF): GeoPoint? =
         fromScreenOffset(
             ScreenCoordinate(
                 offset.x.toDouble(),

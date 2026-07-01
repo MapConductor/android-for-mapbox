@@ -14,7 +14,7 @@ import com.mapbox.maps.MapInitOptions
 import com.mapbox.maps.MapView
 import com.mapconductor.core.circle.CircleManager
 import com.mapconductor.core.map.MapCameraPositionInterface
-import com.mapconductor.core.map.MapViewBase
+import com.mapconductor.compose.MapViewBase
 import com.mapconductor.core.map.MutableMapServiceRegistry
 import com.mapconductor.core.map.OnCameraMoveHandler
 import com.mapconductor.core.map.OnMapEventHandler
