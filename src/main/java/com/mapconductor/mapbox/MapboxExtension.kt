@@ -1,10 +1,10 @@
 package com.mapconductor.mapbox
 
+import androidx.compose.ui.graphics.Color
 import com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
 import com.mapconductor.core.marker.BitmapIcon
 import android.graphics.Bitmap
-import android.graphics.Color
 
 internal fun BitmapIcon.toPointAnnotationOptions(): PointAnnotationOptions {
     val iconW = bitmap.width.toDouble()
@@ -27,10 +27,10 @@ internal fun BitmapIcon.toPointAnnotationOptions(): PointAnnotationOptions {
         .withIconOffset(listOf(offsetX, offsetY))
 }
 
-fun Int.toMapboxColorString(): String {
-    val red = Color.red(this)
-    val green = Color.green(this)
-    val blue = Color.blue(this)
-    val alpha = Color.alpha(this) / 255.0
+fun Color.toMapboxColorString(): String {
+    val red = this.red * 255
+    val green = this.green * 255
+    val blue = this.blue * 255
+    val alpha = this.alpha
     return "rgba($red, $green, $blue, $alpha)"
 }

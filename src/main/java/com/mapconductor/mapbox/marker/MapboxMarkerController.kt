@@ -36,9 +36,9 @@ class MapboxMarkerController private constructor(
     markerManager: MarkerManager<MapboxActualMarker>,
     private val markerTiling: MarkerTilingOptions,
 ) : AbstractMarkerController<MapboxActualMarker>(
-        markerManager = markerManager,
-        renderer = renderer,
-    ) {
+    markerManager = markerManager,
+    renderer = renderer,
+) {
     private var internalSelectedMarker: MarkerEntityInterface<MapboxActualMarker>? = null
 
     private val defaultMarkerIcon: BitmapIcon = DefaultMarkerIcon().toBitmapIcon()
@@ -92,7 +92,7 @@ class MapboxMarkerController private constructor(
         val markerScreen = renderer.holder.toScreenOffset(nearest.state.position) ?: return null
 
         val tolerancePx =
-            Settings.Default.tapTolerance
+            Settings.Default.tapTolerance.value
                 .toDouble() *
                 ResourceProvider.getDensity().toDouble()
 

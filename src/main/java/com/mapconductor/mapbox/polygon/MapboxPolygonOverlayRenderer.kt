@@ -1,6 +1,6 @@
 package com.mapconductor.mapbox.polygon
 
-import android.graphics.Color
+import androidx.compose.ui.graphics.Color
 import com.mapconductor.core.features.GeoPointInterface
 import com.mapconductor.core.polygon.AbstractPolygonOverlayRenderer
 import com.mapconductor.core.polygon.PolygonEntityInterface
@@ -73,7 +73,7 @@ class MapboxPolygonOverlayRenderer(
                 points = state.points,
                 holes = emptyList(),
                 geodesic = state.geodesic,
-                fillColor = Color.TRANSPARENT,
+                fillColor = Color.Transparent,
                 zIndex = state.zIndex,
             )
         }
@@ -169,7 +169,7 @@ class MapboxPolygonOverlayRenderer(
         provider.points = state.points
         provider.holes = state.holes
         provider.fillColor = state.fillColor
-        provider.strokeColor = android.graphics.Color.TRANSPARENT
+        provider.strokeColor = Color.Transparent
         provider.strokeWidthPx = 0f
         provider.geodesic = state.geodesic
         provider.outerBounds =

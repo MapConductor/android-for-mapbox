@@ -1,7 +1,7 @@
 package com.mapconductor.mapbox
 
 import MapboxMapViewControllerInterface
-import android.graphics.PointF
+import androidx.compose.ui.geometry.Offset
 import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.geojson.Point
 import com.mapbox.maps.ScreenCoordinate
@@ -310,19 +310,19 @@ internal class MapboxMapViewController(
         val mapHeight = holder.mapView.height.toFloat()
         val nearLeft =
             holder.fromScreenOffsetSync(
-                PointF(0.0f, mapHeight),
+                Offset(0.0f, mapHeight),
             ) ?: return null
         val nearRight =
             holder.fromScreenOffsetSync(
-                PointF(mapWidth, mapHeight),
+                Offset(mapWidth, mapHeight),
             ) ?: return null
         val farLeft =
             holder.fromScreenOffsetSync(
-                PointF(0.0f, 0.0f),
+                Offset(0.0f, 0.0f),
             ) ?: return null
         val farRight =
             holder.fromScreenOffsetSync(
-                PointF(mapWidth, 0.0f),
+                Offset(mapWidth, 0.0f),
             ) ?: return null
 
         val bounds = GeoRectBounds()
@@ -507,7 +507,7 @@ internal class MapboxMapViewController(
         val controller = activeDragController ?: return false
         val entity = controller.getSelectedMarker() ?: return false
         val screenCoordinate =
-            PointF(
+            Offset(
                 detector.focalPoint.x,
                 detector.focalPoint.y,
             )
@@ -703,10 +703,10 @@ internal class MapboxMapViewController(
             if (mapWidth <= 0 || mapHeight <= 0) return@launch
 
             val camera = readLogicalCameraPosition()
-            val nearLeft = holder.fromScreenOffsetSync(PointF(0f, mapHeight)) ?: return@launch
-            val nearRight = holder.fromScreenOffsetSync(PointF(mapWidth, mapHeight)) ?: return@launch
-            val farLeft = holder.fromScreenOffsetSync(PointF(0f, 0f)) ?: return@launch
-            val farRight = holder.fromScreenOffsetSync(PointF(mapWidth, 0f)) ?: return@launch
+            val nearLeft = holder.fromScreenOffsetSync(Offset(0f, mapHeight)) ?: return@launch
+            val nearRight = holder.fromScreenOffsetSync(Offset(mapWidth, mapHeight)) ?: return@launch
+            val farLeft = holder.fromScreenOffsetSync(Offset(0f, 0f)) ?: return@launch
+            val farRight = holder.fromScreenOffsetSync(Offset(mapWidth, 0f)) ?: return@launch
 
             val bounds = GeoRectBounds()
             bounds.extend(nearLeft)
