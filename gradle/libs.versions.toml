@@ -1,12 +1,11 @@
 [versions]
 agp = "9.2.1"
-kotlin = "2.4.0"
+kotlin = "2.0.21"
 
-compose = "1.11.3"
-composeBom = "2026.06.00"
-lifecycleRuntimeKtx = "2.11.0"
+composeBom = "2025.02.00"
+lifecycleRuntimeKtx = "2.8.7"
 mapboxAndroid = "11.24.3"
-activityCompose = "1.13.0"
+activityCompose = "1.9.3"
 ktLint = "14.2.0"
 
 junit = "4.13.2"
@@ -16,8 +15,8 @@ espressoCore = "3.7.0"
 [libraries]
 # Jetpack Compose (with BOM)
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
-androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "compose" }
-androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview", version.ref = "compose" }
+androidx-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-foundation = { group = "androidx.compose.foundation", name = "foundation" }
 
 # Lifecycle
@@ -30,7 +29,7 @@ mapbox-android = { module = "com.mapbox.maps:android-ndk27", version.ref = "mapb
 # Sample app
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
-androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", version.ref = "compose" }
+androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 
 # Test
 junit = { group = "junit", name = "junit", version.ref = "junit" }
