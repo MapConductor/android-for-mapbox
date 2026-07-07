@@ -29,7 +29,6 @@ import com.mapconductor.core.marker.MarkerTilingOptions
 import com.mapconductor.core.marker.StrategyMarkerController
 import com.mapconductor.core.polygon.PolygonManager
 import com.mapconductor.core.polyline.PolylineManager
-import com.mapconductor.core.tileserver.TileServerRegistry
 import com.mapconductor.mapbox.circle.MapboxCircleController
 import com.mapconductor.mapbox.circle.MapboxCircleLayer
 import com.mapconductor.mapbox.circle.MapboxCircleOverlayRenderer
@@ -257,7 +256,6 @@ internal fun getPolygonController(
             layer = polygonLayer,
             polygonManager = polygonManager,
             holder = holder,
-            rasterLayerController = rasterLayerController,
         )
 
     val conductor =
@@ -350,11 +348,9 @@ internal fun getRasterLayerController(holder: MapboxMapViewHolder): MapboxRaster
 }
 
 internal fun getGroundImageController(holder: MapboxMapViewHolder): MapboxGroundImageController {
-    val tileServer = TileServerRegistry.get()
     val renderer =
         MapboxGroundImageOverlayRenderer(
             holder = holder,
-            tileServer = tileServer,
         )
     return MapboxGroundImageController(renderer = renderer)
 }

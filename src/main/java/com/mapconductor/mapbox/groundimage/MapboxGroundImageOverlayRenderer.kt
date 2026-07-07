@@ -1,53 +1,51 @@
 package com.mapconductor.mapbox.groundimage
 
+import com.mapbox.bindgen.DataRef
+import com.mapbox.maps.Image
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.style.layers.addLayer
 import com.mapbox.maps.extension.style.layers.addLayerBelow
 import com.mapbox.maps.extension.style.layers.generated.rasterLayer
 import com.mapbox.maps.extension.style.layers.properties.generated.Visibility
 import com.mapbox.maps.extension.style.sources.addSource
-import com.mapbox.maps.extension.style.sources.generated.rasterSource
+import com.mapbox.maps.extension.style.sources.generated.imageSource
+import com.mapbox.maps.extension.style.utils.TypeUtils
+import com.mapconductor.core.features.GeoRectBounds
 import com.mapconductor.core.groundimage.AbstractGroundImageOverlayRenderer
 import com.mapconductor.core.groundimage.GroundImageEntityInterface
+import com.mapconductor.core.groundimage.GroundImageFingerPrint
 import com.mapconductor.core.groundimage.GroundImageState
-import com.mapconductor.core.groundimage.GroundImageTileProvider
-import com.mapconductor.core.tileserver.LocalTileServer
 import com.mapconductor.mapbox.MapboxActualGroundImage
 import com.mapconductor.mapbox.MapboxMapViewHolder
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Rect
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.nio.ByteBuffer
 
 class MapboxGroundImageOverlayRenderer(
     override val holder: MapboxMapViewHolder,
-    private val tileServer: LocalTileServer,
     override val coroutine: CoroutineScope = CoroutineScope(Dispatchers.Main),
 ) : AbstractGroundImageOverlayRenderer<MapboxActualGroundImage>() {
     override suspend fun createGroundImage(state: GroundImageState): MapboxActualGroundImage? =
         withContext(coroutine.coroutineContext) {
-            val routeId = buildSafeRouteId(state.id)
-            val provider = GroundImageTileProvider(tileSize = state.tileSize)
-            provider.update(state, opacity = 1.0f)
-            tileServer.register(routeId, provider)
-
-            val sourceId = "groundimage-source-$routeId"
-            val layerId = "groundimage-layer-$routeId"
+            val style = holder.map.style ?: return@withContext null
+            val coordinates = state.bounds.toImageCoordinates() ?: return@withContext null
             val handle =
                 MapboxGroundImageHandle(
-                    routeId = routeId,
-                    generation = 0L,
-                    cacheKey = tileCacheKey(state),
-                    sourceId = sourceId,
-                    layerId = layerId,
-                    tileProvider = provider,
+                    sourceId = sourceId(state.id),
+                    layerId = layerId(state.id),
+                    applied = state.fingerPrint().toAppliedGroundImage(),
                 )
 
-            holder.map.style?.let { style ->
-                removeSourceAndLayerIfExists(style, handle)
-                addSourceAndLayer(style, handle, state)
-            }
+            removeSourceAndLayerIfExists(style, handle)
+            addSourceAndLayer(style, handle, state, coordinates)
             handle
         }
 
@@ -57,63 +55,47 @@ class MapboxGroundImageOverlayRenderer(
         prev: GroundImageEntityInterface<MapboxActualGroundImage>,
     ): MapboxActualGroundImage? =
         withContext(coroutine.coroutineContext) {
+            val style = holder.map.style ?: return@withContext groundImage
+
+            if (!style.styleSourceExists(groundImage.sourceId) || !style.styleLayerExists(groundImage.layerId)) {
+                removeSourceAndLayerIfExists(style, groundImage)
+                return@withContext createGroundImage(current.state)
+            }
+
             val finger = current.fingerPrint
-            val prevFinger = prev.fingerPrint
+            val prevFinger = groundImage.applied
+            val coordinates = current.state.bounds.toImageCoordinates() ?: return@withContext groundImage
 
-            val tileSizeChanged = finger.tileSize != prevFinger.tileSize
-            val tileContentChanged =
-                finger.bounds != prevFinger.bounds || finger.image != prevFinger.image || tileSizeChanged
-            val opacityChanged = finger.opacity != prevFinger.opacity
-
-            if (!tileContentChanged && !opacityChanged) {
-                return@withContext groundImage
+            if (finger.image != prevFinger.image) {
+                style.updateStyleImageSourceImage(groundImage.sourceId, current.state.image.toBitmap().toMapboxImage())
+                style.setStyleSourceProperty(
+                    groundImage.sourceId,
+                    "coordinates",
+                    TypeUtils.wrapToValue(coordinates),
+                )
+            } else if (finger.bounds != prevFinger.bounds) {
+                style.setStyleSourceProperty(
+                    groundImage.sourceId,
+                    "coordinates",
+                    TypeUtils.wrapToValue(coordinates),
+                )
             }
 
-            val nextHandle =
-                if (tileContentChanged) {
-                    val provider =
-                        if (tileSizeChanged) {
-                            GroundImageTileProvider(tileSize = current.state.tileSize).also {
-                                tileServer.register(groundImage.routeId, it)
-                            }
-                        } else {
-                            groundImage.tileProvider
-                        }
-                    provider.update(current.state, opacity = 1.0f)
-                    groundImage.copy(
-                        generation = groundImage.generation + 1L,
-                        cacheKey = tileCacheKey(current.state),
-                        tileProvider = provider,
-                    )
-                } else {
-                    groundImage
-                }
-
-            holder.map.style?.let { style ->
-                if (tileContentChanged) {
-                    removeSourceAndLayerIfExists(style, nextHandle)
-                    addSourceAndLayer(style, nextHandle, current.state)
-                } else if (opacityChanged) {
-                    updateLayerOpacity(
-                        style = style,
-                        sourceId = nextHandle.sourceId,
-                        layerId = nextHandle.layerId,
-                        opacity = current.state.opacity,
-                    )
-                }
+            if (finger.opacity != prevFinger.opacity) {
+                style.setStyleLayerProperty(
+                    groundImage.layerId,
+                    "raster-opacity",
+                    TypeUtils.wrapToValue(current.state.opacity.coerceIn(0.0f, 1.0f).toDouble()),
+                )
             }
 
-            nextHandle
+            groundImage.copy(applied = finger.toAppliedGroundImage())
         }
 
     override suspend fun removeGroundImage(entity: GroundImageEntityInterface<MapboxActualGroundImage>) {
         coroutine.launch {
-            val style = holder.map.style
-            val handle = entity.groundImage
-            if (style != null) {
-                removeSourceAndLayerIfExists(style, handle)
-            }
-            tileServer.unregister(handle.routeId)
+            val style = holder.map.style ?: return@launch
+            removeSourceAndLayerIfExists(style, entity.groundImage)
         }
     }
 
@@ -121,28 +103,22 @@ class MapboxGroundImageOverlayRenderer(
         style: Style,
         handle: MapboxGroundImageHandle,
         state: GroundImageState,
+        coordinates: List<List<Double>>,
     ) {
         val source =
-            rasterSource(handle.sourceId) {
-                tiles(listOf(tileServer.urlTemplate(handle.routeId, handle.tileProvider.tileSize, handle.cacheKey)))
-                tileSize(handle.tileProvider.tileSize.toLong())
-                minzoom(0L)
-                maxzoom(22L)
+            imageSource(handle.sourceId) {
+                coordinates(coordinates)
             }
-
-        val opacity =
-            state.opacity
-                .coerceIn(0.0f, 1.0f)
-                .toDouble()
 
         val layer =
             rasterLayer(handle.layerId, handle.sourceId) {
-                rasterOpacity(opacity)
+                rasterOpacity(state.opacity.coerceIn(0.0f, 1.0f).toDouble())
                 visibility(Visibility.VISIBLE)
             }
 
         try {
             style.addSource(source)
+            style.updateStyleImageSourceImage(handle.sourceId, state.image.toBitmap().toMapboxImage())
         } catch (e: Exception) {
             Log.w("Mapbox", "Failed to add ground image source: ${e.message}")
         }
@@ -172,38 +148,56 @@ class MapboxGroundImageOverlayRenderer(
         }
     }
 
-    private fun updateLayerOpacity(
-        style: Style,
-        sourceId: String,
-        layerId: String,
-        opacity: Float,
-    ) {
-        try {
-            style.removeStyleLayer(layerId)
-        } catch (_: Exception) {
-        }
-
-        val safeOpacity = opacity.coerceIn(0.0f, 1.0f).toDouble()
-        val layer =
-            rasterLayer(layerId, sourceId) {
-                rasterOpacity(safeOpacity)
-                visibility(Visibility.VISIBLE)
-            }
-
-        try {
-            style.addLayerBelow(layer, BELOW_LAYER_ID)
-        } catch (_: Exception) {
-            try {
-                style.addLayer(layer)
-            } catch (_: Exception) {
-            }
-        }
+    private fun GeoRectBounds.toImageCoordinates(): List<List<Double>>? {
+        val sw = southWest ?: return null
+        val ne = northEast ?: return null
+        return listOf(
+            listOf(sw.longitude, ne.latitude),
+            listOf(ne.longitude, ne.latitude),
+            listOf(ne.longitude, sw.latitude),
+            listOf(sw.longitude, sw.latitude),
+        )
     }
 
-    private fun buildSafeRouteId(id: String): String =
-        buildString(id.length + 16) {
-            append("groundimage-")
-            id.forEach { ch ->
+    private fun Drawable.toBitmap(): Bitmap {
+        if (this is BitmapDrawable && bitmap != null) {
+            return bitmap
+        }
+
+        val width = intrinsicWidth.takeIf { it > 0 } ?: 1
+        val height = intrinsicHeight.takeIf { it > 0 } ?: 1
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val oldBounds = Rect(bounds)
+        setBounds(0, 0, canvas.width, canvas.height)
+        draw(canvas)
+        bounds = oldBounds
+        return bitmap
+    }
+
+    private fun Bitmap.toMapboxImage(): Image {
+        val src = if (config == Bitmap.Config.ARGB_8888) this else copy(Bitmap.Config.ARGB_8888, false)
+        val pixels = IntArray(src.width * src.height)
+        src.getPixels(pixels, 0, src.width, 0, 0, src.width, src.height)
+
+        val buffer = ByteBuffer.allocateDirect(pixels.size * 4)
+        pixels.forEach { argb ->
+            buffer.put(((argb shr 16) and 0xff).toByte())
+            buffer.put(((argb shr 8) and 0xff).toByte())
+            buffer.put((argb and 0xff).toByte())
+            buffer.put(((argb ushr 24) and 0xff).toByte())
+        }
+        buffer.flip()
+        return Image(src.width, src.height, DataRef(buffer))
+    }
+
+    private fun sourceId(id: String): String = "mc-gimg-src-${id.toStyleIdPart()}"
+
+    private fun layerId(id: String): String = "mc-gimg-lyr-${id.toStyleIdPart()}"
+
+    private fun String.toStyleIdPart(): String =
+        buildString(length) {
+            this@toStyleIdPart.forEach { ch ->
                 when {
                     ch.isLetterOrDigit() -> append(ch)
                     ch == '-' || ch == '_' -> append(ch)
@@ -212,16 +206,12 @@ class MapboxGroundImageOverlayRenderer(
             }
         }
 
-    private fun tileCacheKey(state: GroundImageState): String =
-        buildString(64) {
-            append(state.bounds.hashCode())
-            append('-')
-            append(state.image.hashCode())
-            append('-')
-            append(state.tileSize.hashCode())
-            append('-')
-            append(state.extra?.hashCode() ?: 0)
-        }
+    private fun GroundImageFingerPrint.toAppliedGroundImage(): AppliedGroundImage =
+        AppliedGroundImage(
+            bounds = bounds,
+            image = image,
+            opacity = opacity,
+        )
 
     companion object {
         private const val BELOW_LAYER_ID = "polyline-layer"
