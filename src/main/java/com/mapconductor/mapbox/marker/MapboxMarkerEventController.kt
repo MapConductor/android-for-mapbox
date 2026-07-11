@@ -42,7 +42,7 @@ internal interface MapboxMarkerEventControllerInterface : MarkerEventControllerI
 internal class DefaultMapboxMarkerEventController(
     private val controller: MapboxMarkerController,
 ) : MapboxMarkerEventControllerInterface {
-    override val renderer: MapboxMarkerOverlayRenderer = controller.renderer
+    override val renderer: MapboxMarkerOverlayRenderer = controller.renderer as MapboxMarkerOverlayRenderer
 
     override fun find(position: GeoPointInterface): MarkerEntityInterface<MapboxActualMarker>? =
         controller

@@ -28,6 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.nio.ByteBuffer
+import android.annotation.SuppressLint
 
 class MapboxGroundImageOverlayRenderer(
     override val holder: MapboxMapViewHolder,
@@ -49,6 +50,7 @@ class MapboxGroundImageOverlayRenderer(
             handle
         }
 
+    @SuppressLint("RestrictedApi")
     override suspend fun updateGroundImageProperties(
         groundImage: MapboxActualGroundImage,
         current: GroundImageEntityInterface<MapboxActualGroundImage>,

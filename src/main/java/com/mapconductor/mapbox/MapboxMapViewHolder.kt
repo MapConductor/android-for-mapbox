@@ -10,8 +10,6 @@ import com.mapconductor.core.features.GeoPoint
 import com.mapconductor.core.features.GeoPointInterface
 import com.mapconductor.core.map.MapViewHolderInterface
 
-typealias MapboxMapViewHolderInterface = MapViewHolderInterface<MapView, MapboxMap>
-
 class MapboxMapViewHolder(
     override val mapView: MapView,
     override val map: MapboxMap,

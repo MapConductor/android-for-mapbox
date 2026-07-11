@@ -17,11 +17,11 @@ import com.mapconductor.core.marker.MarkerOverlayRendererInterface
 import com.mapconductor.mapbox.MapboxActualMarker
 import com.mapconductor.mapbox.MapboxMapViewHolder
 import com.mapconductor.mapbox.toPoint
-import kotlin.coroutines.suspendCoroutine
 import android.graphics.Bitmap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 
@@ -58,7 +58,7 @@ class MapboxMarkerOverlayRenderer(
     }
 
     private suspend fun getStyle(): com.mapbox.maps.Style =
-        suspendCoroutine { continuation ->
+        suspendCancellableCoroutine { continuation ->
             holder.map.getStyle { style ->
                 continuation.resumeWith(Result.success(style))
             }

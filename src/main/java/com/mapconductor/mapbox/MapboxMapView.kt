@@ -45,11 +45,13 @@ import com.mapconductor.mapbox.polyline.MapboxPolylineLayer
 import com.mapconductor.mapbox.polyline.MapboxPolylineOverlayRenderer
 import com.mapconductor.mapbox.raster.MapboxRasterLayerController
 import com.mapconductor.mapbox.raster.MapboxRasterLayerOverlayRenderer
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.view.ViewGroup
 
+@SuppressLint("Lifecycle")
 @Composable
 fun MapboxMapView(
     state: MapboxViewState,
@@ -106,7 +108,7 @@ fun MapboxMapView(
                 )
             val polylineController = getPolylineController(holder)
             val rasterLayerController = getRasterLayerController(holder)
-            val polygonController = getPolygonController(holder, rasterLayerController)
+            val polygonController = getPolygonController(holder)
             val groundImageController = getGroundImageController(holder)
             val circleController = getCircleController(holder)
 
@@ -190,11 +192,10 @@ fun MapboxMapView(
         // or handle it here if it's specific to MapboxMapView structure before calling MapViewBase.
         // For now, assuming content relates to overlay definitions.
         content = content, // This might need adjustment based on how overlays are handled
-        customDisposableEffect = { initState, holderRef ->
+        customDisposableEffect = { _, holderRef ->
 
             // HERE specific DisposableEffect logic
             DisposableEffect(lifecycle) {
-                val stateId = state.id // from BaseMapViewState
                 val observer =
                     object : DefaultLifecycleObserver {
                         override fun onResume(owner: LifecycleOwner) {
@@ -206,6 +207,7 @@ fun MapboxMapView(
                             // holderRef.value?.mapView?.onPause()
                         }
 
+                        @SuppressLint("Lifecycle")
                         override fun onDestroy(owner: LifecycleOwner) {
                             val currentHolder = holderRef.value
                             if (currentHolder != null) {
@@ -230,7 +232,6 @@ fun MapboxMapView(
 
 internal fun getPolygonController(
     holder: MapboxMapViewHolder,
-    rasterLayerController: MapboxRasterLayerController,
 ): MapboxPolygonConductor {
     val polylineLayer =
         MapboxPolylineLayer(
@@ -267,7 +268,7 @@ internal fun getPolygonController(
 }
 
 internal fun getCircleController(holder: MapboxMapViewHolder): MapboxCircleController {
-    val circleLayer: MapboxCircleLayer =
+    val circleLayer =
         MapboxCircleLayer(
             sourceId = "circle-source",
             layerId = "circle-layer",
@@ -289,7 +290,7 @@ internal fun getCircleController(holder: MapboxMapViewHolder): MapboxCircleContr
 }
 
 internal fun getPolylineController(holder: MapboxMapViewHolder): MapboxPolylineController {
-    val polylineLayer: MapboxPolylineLayer =
+    val polylineLayer =
         MapboxPolylineLayer(
             sourceId = "polyline-source",
             layerId = "polyline-layer",

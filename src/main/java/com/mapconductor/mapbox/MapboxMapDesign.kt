@@ -36,9 +36,9 @@ sealed class MapboxMapDesign(
     override fun getValue(): String = "${MAPBOX_URL}/${this.id}"
 
     companion object {
-        val MAPBOX_URL = "mapbox://styles/mapbox"
+        const val MAPBOX_URL = "mapbox://styles/mapbox"
 
-        fun Create(layerId: String): MapboxMapDesign =
+        fun create(layerId: String): MapboxMapDesign =
             when (layerId) {
                 Standard.id -> Standard
                 StandardSatellite.id -> StandardSatellite

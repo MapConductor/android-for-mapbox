@@ -1,6 +1,7 @@
 package com.mapconductor.mapbox.marker
 
 import com.mapconductor.core.ResourceProvider
+import com.mapconductor.core.controller.OnCameraChangeReceiverInterface
 import com.mapconductor.core.features.GeoPoint
 import com.mapconductor.core.features.GeoPointInterface
 import com.mapconductor.core.map.MapCameraPosition
@@ -25,20 +26,19 @@ import com.mapconductor.mapbox.MapboxMapViewHolder
 import com.mapconductor.mapbox.toMapCameraPosition
 import com.mapconductor.settings.Settings
 import java.util.UUID
-import kotlin.math.floor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 
 class MapboxMarkerController private constructor(
-    override val renderer: MapboxMarkerOverlayRenderer,
+    renderer: MapboxMarkerOverlayRenderer,
     markerManager: MarkerManager<MapboxActualMarker>,
     private val markerTiling: MarkerTilingOptions,
 ) : AbstractMarkerController<MapboxActualMarker>(
     markerManager = markerManager,
     renderer = renderer,
-) {
+), OnCameraChangeReceiverInterface {
     private var internalSelectedMarker: MarkerEntityInterface<MapboxActualMarker>? = null
 
     private val defaultMarkerIcon: BitmapIcon = DefaultMarkerIcon().toBitmapIcon()
@@ -55,25 +55,25 @@ class MapboxMarkerController private constructor(
 
     internal var selectedMarker: MarkerEntityInterface<MapboxActualMarker>?
         set(value) {
-            if (value == null) {
-                internalSelectedMarker?.let {
-                    renderer.dragLayer.updatePosition(GeoPoint.from(it.state.position))
-                    setDraggingState(it.state, false)
-                    renderer.dragLayer.selected = null
-                    renderer.drawDragLayer()
-                    markerManager.registerEntity(it)
-                    renderer.redraw()
+            (renderer as MapboxMarkerOverlayRenderer).let { markerRenderer ->
+                if (value == null) {
+                    internalSelectedMarker?.let {
+                        markerRenderer.dragLayer.updatePosition(GeoPoint.from(it.state.position))
+                        markerRenderer.dragLayer.selected = null
+                        markerRenderer.drawDragLayer()
+                        markerManager.registerEntity(it)
+                        markerRenderer.redraw()
+                    }
+                    internalSelectedMarker = null
+                    return
                 }
-                internalSelectedMarker = null
-                return
+                internalSelectedMarker = value
+                markerManager.removeEntity(value.state.id)
+                markerRenderer.dragLayer.selected = value
+                markerRenderer.dragLayer.updatePosition(GeoPoint.from(value.state.position))
+                markerRenderer.redraw()
+                markerRenderer.drawDragLayer()
             }
-            internalSelectedMarker = value
-            markerManager.removeEntity(value.state.id)
-            setDraggingState(value.state, true)
-            renderer.dragLayer.selected = value
-            renderer.dragLayer.updatePosition(GeoPoint.from(value.state.position))
-            renderer.redraw()
-            renderer.drawDragLayer()
         }
         get() = internalSelectedMarker
 
@@ -122,7 +122,6 @@ class MapboxMarkerController private constructor(
 
     override suspend fun add(data: List<MarkerState>) {
         semaphore.withPermit {
-            val currentZoom = currentTileZoom()
             val tilingEnabled =
                 markerTiling.enabled && data.size >= markerManager.minMarkerCount
             val result =
@@ -139,10 +138,10 @@ class MapboxMarkerController private constructor(
                 }
 
             if (result.tiledDataChanged) {
-                syncTiledOverlay(currentZoom)
+                syncTiledOverlay()
             } else if (result.hasTiledMarkers) {
                 if (markerTileRenderer == null || markerTileRasterLayerState == null) {
-                    syncTiledOverlay(currentZoom)
+                    syncTiledOverlay()
                 }
             } else {
                 removeTileOverlay()
@@ -177,7 +176,6 @@ class MapboxMarkerController private constructor(
             val wantsTiled = tilingEnabled && !state.draggable && state.getAnimation() == null
             val wasTiled = tiledMarkerIds.contains(state.id)
             val markerIcon = state.icon?.toBitmapIcon() ?: defaultMarkerIcon
-            val currentZoom = currentTileZoom()
 
             if (wantsTiled) {
                 if (!wasTiled) {
@@ -193,7 +191,7 @@ class MapboxMarkerController private constructor(
                     ),
                 )
                 renderer.onPostProcess()
-                syncTiledOverlay(currentZoom)
+                syncTiledOverlay()
                 return@withPermit
             }
 
@@ -230,7 +228,7 @@ class MapboxMarkerController private constructor(
             renderer.onPostProcess()
 
             if (tiledMarkerIds.isNotEmpty()) {
-                syncTiledOverlay(currentZoom)
+                syncTiledOverlay()
             } else {
                 removeTileOverlay()
             }
@@ -252,7 +250,7 @@ class MapboxMarkerController private constructor(
         markerTileGroupId = null
         markerTileRenderer = null
 
-        renderer.coroutine.launch {
+        (renderer as MapboxMarkerOverlayRenderer).coroutine.launch {
             rasterLayerCallback?.onRasterLayerUpdate(null)
         }
         markerTileRasterLayerState = null
@@ -281,9 +279,7 @@ class MapboxMarkerController private constructor(
         rasterLayerCallback?.onRasterLayerUpdate(newState)
     }
 
-    private fun currentTileZoom(): Int = floor(lastCameraPosition.zoom).toInt().coerceAtLeast(0)
-
-    private suspend fun syncTiledOverlay(zoom: Int) {
+    private suspend fun syncTiledOverlay() {
         if (tiledMarkerIds.isEmpty()) {
             removeTileOverlay()
             return

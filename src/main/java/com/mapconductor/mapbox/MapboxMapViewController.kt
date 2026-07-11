@@ -29,13 +29,12 @@ import com.mapconductor.core.groundimage.GroundImageEvent
 import com.mapconductor.core.groundimage.GroundImageState
 import com.mapconductor.core.groundimage.OnGroundImageEventHandler
 import com.mapconductor.core.map.MapCameraPosition
-import com.mapconductor.core.OnMapInitializedHandler
+import com.mapconductor.core.controller.OverlayControllerInterface
 import com.mapconductor.core.map.VisibleRegion
 import com.mapconductor.core.marker.MarkerEventControllerInterface
 import com.mapconductor.core.marker.MarkerOverlayRendererInterface
 import com.mapconductor.core.marker.MarkerRenderingStrategyInterface
 import com.mapconductor.core.marker.MarkerState
-import com.mapconductor.core.marker.MarkerTileRasterLayerCallback
 import com.mapconductor.core.marker.OnMarkerEventHandler
 import com.mapconductor.core.marker.StrategyMarkerController
 import com.mapconductor.core.polygon.OnPolygonEventHandler
@@ -75,8 +74,8 @@ internal class MapboxMapViewController(
     private val groundImageController: MapboxGroundImageController,
     private val circleController: MapboxCircleController,
     private val rasterLayerController: MapboxRasterLayerController,
-    override val coroutine: CoroutineScope = CoroutineScope(Dispatchers.Main),
-    val backCoroutine: CoroutineScope = CoroutineScope(Dispatchers.Default),
+    override val mainCoroutine: CoroutineScope = CoroutineScope(Dispatchers.Main),
+    override val defaultCoroutine: CoroutineScope = CoroutineScope(Dispatchers.Default),
 ) : BaseMapViewController(),
     MapboxMapViewControllerInterface,
     OnMapClickListener,
@@ -100,32 +99,30 @@ internal class MapboxMapViewController(
 
     init {
         setupListeners()
-        registerController(markerController)
-        registerController(polylineController)
-        registerController(polygonController)
-        registerController(groundImageController)
-        registerController(circleController)
-        registerController(rasterLayerController)
+        registerOverlayController(markerController)
+        registerOverlayController(polylineController)
+        registerOverlayController(polygonController)
+        registerOverlayController(groundImageController)
+        registerOverlayController(circleController)
+        registerOverlayController(rasterLayerController)
         registerMarkerEventController(DefaultMapboxMarkerEventController(markerController))
 
-        markerController.setRasterLayerCallback(
-            MarkerTileRasterLayerCallback { state ->
-                if (state != null) {
-                    rasterLayerController.upsert(state)
-                } else {
-                    val markerTileLayers =
-                        rasterLayerController.rasterLayerManager
-                            .allEntities()
-                            .filter { it.state.id.startsWith("marker-tile-") }
-                    markerTileLayers.forEach { entity -> rasterLayerController.removeById(entity.state.id) }
-                }
-            },
-        )
+        markerController.setRasterLayerCallback { state ->
+            if (state != null) {
+                rasterLayerController.upsert(state)
+            } else {
+                val markerTileLayers =
+                    rasterLayerController.rasterLayerManager
+                        .allEntities()
+                        .filter { it.state.id.startsWith("marker-tile-") }
+                markerTileLayers.forEach { entity -> rasterLayerController.removeById(entity.state.id) }
+            }
+        }
     }
 
     private fun attachMarkerLayers(
         style: com.mapbox.maps.Style,
-        renderer: com.mapconductor.mapbox.marker.MapboxMarkerOverlayRenderer,
+        renderer: MapboxMarkerOverlayRenderer,
     ) {
         try {
             style.addSource(renderer.markerLayer.source)
@@ -163,7 +160,7 @@ internal class MapboxMapViewController(
         ensurePolygonZLayers(style)
 
         // Marker + drag layers
-        attachMarkerLayers(style, markerController.renderer)
+        attachMarkerLayers(style, markerController.renderer as MapboxMarkerOverlayRenderer)
         markerEventControllers
             .map { it.renderer }
             .filter { it != markerController.renderer }
@@ -173,7 +170,7 @@ internal class MapboxMapViewController(
     fun setupListeners() {
         holder.map.subscribeCameraChanged {
             val token = cameraUpdateToken.incrementAndGet()
-            backCoroutine.launch {
+            defaultCoroutine.launch {
                 if (token != cameraUpdateToken.get()) return@launch
                 // Calculate camera position on background thread
                 val mapCameraPosition = getMapCameraPositionAsync() ?: return@launch
@@ -190,7 +187,7 @@ internal class MapboxMapViewController(
                     controller.renderer.ensureStyleImages(style)
                     controller.renderer.redraw()
                 }
-                coroutine.launch {
+                mainCoroutine.launch {
                     groundImageController.reapplyStyle()
                     rasterLayerController.reapplyStyle()
                 }
@@ -212,9 +209,9 @@ internal class MapboxMapViewController(
             }
         }
         holder.map.subscribeMapIdle {
-            coroutine.launch {
+            mainCoroutine.launch {
                 getMapCameraPosition()?.let { mapCameraPosition ->
-                    backCoroutine.launch {
+                    defaultCoroutine.launch {
                         notifyMapCameraPosition(mapCameraPosition)
                         cameraMoveEndCallback?.invoke(mapCameraPosition)
                     }
@@ -238,10 +235,6 @@ internal class MapboxMapViewController(
         polygonController.clear()
         groundImageController.clear()
         rasterLayerController.clear()
-    }
-
-    override fun setMapInitializedListener(listener: OnMapInitializedHandler?) {
-        mapInitializedCallback = listener
     }
 
     override suspend fun compositionMarkers(data: List<MarkerState>) = markerController.add(data)
@@ -357,14 +350,14 @@ internal class MapboxMapViewController(
      * Uses withContext to ensure Mapbox SDK calls run on the main thread.
      */
     private suspend fun getMapCameraPositionAsync(): MapCameraPosition? =
-        withContext(Dispatchers.Main) {
+        withContext(mainCoroutine.coroutineContext) {
             getMapCameraPosition()
         }
 
     override fun moveCamera(position: MapCameraPosition) {
         val cameraOptions = position.toCameraOptions()
         lastLogicalCameraPosition = position
-        coroutine.launch {
+        mainCoroutine.launch {
             holder.map.setCamera(cameraOptions)
         }
     }
@@ -402,7 +395,7 @@ internal class MapboxMapViewController(
                 }
             }
 
-        coroutine.launch {
+        mainCoroutine.launch {
             holder.map.flyTo(
                 cameraOptions = targetCamera,
                 animationOptions = animationOptions,
@@ -425,10 +418,19 @@ internal class MapboxMapViewController(
             )
         val cameraOptions = holder.map.cameraForCoordinateBounds(coordinateBounds, edgeInsets)
         lastLogicalCameraPosition = cameraOptions.toMapCameraPosition()
-        coroutine.launch {
+        mainCoroutine.launch {
             holder.map.setCamera(cameraOptions)
         }
     }
+
+    override fun getControllers(): List<OverlayControllerInterface<*, *, *>> = listOf(
+        markerController,
+        polylineController,
+        polygonController,
+        circleController,
+        groundImageController,
+        rasterLayerController,
+    )
 
     override fun onMapLongClick(point: Point): Boolean {
         val touchPosition = point.toGeoPoint()
@@ -483,7 +485,7 @@ internal class MapboxMapViewController(
                     state = hitResult.entity.state,
                     clicked = hitResult.closestPoint,
                 )
-            coroutine.launch {
+            mainCoroutine.launch {
                 polylineController.dispatchClick(event)
             }
             return true
@@ -592,7 +594,7 @@ internal class MapboxMapViewController(
     private var mapDesignTypeChangeListener: MapboxMapDesignTypeChangeHandler? = null
 
     override fun setMapDesignType(value: MapboxDesignType) {
-        coroutine.launch {
+        mainCoroutine.launch {
             holder.mapView.mapboxMap.loadStyle(value.getValue())
         }
     }
@@ -693,7 +695,7 @@ internal class MapboxMapViewController(
 
     // Trigger an initial camera update after the view and style are ready
     fun sendInitialCameraUpdate() {
-        coroutine.launch {
+        mainCoroutine.launch {
             if (!involvedMapInitializedCallback) {
                 involvedMapInitializedCallback = true
                 mapInitializedCallback?.invoke()
@@ -718,7 +720,7 @@ internal class MapboxMapViewController(
             val mapCameraPosition = camera.copy(visibleRegion = visibleRegion)
             lastLogicalCameraPosition = mapCameraPosition
 
-            backCoroutine.launch { notifyMapCameraPosition(mapCameraPosition) }
+            defaultCoroutine.launch { notifyMapCameraPosition(mapCameraPosition) }
         }
     }
 
