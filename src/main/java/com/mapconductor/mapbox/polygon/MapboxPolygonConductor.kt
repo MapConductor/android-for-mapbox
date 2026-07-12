@@ -16,7 +16,6 @@ class MapboxPolygonConductor(
 ) : OverlayControllerInterface<
         PolygonState,
         PolygonEntityInterface<PolygonState>,
-        PolygonEvent,
     > {
     override val zIndex: Int = 2
 
