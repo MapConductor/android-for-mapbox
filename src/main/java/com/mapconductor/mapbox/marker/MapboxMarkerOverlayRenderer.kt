@@ -261,10 +261,22 @@ class MapboxMarkerOverlayRenderer(
     }
 
     override suspend fun onPostProcess() {
+        val target = markerManager.allEntities().filter { !it.tiling }
+
+        // withContext(Dispatchers.Main) below is a real cross-thread hop when onPostProcess()
+        // is invoked from a background ingest dispatcher rather than already running on Main.
+        // That hop, immediately following a large tiled-marker ingest, lines up with severe GC
+        // stalls on-device even though the Main-side work below is a few ms at most - so skip
+        // the hop entirely when there's nothing for it to do. See MapLibreMarkerOverlayRenderer
+        // for the same fix and the investigation behind it.
+        if (markerLayer.wouldSkipDraw(target) && pendingStyleImageRemovals.isEmpty()) {
+            return
+        }
+
         withContext(Dispatchers.Main) {
             // Update the source first, then remove unused images.
             // Removing images too early can produce "[maps-core/style]: Required image ... is missing".
-            markerLayer.draw(markerManager.allEntities())
+            markerLayer.draw(target)
             yield()
 
             val style = holder.map.style ?: return@withContext
