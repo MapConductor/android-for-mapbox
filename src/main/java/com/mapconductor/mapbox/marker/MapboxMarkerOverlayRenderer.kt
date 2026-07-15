@@ -38,6 +38,8 @@ class MapboxMarkerOverlayRenderer(
         holder = holder,
         coroutine = coroutine,
     ) {
+    override val supportsAnimationOverlay: Boolean = true
+
     private val iconRefCounter: MutableMap<String, Int> = mutableMapOf()
     private val pendingStyleImageRemovals: MutableMap<String, Long> = mutableMapOf()
     private val iconBitmapCache: MutableMap<String, Bitmap> = mutableMapOf()
@@ -63,6 +65,14 @@ class MapboxMarkerOverlayRenderer(
                 continuation.resumeWith(Result.success(style))
             }
         }
+
+    override fun setMarkerVisible(
+        markerEntity: MarkerEntityInterface<MapboxActualMarker>,
+        visible: Boolean,
+    ) {
+        markerEntity.visible = visible
+        redraw()
+    }
 
     private fun decrementIconRef(iconKey: String) {
         if (iconKey == Prop.DEFAULT_MARKER_ID) return

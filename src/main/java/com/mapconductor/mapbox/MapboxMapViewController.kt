@@ -32,6 +32,7 @@ import com.mapconductor.core.map.MapCameraPosition
 import com.mapconductor.core.controller.OverlayControllerInterface
 import com.mapconductor.core.map.VisibleRegion
 import com.mapconductor.core.marker.MarkerEventControllerInterface
+import com.mapconductor.core.marker.MarkerAnimationOverlayHost
 import com.mapconductor.core.marker.MarkerOverlayRendererInterface
 import com.mapconductor.core.marker.MarkerRenderingStrategyInterface
 import com.mapconductor.core.marker.MarkerState
@@ -238,6 +239,10 @@ internal class MapboxMapViewController(
     }
 
     override suspend fun compositionMarkers(data: List<MarkerState>) = markerController.add(data)
+
+    override fun setMarkerAnimationOverlayHost(host: MarkerAnimationOverlayHost?) {
+        (markerController.renderer as MapboxMarkerOverlayRenderer).animationOverlayHost = host
+    }
 
     override suspend fun updateMarker(state: MarkerState) = markerController.update(state)
 
