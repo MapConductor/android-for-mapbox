@@ -8,6 +8,9 @@ import com.mapbox.maps.ScreenCoordinate
 import com.mapbox.maps.extension.style.layers.addLayer
 import com.mapbox.maps.extension.style.layers.addLayerAbove
 import com.mapbox.maps.extension.style.layers.addLayerBelow
+import com.mapbox.maps.extension.style.layers.properties.generated.ProjectionName
+import com.mapbox.maps.extension.style.projection.generated.Projection
+import com.mapbox.maps.extension.style.projection.generated.setProjection
 import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.plugin.animation.MapAnimationOptions
 import com.mapbox.maps.plugin.animation.flyTo
@@ -24,15 +27,16 @@ import com.mapconductor.core.circle.CircleEvent
 import com.mapconductor.core.circle.CircleState
 import com.mapconductor.core.circle.OnCircleEventHandler
 import com.mapconductor.core.controller.BaseMapViewController
+import com.mapconductor.core.controller.OverlayControllerInterface
 import com.mapconductor.core.features.GeoRectBounds
 import com.mapconductor.core.groundimage.GroundImageEvent
 import com.mapconductor.core.groundimage.GroundImageState
 import com.mapconductor.core.groundimage.OnGroundImageEventHandler
 import com.mapconductor.core.map.MapCameraPosition
-import com.mapconductor.core.controller.OverlayControllerInterface
+import com.mapconductor.core.map.MapProjection
 import com.mapconductor.core.map.VisibleRegion
-import com.mapconductor.core.marker.MarkerEventControllerInterface
 import com.mapconductor.core.marker.MarkerAnimationOverlayHost
+import com.mapconductor.core.marker.MarkerEventControllerInterface
 import com.mapconductor.core.marker.MarkerOverlayRendererInterface
 import com.mapconductor.core.marker.MarkerRenderingStrategyInterface
 import com.mapconductor.core.marker.MarkerState
@@ -69,6 +73,7 @@ typealias MapboxMapDesignTypeChangeHandler = (MapboxDesignType) -> Unit
 
 internal class MapboxMapViewController(
     override val holder: MapboxMapViewHolder,
+    private var projection: MapProjection,
     private val markerController: MapboxMarkerController,
     private val polylineController: MapboxPolylineController,
     private val polygonController: MapboxPolygonConductor,
@@ -181,6 +186,7 @@ internal class MapboxMapViewController(
         }
         holder.map.subscribeStyleLoaded {
             holder.map.style?.let { style ->
+                applyProjection()
                 // When style reloads, our runtime sources/layers/images are dropped.
                 // Reattach overlays and ensure marker images exist, then redraw.
                 attachOverlaySourcesAndLayers(style)
@@ -228,6 +234,24 @@ internal class MapboxMapViewController(
 
         holder.map.removeOnMoveListener(this)
         holder.map.addOnMoveListener(this)
+    }
+
+    fun setProjection(value: MapProjection) {
+        if (projection == value) return
+        projection = value
+        mainCoroutine.launch {
+            applyProjection()
+        }
+    }
+
+    private fun applyProjection() {
+        if (holder.map.style == null) return
+        val name =
+            when (projection) {
+                MapProjection.Mercator -> ProjectionName.MERCATOR
+                MapProjection.Globe -> ProjectionName.GLOBE
+            }
+        holder.map.setProjection(Projection(name))
     }
 
     override suspend fun clearOverlays() {

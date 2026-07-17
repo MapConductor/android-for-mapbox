@@ -161,7 +161,6 @@ class MapboxRasterLayerOverlayRenderer(
                 // tileCacheBudget(TileCacheBudget(TileCacheBudgetInMegabytes(0L)))
                 source.minZoom?.let { minzoom(it.toLong()) }
                 source.maxZoom?.let { maxzoom(it.toLong()) }
-                source.attribution?.let { attribution(it) }
                 if (source.scheme == TileScheme.TMS) {
                     // Mapbox raster sources default to XYZ; TMS is best-effort.
                     // If needed, provide a TMS-compatible URL template instead.

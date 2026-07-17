@@ -1,6 +1,7 @@
 package com.mapconductor.mapbox
 
 import com.mapbox.maps.Style
+import com.mapconductor.core.map.AttributionRule
 import com.mapconductor.core.map.MapDesignTypeInterface
 import com.mapconductor.mapbox.MapboxMapDesign.Companion.MAPBOX_URL
 
@@ -8,6 +9,7 @@ typealias MapboxDesignType = MapDesignTypeInterface<String>
 
 sealed class MapboxMapDesign(
     override val id: String,
+    override val attributionRules: List<AttributionRule> = emptyList(),
 ) : MapboxDesignType {
     object Standard : MapboxMapDesign("standard")
 
@@ -31,7 +33,8 @@ sealed class MapboxMapDesign(
 
     class Custom(
         layerId: String,
-    ) : MapboxMapDesign(layerId)
+        attributionRules: List<AttributionRule> = emptyList(),
+    ) : MapboxMapDesign(layerId, attributionRules)
 
     override fun getValue(): String = "${MAPBOX_URL}/${this.id}"
 

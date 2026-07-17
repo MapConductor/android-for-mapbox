@@ -2,6 +2,7 @@
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -13,12 +14,13 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.mapbox.maps.MapInitOptions
 import com.mapbox.maps.MapView
 import com.mapconductor.compose.map.MapViewBase
-import com.mapconductor.core.circle.CircleManager
-import com.mapconductor.core.map.MapCameraPositionInterface
-import com.mapconductor.core.map.MutableMapServiceRegistry
 import com.mapconductor.core.OnCameraMoveHandler
 import com.mapconductor.core.OnMapEventHandler
 import com.mapconductor.core.OnMapLoadedHandler
+import com.mapconductor.core.circle.CircleManager
+import com.mapconductor.core.map.MapCameraPositionInterface
+import com.mapconductor.core.map.MapProjection
+import com.mapconductor.core.map.MutableMapServiceRegistry
 import com.mapconductor.core.marker.MarkerEventControllerInterface
 import com.mapconductor.core.marker.MarkerManager
 import com.mapconductor.core.marker.MarkerOverlayRendererInterface
@@ -64,6 +66,7 @@ fun MapboxMapView(
     onCameraMoveStart: OnCameraMoveHandler? = null,
     onCameraMove: OnCameraMoveHandler? = null,
     onCameraMoveEnd: OnCameraMoveHandler? = null,
+    projection: MapProjection = MapProjection.Mercator,
     content: (@Composable MapboxMapViewScope.() -> Unit)? = null,
 ) {
     val holderRef = remember { Ref<MapboxMapViewHolder>() }
@@ -74,6 +77,10 @@ fun MapboxMapView(
     val serviceRegistry = remember { MutableMapServiceRegistry() }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val cameraState = remember { mutableStateOf<MapCameraPositionInterface?>(state.cameraPosition) }
+
+    SideEffect {
+        controllerRef.value?.setProjection(projection)
+    }
 
     MapViewBase(
         state = state,
@@ -116,6 +123,7 @@ fun MapboxMapView(
 
             MapboxMapViewController(
                 holder = holder,
+                projection = projection,
                 markerController = markerController,
                 polylineController = polylineController,
                 polygonController = polygonController,
