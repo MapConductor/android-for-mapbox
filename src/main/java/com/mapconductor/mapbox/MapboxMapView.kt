@@ -18,6 +18,7 @@ import com.mapconductor.core.OnCameraMoveHandler
 import com.mapconductor.core.OnMapEventHandler
 import com.mapconductor.core.OnMapLoadedHandler
 import com.mapconductor.core.circle.CircleManager
+import com.mapconductor.core.map.CameraRestriction
 import com.mapconductor.core.map.MapCameraPositionInterface
 import com.mapconductor.core.map.MapProjection
 import com.mapconductor.core.map.MutableMapServiceRegistry
@@ -59,6 +60,7 @@ fun MapboxMapView(
     state: MapboxViewState,
     modifier: Modifier = Modifier,
     markerTiling: MarkerTilingOptions? = null,
+    cameraRestriction: CameraRestriction? = null,
     sdkInitialize: (suspend (Context) -> Boolean)? = null,
     onMapLoaded: OnMapLoadedHandler? = null,
     onMapClick: OnMapEventHandler? = null,
@@ -176,6 +178,7 @@ fun MapboxMapView(
                 mapController.setMapClickListener(onMapClick)
                 mapController.setMapLongClickListener(onMapLongClick)
                 mapController.setMapDesignTypeChangeListener(state::onMapDesignTypeChange)
+                cameraRestriction?.let { mapController.setCameraRestriction(it) }
                 state.setController(mapController)
 
                 holderRef.value = holder

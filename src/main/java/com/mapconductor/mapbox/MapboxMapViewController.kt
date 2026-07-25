@@ -4,6 +4,7 @@ import MapboxMapViewControllerInterface
 import androidx.compose.ui.geometry.Offset
 import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.geojson.Point
+import com.mapbox.maps.CameraBoundsOptions
 import com.mapbox.maps.ScreenCoordinate
 import com.mapbox.maps.extension.style.layers.addLayer
 import com.mapbox.maps.extension.style.layers.addLayerAbove
@@ -32,7 +33,9 @@ import com.mapconductor.core.features.GeoRectBounds
 import com.mapconductor.core.groundimage.GroundImageEvent
 import com.mapconductor.core.groundimage.GroundImageState
 import com.mapconductor.core.groundimage.OnGroundImageEventHandler
+import com.mapconductor.core.map.CameraRestriction
 import com.mapconductor.core.map.MapCameraPosition
+import com.mapconductor.mapbox.zoom.ZoomAltitudeConverter
 import com.mapconductor.core.map.MapProjection
 import com.mapconductor.core.map.VisibleRegion
 import com.mapconductor.core.marker.MarkerAnimationOverlayHost
@@ -430,6 +433,17 @@ internal class MapboxMapViewController(
                 animationOptions = animationOptions,
                 animatorListener = animatorListener,
             )
+        }
+    }
+
+    override fun setCameraRestriction(restriction: CameraRestriction?) {
+        val builder = CameraBoundsOptions.Builder()
+        builder.bounds(restriction?.bounds?.toGeoBox())
+        // 統一ズーム（Google 準拠）を Mapbox ズームへ変換して適用。
+        builder.minZoom(restriction?.minZoom?.let { ZoomAltitudeConverter.googleZoomToMapboxZoom(it) })
+        builder.maxZoom(restriction?.maxZoom?.let { ZoomAltitudeConverter.googleZoomToMapboxZoom(it) })
+        mainCoroutine.launch {
+            holder.map.setBounds(builder.build())
         }
     }
 
