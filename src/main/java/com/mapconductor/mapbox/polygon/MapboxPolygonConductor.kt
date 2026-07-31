@@ -82,6 +82,7 @@ class MapboxPolygonConductor(
     }
 
     fun dispatchClick(event: PolygonEvent) {
+        // 配送座標の wrap は PolygonEvent の生成時に一元化済み。
         event.state.onClick?.invoke(event)
         clickListener?.invoke(event)
     }
