@@ -10,14 +10,11 @@ import com.mapconductor.core.circle.AbstractCircleOverlayRenderer
 import com.mapconductor.core.circle.CircleEntityInterface
 import com.mapconductor.core.circle.CircleManagerInterface
 import com.mapconductor.core.circle.CircleState
-import com.mapconductor.core.features.GeoPoint
+import com.mapconductor.core.geometry.circleToRing
+import com.mapconductor.core.geometry.closeRing
 import com.mapconductor.mapbox.MapboxActualCircle
 import com.mapconductor.mapbox.MapboxMapViewHolder
 import com.mapconductor.mapbox.toMapboxColorString
-import com.mapconductor.mapbox.toPoint
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sin
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -74,22 +71,14 @@ class MapboxCircleOverlayRenderer(
         }
     }
 
+    /**
+     * コア共通の [circleToRing] でリングを生成する。リングは中心経度まわりに連続化
+     * （unwrap）されており、Mapbox GL は ±180 を超える経度を扱えるため、±180 を跨ぐ円も
+     * 分割せず 1 枚の Polygon として描画できる（子午線の継ぎ目が出ない）。
+     */
     private fun createCirclePolygon(state: CircleState): Polygon {
-        val center = GeoPoint.from(state.center).toPoint()
-        val lat = center.latitude()
-        val lng = center.longitude()
-        val segments = 64
-        val latCorrection = if (state.geodesic) cos(Math.toRadians(lat)) else 1.0
-        val metersPerDegree = 111320.0
-
-        val ring = (0 until segments).map { i ->
-            val angle = 2.0 * PI * i / segments
-            val deltaLat = state.radiusMeters / metersPerDegree * cos(angle)
-            val deltaLng = state.radiusMeters / (metersPerDegree * latCorrection) * sin(angle)
-            Point.fromLngLat(lng + deltaLng, lat + deltaLat)
-        }.toMutableList()
-        ring.add(ring.first())
-
-        return Polygon.fromLngLats(listOf(ring))
+        val ring = circleToRing(state.center, state.radiusMeters, state.geodesic)
+        val closed = closeRing(ring.map { Point.fromLngLat(it.longitude, it.latitude) })
+        return Polygon.fromLngLats(listOf(closed))
     }
 }

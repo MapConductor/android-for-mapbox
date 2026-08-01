@@ -28,9 +28,9 @@ internal fun BitmapIcon.toPointAnnotationOptions(): PointAnnotationOptions {
 }
 
 fun Color.toMapboxColorString(): String {
-    val red = this.red * 255
-    val green = this.green * 255
-    val blue = this.blue * 255
+    val red = (this.red * 255).toInt()
+    val green = (this.green * 255).toInt()
+    val blue = (this.blue * 255).toInt()
     val alpha = this.alpha
     return "rgba($red, $green, $blue, $alpha)"
 }
