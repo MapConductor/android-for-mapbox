@@ -1,6 +1,7 @@
 package com.mapconductor.mapbox
 
 import MapboxMapViewControllerInterface
+import android.animation.Animator
 import androidx.compose.ui.geometry.Offset
 import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.geojson.Point
@@ -21,6 +22,7 @@ import com.mapbox.maps.plugin.gestures.OnMoveListener
 import com.mapbox.maps.plugin.gestures.addOnMapClickListener
 import com.mapbox.maps.plugin.gestures.addOnMapLongClickListener
 import com.mapbox.maps.plugin.gestures.addOnMoveListener
+import com.mapbox.maps.plugin.gestures.gestures
 import com.mapbox.maps.plugin.gestures.removeOnMapClickListener
 import com.mapbox.maps.plugin.gestures.removeOnMapLongClickListener
 import com.mapbox.maps.plugin.gestures.removeOnMoveListener
@@ -35,8 +37,8 @@ import com.mapconductor.core.groundimage.GroundImageState
 import com.mapconductor.core.groundimage.OnGroundImageEventHandler
 import com.mapconductor.core.map.CameraRestriction
 import com.mapconductor.core.map.MapCameraPosition
-import com.mapconductor.mapbox.zoom.ZoomAltitudeConverter
 import com.mapconductor.core.map.MapProjection
+import com.mapconductor.core.map.MapUISettings
 import com.mapconductor.core.map.VisibleRegion
 import com.mapconductor.core.marker.MarkerAnimationOverlayHost
 import com.mapconductor.core.marker.MarkerEventControllerInterface
@@ -64,9 +66,9 @@ import com.mapconductor.mapbox.marker.StrategyMapboxMarkerEventController
 import com.mapconductor.mapbox.polygon.MapboxPolygonConductor
 import com.mapconductor.mapbox.polyline.MapboxPolylineController
 import com.mapconductor.mapbox.raster.MapboxRasterLayerController
+import com.mapconductor.mapbox.zoom.ZoomAltitudeConverter
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
-import android.animation.Animator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -433,6 +435,19 @@ internal class MapboxMapViewController(
                 animationOptions = animationOptions,
                 animatorListener = animatorListener,
             )
+        }
+    }
+
+
+    override fun applyUISettings(settings: MapUISettings) {
+        holder.mapView.gestures.apply {
+            scrollEnabled = settings.scrollGesture
+            pinchToZoomEnabled = settings.zoomGesture
+            doubleTapToZoomInEnabled = settings.zoomGesture
+            doubleTouchToZoomOutEnabled = settings.zoomGesture
+            quickZoomEnabled = settings.zoomGesture
+            rotateEnabled = settings.rotateGesture
+            pitchEnabled = settings.tiltGesture
         }
     }
 
