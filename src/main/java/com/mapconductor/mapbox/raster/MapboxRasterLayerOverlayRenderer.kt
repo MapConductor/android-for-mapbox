@@ -6,6 +6,7 @@ import com.mapbox.maps.extension.style.layers.addLayerBelow
 import com.mapbox.maps.extension.style.layers.generated.rasterLayer
 import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.sources.generated.rasterSource
+import com.mapconductor.core.raster.RasterHeaderRuleSet
 import com.mapconductor.core.raster.RasterLayerEntityInterface
 import com.mapconductor.core.raster.RasterLayerOverlayRendererInterface
 import com.mapconductor.core.raster.RasterLayerSource
@@ -25,11 +26,13 @@ class MapboxRasterLayerOverlayRenderer(
 
     private fun isMarkerTileRaster(state: RasterLayerState): Boolean = state.id.startsWith(MARKER_TILE_RASTER_ID_PREFIX)
 
+    /** Mapbox Android はタイル要求を書き換える公開 API を持たない。 */
     override suspend fun onAdd(
         data: List<RasterLayerOverlayRendererInterface.AddParamsInterface>,
     ): List<MapboxRasterLayerHandle?> =
         data
             .map { params ->
+                RasterHeaderRuleSet.warnUnsupported(provider = "Mapbox", state = params.state)
                 addLayer(params.state).also { handle ->
                     if (handle != null) {
                         stateById[params.state.id] = params.state

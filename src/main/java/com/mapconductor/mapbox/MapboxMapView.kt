@@ -21,7 +21,6 @@ import com.mapconductor.core.circle.CircleManager
 import com.mapconductor.core.map.CameraRestriction
 import com.mapconductor.core.map.MapCameraPositionInterface
 import com.mapconductor.core.map.MapProjection
-import com.mapconductor.core.map.MutableMapServiceRegistry
 import com.mapconductor.core.marker.MarkerEventControllerInterface
 import com.mapconductor.core.marker.MarkerManager
 import com.mapconductor.core.marker.MarkerOverlayRendererInterface
@@ -76,7 +75,6 @@ fun MapboxMapView(
     val controllerRef = remember { Ref<MapboxMapViewController>() }
     val scope = remember { MapboxMapViewScope() }
     val registry = remember { scope.buildRegistry() }
-    val serviceRegistry = remember { MutableMapServiceRegistry() }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val cameraState = remember { mutableStateOf<MapCameraPositionInterface?>(state.cameraPosition) }
 
@@ -106,7 +104,6 @@ fun MapboxMapView(
                 it.onStart()
             }
         },
-        serviceRegistry = serviceRegistry,
         holderProvider = { mapView -> MapboxMapViewHolder(mapView, mapView.mapboxMap) },
         controllerProvider = { holder ->
 
@@ -133,8 +130,7 @@ fun MapboxMapView(
                 circleController = circleController,
                 rasterLayerController = rasterLayerController,
             ).also { mapController ->
-                serviceRegistry.clear()
-                serviceRegistry.put(
+                state.serviceRegistry.put(
                     MarkerRenderingSupportKey,
                     object : MarkerRenderingSupport<MapboxActualMarker> {
                         override fun createMarkerRenderer(
