@@ -1,21 +1,11 @@
 package com.mapconductor.mapbox
 
 import MapboxMapViewControllerInterface
-import android.animation.Animator
-import androidx.compose.ui.geometry.Offset
 import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.geojson.Point
-import com.mapbox.maps.CameraBoundsOptions
-import com.mapbox.maps.ScreenCoordinate
-import com.mapbox.maps.extension.style.layers.addLayer
-import com.mapbox.maps.extension.style.layers.addLayerAbove
-import com.mapbox.maps.extension.style.layers.addLayerBelow
 import com.mapbox.maps.extension.style.layers.properties.generated.ProjectionName
 import com.mapbox.maps.extension.style.projection.generated.Projection
 import com.mapbox.maps.extension.style.projection.generated.setProjection
-import com.mapbox.maps.extension.style.sources.addSource
-import com.mapbox.maps.plugin.animation.MapAnimationOptions
-import com.mapbox.maps.plugin.animation.flyTo
 import com.mapbox.maps.plugin.gestures.OnMapClickListener
 import com.mapbox.maps.plugin.gestures.OnMapLongClickListener
 import com.mapbox.maps.plugin.gestures.OnMoveListener
@@ -26,20 +16,18 @@ import com.mapbox.maps.plugin.gestures.gestures
 import com.mapbox.maps.plugin.gestures.removeOnMapClickListener
 import com.mapbox.maps.plugin.gestures.removeOnMapLongClickListener
 import com.mapbox.maps.plugin.gestures.removeOnMoveListener
-import com.mapconductor.core.circle.CircleEvent
 import com.mapconductor.core.circle.CircleState
 import com.mapconductor.core.circle.OnCircleEventHandler
 import com.mapconductor.core.controller.BaseMapViewController
 import com.mapconductor.core.controller.OverlayControllerInterface
+import com.mapconductor.core.features.GeoPoint
 import com.mapconductor.core.features.GeoRectBounds
-import com.mapconductor.core.groundimage.GroundImageEvent
 import com.mapconductor.core.groundimage.GroundImageState
 import com.mapconductor.core.groundimage.OnGroundImageEventHandler
 import com.mapconductor.core.map.CameraRestriction
 import com.mapconductor.core.map.MapCameraPosition
 import com.mapconductor.core.map.MapProjection
 import com.mapconductor.core.map.MapUISettings
-import com.mapconductor.core.map.VisibleRegion
 import com.mapconductor.core.marker.MarkerAnimationOverlayHost
 import com.mapconductor.core.marker.MarkerEventControllerInterface
 import com.mapconductor.core.marker.MarkerOverlayRendererInterface
@@ -48,10 +36,8 @@ import com.mapconductor.core.marker.MarkerState
 import com.mapconductor.core.marker.OnMarkerEventHandler
 import com.mapconductor.core.marker.StrategyMarkerController
 import com.mapconductor.core.polygon.OnPolygonEventHandler
-import com.mapconductor.core.polygon.PolygonEvent
 import com.mapconductor.core.polygon.PolygonState
 import com.mapconductor.core.polyline.OnPolylineEventHandler
-import com.mapconductor.core.polyline.PolylineEvent
 import com.mapconductor.core.polyline.PolylineState
 import com.mapconductor.core.raster.RasterLayerState
 import com.mapconductor.mapbox.circle.MapboxCircleController
@@ -66,25 +52,23 @@ import com.mapconductor.mapbox.marker.StrategyMapboxMarkerEventController
 import com.mapconductor.mapbox.polygon.MapboxPolygonConductor
 import com.mapconductor.mapbox.polyline.MapboxPolylineController
 import com.mapconductor.mapbox.raster.MapboxRasterLayerController
-import com.mapconductor.mapbox.zoom.ZoomAltitudeConverter
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 typealias MapboxMapDesignTypeChangeHandler = (MapboxDesignType) -> Unit
 
 internal class MapboxMapViewController(
     override val holder: MapboxMapViewHolder,
-    private var projection: MapProjection,
-    private val markerController: MapboxMarkerController,
-    private val polylineController: MapboxPolylineController,
-    private val polygonController: MapboxPolygonConductor,
-    private val groundImageController: MapboxGroundImageController,
-    private val circleController: MapboxCircleController,
-    private val rasterLayerController: MapboxRasterLayerController,
+    internal var projection: MapProjection,
+    internal val markerController: MapboxMarkerController,
+    internal val polylineController: MapboxPolylineController,
+    internal val polygonController: MapboxPolygonConductor,
+    internal val groundImageController: MapboxGroundImageController,
+    internal val circleController: MapboxCircleController,
+    internal val rasterLayerController: MapboxRasterLayerController,
     override val mainCoroutine: CoroutineScope = CoroutineScope(Dispatchers.Main),
     override val defaultCoroutine: CoroutineScope = CoroutineScope(Dispatchers.Default),
 ) : BaseMapViewController(),
@@ -93,20 +77,20 @@ internal class MapboxMapViewController(
     OnMapLongClickListener,
     OnMoveListener {
     // Track created z-indexed polygon layers to manage add/remove without enumerating style layers
-    private val polygonZLayers: MutableSet<Int> = mutableSetOf()
-    private val markerEventControllers = mutableListOf<MapboxMarkerEventControllerInterface>()
-    private var activeDragController: MapboxMarkerEventControllerInterface? = null
+    internal val polygonZLayers: MutableSet<Int> = mutableSetOf()
+    internal val markerEventControllers = mutableListOf<MapboxMarkerEventControllerInterface>()
+    internal var activeDragController: MapboxMarkerEventControllerInterface? = null
 
-    private val cameraUpdateToken = AtomicInteger(0)
-    private var lastLogicalCameraPosition: MapCameraPosition? = null
+    internal val cameraUpdateToken = AtomicInteger(0)
+    internal var lastLogicalCameraPosition: MapCameraPosition? = null
 
-    private var markerClickListener: OnMarkerEventHandler? = null
-    private var markerDragStartListener: OnMarkerEventHandler? = null
-    private var markerDragListener: OnMarkerEventHandler? = null
-    private var markerDragEndListener: OnMarkerEventHandler? = null
-    private var markerAnimateStartListener: OnMarkerEventHandler? = null
-    private var markerAnimateEndListener: OnMarkerEventHandler? = null
-    private var involvedMapInitializedCallback: Boolean = false
+    internal var markerClickListener: OnMarkerEventHandler? = null
+    internal var markerDragStartListener: OnMarkerEventHandler? = null
+    internal var markerDragListener: OnMarkerEventHandler? = null
+    internal var markerDragEndListener: OnMarkerEventHandler? = null
+    internal var markerAnimateStartListener: OnMarkerEventHandler? = null
+    internal var markerAnimateEndListener: OnMarkerEventHandler? = null
+    internal var involvedMapInitializedCallback: Boolean = false
 
     init {
         setupListeners()
@@ -131,51 +115,58 @@ internal class MapboxMapViewController(
         }
     }
 
-    private fun attachMarkerLayers(
-        style: com.mapbox.maps.Style,
-        renderer: MapboxMarkerOverlayRenderer,
-    ) {
-        try {
-            style.addSource(renderer.markerLayer.source)
-        } catch (_: Exception) {
-        }
-        try {
-            style.addLayer(renderer.markerLayer.layer)
-        } catch (_: Exception) {
-        }
-        try {
-            style.addSource(renderer.dragLayer.source)
-        } catch (_: Exception) {
-        }
-        try {
-            style.addLayer(renderer.dragLayer.layer)
-        } catch (_: Exception) {
-        }
+    override fun moveCamera(position: MapCameraPosition) = handleMoveCamera(position)
+
+    override fun animateCamera(
+        position: MapCameraPosition,
+        duration: Long,
+    ) = handleAnimateCamera(position, duration)
+
+    override fun setCameraRestriction(restriction: CameraRestriction?) = handleCameraRestriction(restriction)
+
+    override fun fitBounds(
+        bounds: GeoRectBounds,
+        padding: Int,
+    ) = handleFitBounds(bounds, padding)
+
+    override fun onMapLongClick(point: Point): Boolean = handleMapLongClick(point)
+
+    override fun onMapClick(point: Point): Boolean = handleMapClick(point)
+
+    override fun onMove(detector: MoveGestureDetector): Boolean = handleMove(detector)
+
+    override fun onMoveBegin(detector: MoveGestureDetector) = handleMoveBegin(detector)
+
+    override fun onMoveEnd(detector: MoveGestureDetector) = handleMoveEnd(detector)
+
+    // 拡張ファイル（Style / Camera / Gestures）からは基底クラスの protected へ
+    // 触れないため、ここで internal の入口を用意しておく。
+    internal fun emitMapClick(point: GeoPoint) {
+        mapClickCallback?.invoke(point)
     }
 
-    private fun attachOverlaySourcesAndLayers(style: com.mapbox.maps.Style) {
-        // Polygon sources only (z-indexed layers added below)
-        style.addSource(polygonController.polylineOverlay.layer.source)
-        style.addSource(polygonController.polygonOverlay.layer.source)
+    internal fun emitMapLongClick(point: GeoPoint) {
+        mapLongClickCallback?.invoke(point)
+    }
 
-        // Circle fill (fill pass) then stroke (line pass) — both below general polyline
-        style.addSource(circleController.renderer.layer.source)
-        style.addLayer(circleController.renderer.layer.fillLayer)
-        style.addLayer(circleController.renderer.layer.strokeLayer)
+    internal fun emitMapInitialized() {
+        mapInitializedCallback?.invoke()
+    }
 
-        // Polyline (general)
-        style.addSource(polylineController.renderer.layer.source)
-        style.addLayer(polylineController.renderer.layer.layer)
+    internal fun emitCameraMoveStart(position: MapCameraPosition) {
+        cameraMoveStartCallback?.invoke(position)
+    }
 
-        // Add z-indexed polygon layers below general polylines
-        ensurePolygonZLayers(style)
+    internal fun emitCameraMove(position: MapCameraPosition) {
+        cameraMoveCallback?.invoke(position)
+    }
 
-        // Marker + drag layers
-        attachMarkerLayers(style, markerController.renderer as MapboxMarkerOverlayRenderer)
-        markerEventControllers
-            .map { it.renderer }
-            .filter { it != markerController.renderer }
-            .forEach { renderer -> attachMarkerLayers(style, renderer) }
+    internal fun emitCameraMoveEnd(position: MapCameraPosition) {
+        cameraMoveEndCallback?.invoke(position)
+    }
+
+    internal suspend fun emitCameraPosition(position: MapCameraPosition) {
+        notifyMapCameraPosition(position)
     }
 
     fun setupListeners() {
@@ -329,116 +320,6 @@ internal class MapboxMapViewController(
     override fun hasRasterLayer(state: RasterLayerState): Boolean =
         this.rasterLayerController.rasterLayerManager.hasEntity(state.id)
 
-    private fun getMapCameraPosition(): MapCameraPosition? {
-//        val options = cameraChanged.toMapCameraPosition()
-        val camera = readLogicalCameraPosition()
-
-        val mapWidth = holder.mapView.width.toFloat()
-        val mapHeight = holder.mapView.height.toFloat()
-        val nearLeft =
-            holder.fromScreenOffsetSync(
-                Offset(0.0f, mapHeight),
-            ) ?: return null
-        val nearRight =
-            holder.fromScreenOffsetSync(
-                Offset(mapWidth, mapHeight),
-            ) ?: return null
-        val farLeft =
-            holder.fromScreenOffsetSync(
-                Offset(0.0f, 0.0f),
-            ) ?: return null
-        val farRight =
-            holder.fromScreenOffsetSync(
-                Offset(mapWidth, 0.0f),
-            ) ?: return null
-
-        val bounds = GeoRectBounds()
-        bounds.extend(nearLeft)
-        bounds.extend(nearRight)
-        bounds.extend(farLeft)
-        bounds.extend(farRight)
-        val visibleRegion =
-            VisibleRegion(
-                bounds = bounds,
-                nearLeft = nearLeft,
-                nearRight = nearRight,
-                farLeft = farLeft,
-                farRight = farRight,
-            )
-        val mapCameraPosition =
-            camera.copy(
-                visibleRegion = visibleRegion,
-            )
-        lastLogicalCameraPosition = mapCameraPosition
-        return mapCameraPosition
-    }
-
-    private fun readLogicalCameraPosition(): MapCameraPosition =
-        MapboxCameraStateSnapshot(
-            cameraState = holder.map.cameraState,
-            logicalTiltHint = lastLogicalCameraPosition?.tilt,
-        ).toMapCameraPosition()
-
-    /**
-     * Async version of getMapCameraPosition that can be called from background threads.
-     * Uses withContext to ensure Mapbox SDK calls run on the main thread.
-     */
-    private suspend fun getMapCameraPositionAsync(): MapCameraPosition? =
-        withContext(mainCoroutine.coroutineContext) {
-            getMapCameraPosition()
-        }
-
-    override fun moveCamera(position: MapCameraPosition) {
-        val cameraOptions = position.toCameraOptions()
-        lastLogicalCameraPosition = position
-        mainCoroutine.launch {
-            holder.map.setCamera(cameraOptions)
-        }
-    }
-
-    override fun animateCamera(
-        position: MapCameraPosition,
-        duration: Long,
-    ) {
-        val targetCamera = position.toCameraOptions()
-        lastLogicalCameraPosition = position
-
-        val animationOptions =
-            MapAnimationOptions
-                .Builder()
-                .duration(duration)
-                .build()
-
-        val animatorListener =
-            object : Animator.AnimatorListener {
-                override fun onAnimationStart(animation: Animator) {
-                    cameraMoveStartCallback?.invoke(position)
-                }
-
-                override fun onAnimationEnd(animation: Animator) {
-                }
-
-                override fun onAnimationCancel(animation: Animator) {
-                    val mapCameraPosition = readLogicalCameraPosition()
-                    lastLogicalCameraPosition = mapCameraPosition
-                    cameraMoveCallback?.invoke(mapCameraPosition)
-                }
-
-                override fun onAnimationRepeat(animation: Animator) {
-                    // Do nothing here
-                }
-            }
-
-        mainCoroutine.launch {
-            holder.map.flyTo(
-                cameraOptions = targetCamera,
-                animationOptions = animationOptions,
-                animatorListener = animatorListener,
-            )
-        }
-    }
-
-
     override fun applyUISettings(settings: MapUISettings) {
         holder.mapView.gestures.apply {
             scrollEnabled = settings.scrollGesture
@@ -451,155 +332,15 @@ internal class MapboxMapViewController(
         }
     }
 
-    override fun setCameraRestriction(restriction: CameraRestriction?) {
-        val builder = CameraBoundsOptions.Builder()
-        builder.bounds(restriction?.bounds?.toGeoBox())
-        // 統一ズーム（Google 準拠）を Mapbox ズームへ変換して適用。
-        builder.minZoom(restriction?.minZoom?.let { ZoomAltitudeConverter.googleZoomToMapboxZoom(it) })
-        builder.maxZoom(restriction?.maxZoom?.let { ZoomAltitudeConverter.googleZoomToMapboxZoom(it) })
-        mainCoroutine.launch {
-            holder.map.setBounds(builder.build())
-        }
-    }
-
-    override fun fitBounds(
-        bounds: GeoRectBounds,
-        padding: Int,
-    ) {
-        val coordinateBounds = bounds.toGeoBox() ?: return
-        val edgeInsets =
-            com.mapbox.maps.EdgeInsets(
-                padding.toDouble(),
-                padding.toDouble(),
-                padding.toDouble(),
-                padding.toDouble(),
-            )
-        val cameraOptions = holder.map.cameraForCoordinateBounds(coordinateBounds, edgeInsets)
-        lastLogicalCameraPosition = cameraOptions.toMapCameraPosition()
-        mainCoroutine.launch {
-            holder.map.setCamera(cameraOptions)
-        }
-    }
-
-    override fun getControllers(): Map<String, OverlayControllerInterface<*, *>> = mapOf(
-        "marker" to markerController,
-        "polyline" to polylineController,
-        "polygon" to polygonController,
-        "circle" to circleController,
-        "ground_image" to groundImageController,
-        "raster_layer" to rasterLayerController,
-    )
-
-    override fun onMapLongClick(point: Point): Boolean {
-        val touchPosition = point.toGeoPoint()
-        markerEventControllers.forEach { controller ->
-            controller.find(touchPosition)?.let { entity ->
-                if (entity.state.draggable) {
-                    activeDragController = controller
-                    controller.setSelectedMarker(entity)
-                    controller.dispatchDragStart(entity.state)
-                    return true
-                }
-            }
-        }
-
-        mapLongClickCallback?.invoke(touchPosition)
-        return true
-    }
-
-    override fun onMapClick(point: Point): Boolean {
-        val touchPosition = point.toGeoPoint()
-
-        markerEventControllers.forEach { controller ->
-            controller.find(touchPosition)?.let { entity ->
-                controller.dispatchClick(entity.state)
-                return true
-            }
-        }
-
-        circleController.find(touchPosition)?.let { entity ->
-            val event =
-                CircleEvent(
-                    state = entity.state,
-                    clicked = touchPosition,
-                )
-            circleController.dispatchClick(event)
-            return true
-        }
-
-        groundImageController.find(touchPosition)?.let { entity ->
-            val event =
-                GroundImageEvent(
-                    state = entity.state,
-                    clicked = touchPosition,
-                )
-            groundImageController.dispatchClick(event)
-            return true
-        }
-
-        polylineController.findWithClosestPoint(touchPosition)?.let { hitResult ->
-            val event =
-                PolylineEvent(
-                    state = hitResult.entity.state,
-                    clicked = hitResult.closestPoint,
-                )
-            mainCoroutine.launch {
-                polylineController.dispatchClick(event)
-            }
-            return true
-        }
-
-        polygonController.find(touchPosition)?.let { polygonEntity ->
-            val event =
-                PolygonEvent(
-                    state = polygonEntity.state,
-                    clicked = touchPosition,
-                )
-            polygonController.dispatchClick(event)
-            return true
-        }
-
-        mapClickCallback?.invoke(touchPosition)
-        return true
-    }
-
-    override fun onMove(detector: MoveGestureDetector): Boolean {
-        val controller = activeDragController ?: return false
-        val entity = controller.getSelectedMarker() ?: return false
-        val screenCoordinate =
-            Offset(
-                detector.focalPoint.x,
-                detector.focalPoint.y,
-            )
-
-        holder.fromScreenOffsetSync(screenCoordinate)?.let {
-            entity.state.position = it
-            controller.renderer.dragLayer.updatePosition(it)
-            controller.renderer.drawDragLayer()
-        }
-
-        controller.dispatchDrag(entity.state)
-        return true
-    }
-
-    override fun onMoveBegin(detector: MoveGestureDetector) {
-        // Do nothing here
-    }
-
-    override fun onMoveEnd(detector: MoveGestureDetector) {
-        val controller = activeDragController ?: return
-        val entity = controller.getSelectedMarker() ?: return
-        val screenCoordinate =
-            ScreenCoordinate(
-                detector.focalPoint.x.toDouble(),
-                detector.focalPoint.y.toDouble(),
-            )
-        val point = holder.map.coordinateForPixel(screenCoordinate)
-        controller.renderer.dragLayer.updatePosition(point.toGeoPoint())
-        controller.setSelectedMarker(null)
-        controller.dispatchDragEnd(entity.state)
-        activeDragController = null
-    }
+    override fun getControllers(): Map<String, OverlayControllerInterface<*, *>> =
+        mapOf(
+            "marker" to markerController,
+            "polyline" to polylineController,
+            "polygon" to polygonController,
+            "circle" to circleController,
+            "ground_image" to groundImageController,
+            "raster_layer" to rasterLayerController,
+        )
 
     @Deprecated("Use MarkerState.onDragStart instead.")
     override fun setOnMarkerDragStart(listener: OnMarkerEventHandler?) {
@@ -647,9 +388,9 @@ internal class MapboxMapViewController(
         polygonController.clickListener = listener
     }
 
-    private var mapDesignType: MapboxDesignType = MapboxMapDesign.Standard
+    internal var mapDesignType: MapboxDesignType = MapboxMapDesign.Standard
 
-    private var mapDesignTypeChangeListener: MapboxMapDesignTypeChangeHandler? = null
+    internal var mapDesignTypeChangeListener: MapboxMapDesignTypeChangeHandler? = null
 
     override fun setMapDesignType(value: MapboxDesignType) {
         mainCoroutine.launch {
@@ -659,127 +400,6 @@ internal class MapboxMapViewController(
 
     override fun setMapDesignTypeChangeListener(listener: MapboxMapDesignTypeChangeHandler) {
         mapDesignTypeChangeListener = listener
-    }
-
-    private fun ensurePolygonZLayers(style: com.mapbox.maps.Style) {
-        val fillSourceId = polygonController.polygonOverlay.layer.sourceId
-        val outlineSourceId = polygonController.polylineOverlay.layer.sourceId
-        val anchorId = polylineController.renderer.layer.layerId
-
-        val zSet =
-            polygonController.polygonOverlay.polygonManager
-                .allEntities()
-                .map { it.state.zIndex }
-                .toSet()
-
-        // Remove stale z-indexed layers we previously created
-        val toRemove = polygonZLayers.subtract(zSet)
-        toRemove.forEach { z ->
-            val fillId = "polygon-fill-layer-$z"
-            val outlineId = "polygon-outline-layer-$z"
-            try {
-                style.removeStyleLayer(outlineId)
-            } catch (_: Exception) {
-            }
-            try {
-                style.removeStyleLayer(fillId)
-            } catch (_: Exception) {
-            }
-        }
-
-        val zList = zSet.toList().sorted()
-        zList.forEach { z ->
-            val fillId = "polygon-fill-layer-$z"
-            val outlineId = "polygon-outline-layer-$z"
-
-            // Fill layer for this z
-            if (!style.styleLayerExists(fillId)) {
-                val layer =
-                    com.mapbox.maps.extension.style.layers.generated.fillLayer(fillId, fillSourceId) {
-                        filter(
-                            com.mapbox.maps.extension.style.expressions.generated.Expression.eq(
-                                com.mapbox.maps.extension.style.expressions.generated.Expression
-                                    .get("zIndex"),
-                                com.mapbox.maps.extension.style.expressions.generated.Expression
-                                    .literal(z.toDouble()),
-                            ),
-                        )
-                        fillColor(
-                            com.mapbox.maps.extension.style.expressions.generated.Expression
-                                .get("fillColor"),
-                        )
-                    }
-                try {
-                    style.addLayerBelow(layer, anchorId)
-                } catch (_: Exception) {
-                    style.addLayer(layer)
-                }
-            }
-
-            // Outline layer above its fill
-            if (!style.styleLayerExists(outlineId)) {
-                val layer =
-                    com.mapbox.maps.extension.style.layers.generated.lineLayer(outlineId, outlineSourceId) {
-                        lineJoin(com.mapbox.maps.extension.style.layers.properties.generated.LineJoin.ROUND)
-                        lineCap(com.mapbox.maps.extension.style.layers.properties.generated.LineCap.ROUND)
-                        filter(
-                            com.mapbox.maps.extension.style.expressions.generated.Expression.eq(
-                                com.mapbox.maps.extension.style.expressions.generated.Expression
-                                    .get("zIndex"),
-                                com.mapbox.maps.extension.style.expressions.generated.Expression
-                                    .literal(z.toDouble()),
-                            ),
-                        )
-                        lineColor(
-                            com.mapbox.maps.extension.style.expressions.generated.Expression
-                                .get("strokeColor"),
-                        )
-                        lineWidth(
-                            com.mapbox.maps.extension.style.expressions.generated.Expression
-                                .get("strokeWidth"),
-                        )
-                    }
-                try {
-                    style.addLayerAbove(layer, fillId)
-                } catch (_: Exception) {
-                    style.addLayer(layer)
-                }
-            }
-        }
-        // Update tracked set
-        polygonZLayers.clear()
-        polygonZLayers.addAll(zSet)
-    }
-
-    // Trigger an initial camera update after the view and style are ready
-    fun sendInitialCameraUpdate() {
-        mainCoroutine.launch {
-            if (!involvedMapInitializedCallback) {
-                involvedMapInitializedCallback = true
-                mapInitializedCallback?.invoke()
-            }
-            val mapWidth = holder.mapView.width.toFloat()
-            val mapHeight = holder.mapView.height.toFloat()
-            if (mapWidth <= 0 || mapHeight <= 0) return@launch
-
-            val camera = readLogicalCameraPosition()
-            val nearLeft = holder.fromScreenOffsetSync(Offset(0f, mapHeight)) ?: return@launch
-            val nearRight = holder.fromScreenOffsetSync(Offset(mapWidth, mapHeight)) ?: return@launch
-            val farLeft = holder.fromScreenOffsetSync(Offset(0f, 0f)) ?: return@launch
-            val farRight = holder.fromScreenOffsetSync(Offset(mapWidth, 0f)) ?: return@launch
-
-            val bounds = GeoRectBounds()
-            bounds.extend(nearLeft)
-            bounds.extend(nearRight)
-            bounds.extend(farLeft)
-            bounds.extend(farRight)
-
-            val visibleRegion = VisibleRegion(bounds, nearLeft, nearRight, farLeft, farRight)
-            val mapCameraPosition = camera.copy(visibleRegion = visibleRegion)
-            lastLogicalCameraPosition = mapCameraPosition
-
-            defaultCoroutine.launch { notifyMapCameraPosition(mapCameraPosition) }
-        }
     }
 
     internal fun registerMarkerEventController(controller: MapboxMarkerEventControllerInterface) {

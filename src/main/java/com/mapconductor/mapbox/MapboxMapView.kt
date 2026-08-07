@@ -237,9 +237,7 @@ fun MapboxMapView(
     )
 }
 
-internal fun getPolygonController(
-    holder: MapboxMapViewHolder,
-): MapboxPolygonConductor {
+internal fun getPolygonController(holder: MapboxMapViewHolder): MapboxPolygonConductor {
     val polylineLayer =
         MapboxPolylineLayer(
             sourceId = "polygon-outline-source",

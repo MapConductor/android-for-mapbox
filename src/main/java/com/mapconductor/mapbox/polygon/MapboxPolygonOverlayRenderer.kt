@@ -17,7 +17,6 @@ class MapboxPolygonOverlayRenderer(
     override val holder: MapboxMapViewHolder,
     override val coroutine: CoroutineScope = CoroutineScope(Dispatchers.Main),
 ) : AbstractPolygonOverlayRenderer<MapboxActualPolygon>() {
-
     override suspend fun onRemove(data: List<PolygonEntityInterface<MapboxActualPolygon>>) {
     }
 
@@ -30,14 +29,15 @@ class MapboxPolygonOverlayRenderer(
 
     override suspend fun createPolygon(state: PolygonState): MapboxActualPolygon? {
         val resolved = if (state.holes.size > 1) state.unionHoles() else state
-        val features = createMapboxPolygons(
-            id = resolved.id,
-            points = resolved.points,
-            holes = resolved.holes,
-            geodesic = resolved.geodesic,
-            fillColor = resolved.fillColor,
-            zIndex = resolved.zIndex,
-        )
+        val features =
+            createMapboxPolygons(
+                id = resolved.id,
+                points = resolved.points,
+                holes = resolved.holes,
+                geodesic = resolved.geodesic,
+                fillColor = resolved.fillColor,
+                zIndex = resolved.zIndex,
+            )
 
         if (features.isEmpty()) {
             return null

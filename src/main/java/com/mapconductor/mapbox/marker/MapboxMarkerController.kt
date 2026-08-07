@@ -34,9 +34,10 @@ class MapboxMarkerController private constructor(
     markerManager: MarkerManager<MapboxActualMarker>,
     private val markerTiling: MarkerTilingOptions,
 ) : AbstractMarkerController<MapboxActualMarker>(
-    markerManager = markerManager,
-    renderer = renderer,
-), OnCameraChangeReceiverInterface {
+        markerManager = markerManager,
+        renderer = renderer,
+    ),
+    OnCameraChangeReceiverInterface {
     private var internalSelectedMarker: MarkerEntityInterface<MapboxActualMarker>? = null
 
     private val defaultMarkerIcon: BitmapIcon = DefaultMarkerIcon().toBitmapIcon()

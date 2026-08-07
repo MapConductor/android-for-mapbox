@@ -14,8 +14,8 @@ class MapboxCircleLayer(
     val sourceId: String,
     val layerId: String,
 ) {
-    val fillLayerId = "${layerId}-fill"
-    val strokeLayerId = "${layerId}-stroke"
+    val fillLayerId = "$layerId-fill"
+    val strokeLayerId = "$layerId-stroke"
 
     object Prop {
         const val FILL_COLOR = "fillColor"

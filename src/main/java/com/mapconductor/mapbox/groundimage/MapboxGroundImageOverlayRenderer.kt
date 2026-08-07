@@ -17,6 +17,8 @@ import com.mapconductor.core.groundimage.GroundImageFingerPrint
 import com.mapconductor.core.groundimage.GroundImageState
 import com.mapconductor.mapbox.MapboxActualGroundImage
 import com.mapconductor.mapbox.MapboxMapViewHolder
+import java.nio.ByteBuffer
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Rect
@@ -27,8 +29,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.nio.ByteBuffer
-import android.annotation.SuppressLint
 
 class MapboxGroundImageOverlayRenderer(
     override val holder: MapboxMapViewHolder,
@@ -69,7 +69,12 @@ class MapboxGroundImageOverlayRenderer(
             val coordinates = current.state.bounds.toImageCoordinates() ?: return@withContext groundImage
 
             if (finger.image != prevFinger.image) {
-                style.updateStyleImageSourceImage(groundImage.sourceId, current.state.image.toBitmap().toMapboxImage())
+                style.updateStyleImageSourceImage(
+                    groundImage.sourceId,
+                    current.state.image
+                        .toBitmap()
+                        .toMapboxImage(),
+                )
                 style.setStyleSourceProperty(
                     groundImage.sourceId,
                     "coordinates",
@@ -87,7 +92,11 @@ class MapboxGroundImageOverlayRenderer(
                 style.setStyleLayerProperty(
                     groundImage.layerId,
                     "raster-opacity",
-                    TypeUtils.wrapToValue(current.state.opacity.coerceIn(0.0f, 1.0f).toDouble()),
+                    TypeUtils.wrapToValue(
+                        current.state.opacity
+                            .coerceIn(0.0f, 1.0f)
+                            .toDouble(),
+                    ),
                 )
             }
 
