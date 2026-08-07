@@ -63,8 +63,6 @@ class MapboxViewState(
     @Suppress("UNCHECKED_CAST")
     override fun getMapViewHolder(): MapboxMapViewHolder? = controller?.holder as? MapboxMapViewHolder
 
-    override fun getControllers() = controller?.getControllers()
-
     override fun moveCameraTo(
         cameraPosition: MapCameraPosition,
         durationMillis: Long?,
