@@ -2,6 +2,7 @@ package com.mapconductor.mapbox.marker
 
 import com.mapconductor.core.features.GeoPoint
 import com.mapconductor.core.features.GeoPointInterface
+import com.mapconductor.core.marker.GeoMarkerClickTargetInterface
 import com.mapconductor.core.marker.MarkerEntityInterface
 import com.mapconductor.core.marker.MarkerEventControllerInterface
 import com.mapconductor.core.marker.MarkerState
@@ -9,16 +10,16 @@ import com.mapconductor.core.marker.OnMarkerEventHandler
 import com.mapconductor.core.marker.StrategyMarkerController
 import com.mapconductor.mapbox.MapboxActualMarker
 
-internal interface MapboxMarkerEventControllerInterface : MarkerEventControllerInterface<MapboxActualMarker> {
+internal interface MapboxMarkerEventControllerInterface :
+    MarkerEventControllerInterface<MapboxActualMarker>,
+    // find / dispatchClick はコアの契約。クリックカスケードは
+    // BaseMapViewController.dispatchTap が回す。
+    GeoMarkerClickTargetInterface<MapboxActualMarker> {
     val renderer: MapboxMarkerOverlayRenderer
-
-    fun find(position: GeoPointInterface): MarkerEntityInterface<MapboxActualMarker>?
 
     fun getSelectedMarker(): MarkerEntityInterface<MapboxActualMarker>?
 
     fun setSelectedMarker(entity: MarkerEntityInterface<MapboxActualMarker>?)
-
-    fun dispatchClick(state: MarkerState)
 
     fun dispatchDragStart(state: MarkerState)
 

@@ -1,6 +1,8 @@
 package com.mapconductor.mapbox.polygon
 
-import com.mapconductor.core.controller.OverlayControllerInterface
+import com.mapconductor.core.controller.OverlayHit
+import com.mapconductor.core.controller.OverlayKind
+import com.mapconductor.core.controller.SlottedOverlayController
 import com.mapconductor.core.features.GeoPointInterface
 import com.mapconductor.core.polygon.PolygonEntity
 import com.mapconductor.core.polygon.PolygonEntityInterface
@@ -13,7 +15,7 @@ import com.mapconductor.mapbox.polyline.MapboxPolylineOverlayRenderer
 class MapboxPolygonConductor(
     val polygonOverlay: MapboxPolygonOverlayRenderer,
     val polylineOverlay: MapboxPolylineOverlayRenderer,
-) : OverlayControllerInterface<
+) : SlottedOverlayController<
         PolygonState,
         PolygonEntityInterface<PolygonState>,
     > {
@@ -99,6 +101,32 @@ class MapboxPolygonConductor(
         polygonOverlay.onPostProcess()
         polylineOverlay.onPostProcess()
     }
+
+    // ── Capable ファサードのスロットとクリックカスケードへの参加 ──────────
+    //
+    // このコンダクタはコアの PolygonController を継承していない（ポリゴンの輪郭を
+    // ポリラインとして描くために polygon と polyline の 2 レンダラを束ねている）。
+    // それでも扱いは他プロバイダのポリゴンと同じでなければならないので、
+    // スロットの契約はここで自前で満たす。
+    //
+    // 実際、Step 4 でこれを実装し忘れて `hasPolygon` が常に false になり、
+    // ポリゴン単体の状態更新が黙って捨てられていた。
+
+    override val kind: OverlayKind = OverlayKind.Polygon
+
+    override fun has(id: String): Boolean = polygonOverlay.polygonManager.hasEntity(id)
+
+    @Suppress("UNCHECKED_CAST")
+    override fun setClickListenerAny(listener: Any?) {
+        clickListener = listener as? ((PolygonEvent) -> Unit)
+    }
+
+    override fun resolveTap(position: GeoPointInterface): OverlayHit? =
+        find(position)?.let { entity ->
+            OverlayHit(OverlayKind.Polygon, position) {
+                dispatchClick(PolygonEvent(entity.state, position))
+            }
+        }
 
     override fun destroy() {
         // No native resources to clean up for polygons
