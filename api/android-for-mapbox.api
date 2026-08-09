@@ -249,11 +249,7 @@ public final class com.mapconductor.mapbox.MapboxViewState extends com.mapconduc
   public java.lang.String getId();
   public com.mapconductor.core.map.MapDesignTypeInterface<java.lang.String> getMapDesignType();
   public void setMapDesignType(com.mapconductor.core.map.MapDesignTypeInterface<java.lang.String>);
-  public com.mapconductor.core.map.MapCameraPosition getCameraPosition();
-  public void moveCameraTo(com.mapconductor.core.features.GeoPoint, java.lang.Long);
   public com.mapconductor.mapbox.MapboxMapViewHolder getMapViewHolder();
-  public void moveCameraTo(com.mapconductor.core.map.MapCameraPosition, java.lang.Long);
-  public void fitBounds(com.mapconductor.core.features.GeoRectBounds, int);
   public java.lang.Object getMapDesignType();
   public void setMapDesignType(java.lang.Object);
   public com.mapconductor.core.map.MapViewHolderInterface getMapViewHolder();
