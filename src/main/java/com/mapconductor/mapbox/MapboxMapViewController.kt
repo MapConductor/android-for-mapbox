@@ -25,6 +25,7 @@ import com.mapconductor.core.map.CameraRestriction
 import com.mapconductor.core.map.MapCameraPosition
 import com.mapconductor.core.map.MapProjection
 import com.mapconductor.core.map.MapUISettings
+import com.mapconductor.core.marker.DefaultMarkerEventController
 import com.mapconductor.core.marker.MarkerAnimationOverlayHost
 import com.mapconductor.core.marker.MarkerEventControllerInterface
 import com.mapconductor.core.marker.MarkerOverlayRendererInterface
@@ -38,13 +39,10 @@ import com.mapconductor.core.polyline.OnPolylineEventHandler
 import com.mapconductor.core.polyline.PolylineState
 import com.mapconductor.mapbox.circle.MapboxCircleController
 import com.mapconductor.mapbox.groundimage.MapboxGroundImageController
-import com.mapconductor.mapbox.marker.DefaultMapboxMarkerEventController
 import com.mapconductor.mapbox.marker.MapboxMarkerController
-import com.mapconductor.mapbox.marker.MapboxMarkerEventControllerInterface
 import com.mapconductor.mapbox.marker.MapboxMarkerOverlayRenderer
 import com.mapconductor.mapbox.marker.MarkerDragLayer
 import com.mapconductor.mapbox.marker.MarkerLayer
-import com.mapconductor.mapbox.marker.StrategyMapboxMarkerEventController
 import com.mapconductor.mapbox.polygon.MapboxPolygonConductor
 import com.mapconductor.mapbox.polyline.MapboxPolylineController
 import com.mapconductor.mapbox.raster.MapboxRasterLayerController
@@ -74,8 +72,8 @@ internal class MapboxMapViewController(
     OnMoveListener {
     // Track created z-indexed polygon layers to manage add/remove without enumerating style layers
     internal val polygonZLayers: MutableSet<Int> = mutableSetOf()
-    internal val markerEventControllers = mutableListOf<MapboxMarkerEventControllerInterface>()
-    internal var activeDragController: MapboxMarkerEventControllerInterface? = null
+    internal val markerEventControllers = mutableListOf<DefaultMarkerEventController<MapboxActualMarker>>()
+    internal var activeDragController: DefaultMarkerEventController<MapboxActualMarker>? = null
 
     internal val cameraUpdateToken = AtomicInteger(0)
     internal var lastLogicalCameraPosition: MapCameraPosition? = null
@@ -96,7 +94,7 @@ internal class MapboxMapViewController(
         registerOverlayController(groundImageController)
         registerOverlayController(circleController)
         registerOverlayController(rasterLayerController)
-        registerMarkerEventController(DefaultMapboxMarkerEventController(markerController))
+        registerMarkerEventController(DefaultMarkerEventController(markerController))
 
         markerController.setRasterLayerCallback { state ->
             if (state != null) {
@@ -185,8 +183,9 @@ internal class MapboxMapViewController(
                 // Reattach overlays and ensure marker images exist, then redraw.
                 attachOverlaySourcesAndLayers(style)
                 markerEventControllers.forEach { controller ->
-                    controller.renderer.ensureStyleImages(style)
-                    controller.renderer.redraw()
+                    val renderer = controller.renderer as MapboxMarkerOverlayRenderer
+                    renderer.ensureStyleImages(style)
+                    renderer.redraw()
                 }
                 mainCoroutine.launch {
                     groundImageController.reapplyStyle()
@@ -206,7 +205,7 @@ internal class MapboxMapViewController(
         holder.map.subscribeStyleImageMissing { evt ->
             val missingId = evt.imageId
             markerEventControllers.forEach { controller ->
-                controller.renderer.onStyleImageMissing(missingId)
+                (controller.renderer as MapboxMarkerOverlayRenderer).onStyleImageMissing(missingId)
             }
         }
         holder.map.subscribeMapIdle {
@@ -360,7 +359,7 @@ internal class MapboxMapViewController(
         mapDesignTypeChangeListener = listener
     }
 
-    internal fun registerMarkerEventController(controller: MapboxMarkerEventControllerInterface) {
+    internal fun registerMarkerEventController(controller: DefaultMarkerEventController<MapboxActualMarker>) {
         if (markerEventControllers.contains(controller)) return
         markerEventControllers.add(controller)
         controller.setClickListener(markerClickListener)
@@ -371,9 +370,10 @@ internal class MapboxMapViewController(
         controller.setAnimateEndListener(markerAnimateEndListener)
 
         holder.map.style?.let { style ->
-            attachMarkerLayers(style, controller.renderer)
-            controller.renderer.ensureStyleImages(style)
-            controller.renderer.redraw()
+            val renderer = controller.renderer as MapboxMarkerOverlayRenderer
+            attachMarkerLayers(style, renderer)
+            renderer.ensureStyleImages(style)
+            renderer.redraw()
         }
     }
 
@@ -402,14 +402,11 @@ internal class MapboxMapViewController(
     fun createMarkerEventController(
         controller: StrategyMarkerController<MapboxActualMarker>,
         renderer: MarkerOverlayRendererInterface<MapboxActualMarker>,
-    ): MarkerEventControllerInterface<MapboxActualMarker> =
-        StrategyMapboxMarkerEventController(
-            controller = controller,
-            renderer = renderer as MapboxMarkerOverlayRenderer,
-        )
+    ): MarkerEventControllerInterface<MapboxActualMarker> = DefaultMarkerEventController(controller)
 
     fun registerMarkerEventController(controller: MarkerEventControllerInterface<MapboxActualMarker>) {
-        val typed = controller as? MapboxMarkerEventControllerInterface ?: return
+        @Suppress("UNCHECKED_CAST")
+        val typed = controller as? DefaultMarkerEventController<MapboxActualMarker> ?: return
         registerMarkerEventController(typed)
     }
 }

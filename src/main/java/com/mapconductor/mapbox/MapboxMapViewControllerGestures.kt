@@ -42,8 +42,7 @@ internal fun MapboxMapViewController.handleMove(detector: MoveGestureDetector): 
 
     holder.fromScreenOffsetSync(screenCoordinate)?.let {
         entity.state.position = it
-        controller.renderer.dragLayer.updatePosition(it)
-        controller.renderer.drawDragLayer()
+        controller.updateDragPosition(it)
     }
 
     controller.dispatchDrag(entity.state)
@@ -63,7 +62,7 @@ internal fun MapboxMapViewController.handleMoveEnd(detector: MoveGestureDetector
             detector.focalPoint.y.toDouble(),
         )
     val point = holder.map.coordinateForPixel(screenCoordinate)
-    controller.renderer.dragLayer.updatePosition(point.toGeoPoint())
+    controller.updateDragPosition(point.toGeoPoint())
     controller.setSelectedMarker(null)
     controller.dispatchDragEnd(entity.state)
     activeDragController = null

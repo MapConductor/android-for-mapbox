@@ -329,23 +329,6 @@ public final class com.mapconductor.mapbox.groundimage.MapboxGroundImageOverlayR
 }
 public final class com.mapconductor.mapbox.groundimage.MapboxGroundImageOverlayRenderer$Companion {
 }
-public final class com.mapconductor.mapbox.marker.DefaultMapboxMarkerEventController implements com.mapconductor.mapbox.marker.MapboxMarkerEventControllerInterface {
-  public com.mapconductor.mapbox.marker.DefaultMapboxMarkerEventController(com.mapconductor.mapbox.marker.MapboxMarkerController);
-  public com.mapconductor.mapbox.marker.MapboxMarkerOverlayRenderer getRenderer();
-  public com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature> find(com.mapconductor.core.features.GeoPointInterface);
-  public com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature> getSelectedMarker();
-  public void setSelectedMarker(com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature>);
-  public void dispatchClick(com.mapconductor.core.marker.MarkerState);
-  public void dispatchDragStart(com.mapconductor.core.marker.MarkerState);
-  public void dispatchDrag(com.mapconductor.core.marker.MarkerState);
-  public void dispatchDragEnd(com.mapconductor.core.marker.MarkerState);
-  public void setClickListener(kotlin.jvm.functions.Function1<? super com.mapconductor.core.marker.MarkerState, kotlin.Unit>);
-  public void setDragStartListener(kotlin.jvm.functions.Function1<? super com.mapconductor.core.marker.MarkerState, kotlin.Unit>);
-  public void setDragListener(kotlin.jvm.functions.Function1<? super com.mapconductor.core.marker.MarkerState, kotlin.Unit>);
-  public void setDragEndListener(kotlin.jvm.functions.Function1<? super com.mapconductor.core.marker.MarkerState, kotlin.Unit>);
-  public void setAnimateStartListener(kotlin.jvm.functions.Function1<? super com.mapconductor.core.marker.MarkerState, kotlin.Unit>);
-  public void setAnimateEndListener(kotlin.jvm.functions.Function1<? super com.mapconductor.core.marker.MarkerState, kotlin.Unit>);
-}
 public final class com.mapconductor.mapbox.marker.MapboxMarkerController extends com.mapconductor.core.marker.AbstractMarkerController<com.mapbox.geojson.Feature> implements com.mapconductor.core.controller.OnCameraChangeReceiverInterface {
   public static final com.mapconductor.mapbox.marker.MapboxMarkerController$Companion Companion;
   public final void setRasterLayerCallback(com.mapconductor.core.marker.MarkerTileRasterLayerCallback);
@@ -359,20 +342,6 @@ public final class com.mapconductor.mapbox.marker.MapboxMarkerController extends
 }
 public final class com.mapconductor.mapbox.marker.MapboxMarkerController$Companion {
   public final com.mapconductor.mapbox.marker.MapboxMarkerController create(com.mapconductor.mapbox.MapboxMapViewHolder, com.mapconductor.core.marker.MarkerManager<com.mapbox.geojson.Feature>, com.mapconductor.mapbox.marker.MarkerLayer, com.mapconductor.mapbox.marker.MarkerDragLayer, com.mapconductor.core.marker.MarkerTilingOptions);
-}
-public interface com.mapconductor.mapbox.marker.MapboxMarkerEventControllerInterface extends com.mapconductor.core.marker.MarkerEventControllerInterface<com.mapbox.geojson.Feature>, com.mapconductor.core.marker.GeoMarkerClickTargetInterface<com.mapbox.geojson.Feature> {
-  public abstract com.mapconductor.mapbox.marker.MapboxMarkerOverlayRenderer getRenderer();
-  public abstract com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature> getSelectedMarker();
-  public abstract void setSelectedMarker(com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature>);
-  public abstract void dispatchDragStart(com.mapconductor.core.marker.MarkerState);
-  public abstract void dispatchDrag(com.mapconductor.core.marker.MarkerState);
-  public abstract void dispatchDragEnd(com.mapconductor.core.marker.MarkerState);
-  public abstract void setClickListener(kotlin.jvm.functions.Function1<? super com.mapconductor.core.marker.MarkerState, kotlin.Unit>);
-  public abstract void setDragStartListener(kotlin.jvm.functions.Function1<? super com.mapconductor.core.marker.MarkerState, kotlin.Unit>);
-  public abstract void setDragListener(kotlin.jvm.functions.Function1<? super com.mapconductor.core.marker.MarkerState, kotlin.Unit>);
-  public abstract void setDragEndListener(kotlin.jvm.functions.Function1<? super com.mapconductor.core.marker.MarkerState, kotlin.Unit>);
-  public abstract void setAnimateStartListener(kotlin.jvm.functions.Function1<? super com.mapconductor.core.marker.MarkerState, kotlin.Unit>);
-  public abstract void setAnimateEndListener(kotlin.jvm.functions.Function1<? super com.mapconductor.core.marker.MarkerState, kotlin.Unit>);
 }
 public final class com.mapconductor.mapbox.marker.MapboxMarkerOverlayRenderer extends com.mapconductor.core.marker.AbstractMarkerOverlayRenderer<com.mapconductor.mapbox.MapboxMapViewHolder, com.mapbox.geojson.Feature> {
   public com.mapconductor.mapbox.marker.MapboxMarkerOverlayRenderer(com.mapconductor.mapbox.MapboxMapViewHolder, com.mapconductor.core.marker.MarkerManager<com.mapbox.geojson.Feature>, com.mapconductor.mapbox.marker.MarkerLayer, com.mapconductor.mapbox.marker.MarkerDragLayer, kotlinx.coroutines.CoroutineScope);
@@ -391,6 +360,8 @@ public final class com.mapconductor.mapbox.marker.MapboxMarkerOverlayRenderer ex
   public java.lang.Object onRemove(java.util.List<? extends com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature>>, kotlin.coroutines.Continuation<? super kotlin.Unit>);
   public java.lang.Object onPostProcess(kotlin.coroutines.Continuation<? super kotlin.Unit>);
   public java.lang.Object onChange(java.util.List<? extends com.mapconductor.core.marker.MarkerOverlayRendererInterface$ChangeParamsInterface<com.mapbox.geojson.Feature>>, kotlin.coroutines.Continuation<? super java.util.List<com.mapbox.geojson.Feature>>);
+  public void onDragSelectionChanged(com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature>, com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature>);
+  public void onDragPositionChanged(com.mapconductor.core.features.GeoPointInterface);
 }
 public final class com.mapconductor.mapbox.marker.MapboxMarkerOverlayRenderer$Prop {
   public static final com.mapconductor.mapbox.marker.MapboxMarkerOverlayRenderer$Prop INSTANCE;
@@ -417,23 +388,6 @@ public class com.mapconductor.mapbox.marker.MarkerLayer {
   public final com.mapbox.maps.extension.style.sources.generated.GeoJsonSource getSource();
   public final boolean wouldSkipDraw(java.util.List<? extends com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature>>);
   public final void draw(java.util.List<? extends com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature>>);
-}
-public final class com.mapconductor.mapbox.marker.StrategyMapboxMarkerEventController implements com.mapconductor.mapbox.marker.MapboxMarkerEventControllerInterface {
-  public com.mapconductor.mapbox.marker.StrategyMapboxMarkerEventController(com.mapconductor.core.marker.StrategyMarkerController<com.mapbox.geojson.Feature>, com.mapconductor.mapbox.marker.MapboxMarkerOverlayRenderer);
-  public com.mapconductor.mapbox.marker.MapboxMarkerOverlayRenderer getRenderer();
-  public com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature> find(com.mapconductor.core.features.GeoPointInterface);
-  public com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature> getSelectedMarker();
-  public void setSelectedMarker(com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature>);
-  public void dispatchClick(com.mapconductor.core.marker.MarkerState);
-  public void dispatchDragStart(com.mapconductor.core.marker.MarkerState);
-  public void dispatchDrag(com.mapconductor.core.marker.MarkerState);
-  public void dispatchDragEnd(com.mapconductor.core.marker.MarkerState);
-  public void setClickListener(kotlin.jvm.functions.Function1<? super com.mapconductor.core.marker.MarkerState, kotlin.Unit>);
-  public void setDragStartListener(kotlin.jvm.functions.Function1<? super com.mapconductor.core.marker.MarkerState, kotlin.Unit>);
-  public void setDragListener(kotlin.jvm.functions.Function1<? super com.mapconductor.core.marker.MarkerState, kotlin.Unit>);
-  public void setDragEndListener(kotlin.jvm.functions.Function1<? super com.mapconductor.core.marker.MarkerState, kotlin.Unit>);
-  public void setAnimateStartListener(kotlin.jvm.functions.Function1<? super com.mapconductor.core.marker.MarkerState, kotlin.Unit>);
-  public void setAnimateEndListener(kotlin.jvm.functions.Function1<? super com.mapconductor.core.marker.MarkerState, kotlin.Unit>);
 }
 public final class com.mapconductor.mapbox.polygon.MapboxPolygonConductor implements com.mapconductor.core.controller.SlottedOverlayController<com.mapconductor.core.polygon.PolygonState, com.mapconductor.core.polygon.PolygonEntityInterface<com.mapconductor.core.polygon.PolygonState>> {
   public com.mapconductor.mapbox.polygon.MapboxPolygonConductor(com.mapconductor.mapbox.polygon.MapboxPolygonOverlayRenderer, com.mapconductor.mapbox.polyline.MapboxPolylineOverlayRenderer);

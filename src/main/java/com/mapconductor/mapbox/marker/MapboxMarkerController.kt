@@ -1,7 +1,6 @@
 package com.mapconductor.mapbox.marker
 
 import com.mapconductor.core.controller.OnCameraChangeReceiverInterface
-import com.mapconductor.core.features.GeoPoint
 import com.mapconductor.core.map.MapCameraPosition
 import com.mapconductor.core.marker.AbstractMarkerController
 import com.mapconductor.core.marker.BitmapIcon
@@ -36,8 +35,6 @@ class MapboxMarkerController private constructor(
         renderer = renderer,
     ),
     OnCameraChangeReceiverInterface {
-    private var internalSelectedMarker: MarkerEntityInterface<MapboxActualMarker>? = null
-
     private val defaultMarkerIcon: BitmapIcon = DefaultMarkerIcon().toBitmapIcon()
     private val tiledMarkerIds = LinkedHashSet<String>()
     private lateinit var lastCameraPosition: MapCameraPosition
@@ -66,34 +63,6 @@ class MapboxMarkerController private constructor(
             invalidateTiles = ::updateRasterLayerSource,
         )
 
-    internal var selectedMarker: MarkerEntityInterface<MapboxActualMarker>?
-        set(value) {
-            (renderer as MapboxMarkerOverlayRenderer).let { markerRenderer ->
-                if (value == null) {
-                    internalSelectedMarker?.let {
-                        markerRenderer.dragLayer.updatePosition(GeoPoint.from(it.state.position))
-                        markerRenderer.dragLayer.selected = null
-                        markerRenderer.drawDragLayer()
-                        markerManager.registerEntity(it)
-                        markerRenderer.redraw()
-                    }
-                    internalSelectedMarker = null
-                    return
-                }
-                internalSelectedMarker = value
-                markerManager.removeEntity(value.state.id)
-                markerRenderer.dragLayer.selected = value
-                markerRenderer.dragLayer.updatePosition(GeoPoint.from(value.state.position))
-                markerRenderer.redraw()
-                markerRenderer.drawDragLayer()
-            }
-        }
-        get() = internalSelectedMarker
-
-    /**
-     * Sets the callback for RasterLayer operations.
-     * This must be called before using tiled marker rendering.
-     */
     fun setRasterLayerCallback(callback: MarkerTileRasterLayerCallback?) {
         rasterLayerCallback = callback
     }

@@ -7,6 +7,7 @@ import com.mapbox.geojson.FeatureCollection
 import com.mapconductor.core.ResourceProvider
 import com.mapconductor.core.calculateZIndex
 import com.mapconductor.core.features.GeoPoint
+import com.mapconductor.core.features.GeoPointInterface
 import com.mapconductor.core.marker.AbstractMarkerOverlayRenderer
 import com.mapconductor.core.marker.BitmapIcon
 import com.mapconductor.core.marker.DefaultMarkerIcon
@@ -393,6 +394,39 @@ class MapboxMarkerOverlayRenderer(
         }
 
     private fun createIconOffset(icon: MarkerIconInterface): JsonArray = createIconOffset(icon.toBitmapIcon())
+
+    /**
+     * ドラッグ対象の入れ替え。
+     *
+     * ドラッグ中のマーカーは通常のレイヤ（[markerLayer]）から外して専用の
+     * [dragLayer] へ移す。そうしないと GeoJSON ソースを丸ごと描き直すたびに
+     * 指の位置と食い違う。
+     */
+    override fun onDragSelectionChanged(
+        previous: MarkerEntityInterface<MapboxActualMarker>?,
+        current: MarkerEntityInterface<MapboxActualMarker>?,
+    ) {
+        if (current == null) {
+            previous?.let {
+                dragLayer.updatePosition(GeoPoint.from(it.state.position))
+                dragLayer.selected = null
+                drawDragLayer()
+                markerManager.registerEntity(it)
+                redraw()
+            }
+            return
+        }
+        markerManager.removeEntity(current.state.id)
+        dragLayer.selected = current
+        dragLayer.updatePosition(GeoPoint.from(current.state.position))
+        redraw()
+        drawDragLayer()
+    }
+
+    override fun onDragPositionChanged(position: GeoPointInterface) {
+        dragLayer.updatePosition(GeoPoint.from(position))
+        drawDragLayer()
+    }
 }
 
 private const val STYLE_IMAGE_REMOVAL_GRACE_MS: Long = 1500L
