@@ -4,17 +4,13 @@ import androidx.compose.ui.geometry.Offset
 import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.geojson.Point
 import com.mapbox.maps.ScreenCoordinate
-import com.mapconductor.core.circle.CircleEvent
-import com.mapconductor.core.groundimage.GroundImageEvent
-import com.mapconductor.core.polygon.PolygonEvent
-import com.mapconductor.core.polyline.PolylineEvent
-import kotlinx.coroutines.launch
 
 /**
  * 地図のタップ・長押しとマーカーのドラッグ。
  *
- * タップは**マーカーが先**で、どのマーカーにも当たらなかったときだけ地図の
- * タップとして扱う（android の他プロバイダと同じ順序）。
+ * タップのカスケード（marker → circle → groundImage → polyline → polygon → map）は
+ * コアの [com.mapconductor.core.controller.BaseMapViewController.dispatchTap] が回すので、
+ * ここは座標を変換して渡すだけ。長押しはドラッグ開始の判定が要るのでここに残す。
  */
 internal fun MapboxMapViewController.handleMapLongClick(point: Point): Boolean {
     val touchPosition = point.toGeoPoint()
@@ -33,61 +29,7 @@ internal fun MapboxMapViewController.handleMapLongClick(point: Point): Boolean {
     return true
 }
 
-internal fun MapboxMapViewController.handleMapClick(point: Point): Boolean {
-    val touchPosition = point.toGeoPoint()
-
-    markerEventControllers.forEach { controller ->
-        controller.find(touchPosition)?.let { entity ->
-            controller.dispatchClick(entity.state)
-            return true
-        }
-    }
-
-    circleController.find(touchPosition)?.let { entity ->
-        val event =
-            CircleEvent(
-                state = entity.state,
-                clicked = touchPosition,
-            )
-        circleController.dispatchClick(event)
-        return true
-    }
-
-    groundImageController.find(touchPosition)?.let { entity ->
-        val event =
-            GroundImageEvent(
-                state = entity.state,
-                clicked = touchPosition,
-            )
-        groundImageController.dispatchClick(event)
-        return true
-    }
-
-    polylineController.findWithClosestPoint(touchPosition)?.let { hitResult ->
-        val event =
-            PolylineEvent(
-                state = hitResult.entity.state,
-                clicked = hitResult.closestPoint,
-            )
-        mainCoroutine.launch {
-            polylineController.dispatchClick(event)
-        }
-        return true
-    }
-
-    polygonController.find(touchPosition)?.let { polygonEntity ->
-        val event =
-            PolygonEvent(
-                state = polygonEntity.state,
-                clicked = touchPosition,
-            )
-        polygonController.dispatchClick(event)
-        return true
-    }
-
-    emitMapClick(touchPosition)
-    return true
-}
+internal fun MapboxMapViewController.handleMapClick(point: Point): Boolean = dispatchTap(point.toGeoPoint())
 
 internal fun MapboxMapViewController.handleMove(detector: MoveGestureDetector): Boolean {
     val controller = activeDragController ?: return false
@@ -100,8 +42,7 @@ internal fun MapboxMapViewController.handleMove(detector: MoveGestureDetector): 
 
     holder.fromScreenOffsetSync(screenCoordinate)?.let {
         entity.state.position = it
-        controller.renderer.dragLayer.updatePosition(it)
-        controller.renderer.drawDragLayer()
+        controller.updateDragPosition(it)
     }
 
     controller.dispatchDrag(entity.state)
@@ -121,7 +62,7 @@ internal fun MapboxMapViewController.handleMoveEnd(detector: MoveGestureDetector
             detector.focalPoint.y.toDouble(),
         )
     val point = holder.map.coordinateForPixel(screenCoordinate)
-    controller.renderer.dragLayer.updatePosition(point.toGeoPoint())
+    controller.updateDragPosition(point.toGeoPoint())
     controller.setSelectedMarker(null)
     controller.dispatchDragEnd(entity.state)
     activeDragController = null

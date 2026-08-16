@@ -55,7 +55,7 @@ internal fun MapboxMapViewController.attachOverlaySourcesAndLayers(style: com.ma
     // Marker + drag layers
     attachMarkerLayers(style, markerController.renderer as MapboxMarkerOverlayRenderer)
     markerEventControllers
-        .map { it.renderer }
+        .map { it.renderer as MapboxMarkerOverlayRenderer }
         .filter { it != markerController.renderer }
         .forEach { renderer -> attachMarkerLayers(style, renderer) }
 }

@@ -1,15 +1,12 @@
 package com.mapconductor.mapbox.marker
 
 import com.mapconductor.core.controller.OnCameraChangeReceiverInterface
-import com.mapconductor.core.features.GeoPoint
-import com.mapconductor.core.features.GeoPointInterface
 import com.mapconductor.core.map.MapCameraPosition
 import com.mapconductor.core.marker.AbstractMarkerController
 import com.mapconductor.core.marker.BitmapIcon
 import com.mapconductor.core.marker.DefaultMarkerIcon
 import com.mapconductor.core.marker.MarkerEntity
 import com.mapconductor.core.marker.MarkerEntityInterface
-import com.mapconductor.core.marker.MarkerHitTest
 import com.mapconductor.core.marker.MarkerIngestionEngine
 import com.mapconductor.core.marker.MarkerManager
 import com.mapconductor.core.marker.MarkerOverlayRendererInterface
@@ -38,8 +35,6 @@ class MapboxMarkerController private constructor(
         renderer = renderer,
     ),
     OnCameraChangeReceiverInterface {
-    private var internalSelectedMarker: MarkerEntityInterface<MapboxActualMarker>? = null
-
     private val defaultMarkerIcon: BitmapIcon = DefaultMarkerIcon().toBitmapIcon()
     private val tiledMarkerIds = LinkedHashSet<String>()
     private lateinit var lastCameraPosition: MapCameraPosition
@@ -68,49 +63,8 @@ class MapboxMarkerController private constructor(
             invalidateTiles = ::updateRasterLayerSource,
         )
 
-    internal var selectedMarker: MarkerEntityInterface<MapboxActualMarker>?
-        set(value) {
-            (renderer as MapboxMarkerOverlayRenderer).let { markerRenderer ->
-                if (value == null) {
-                    internalSelectedMarker?.let {
-                        markerRenderer.dragLayer.updatePosition(GeoPoint.from(it.state.position))
-                        markerRenderer.dragLayer.selected = null
-                        markerRenderer.drawDragLayer()
-                        markerManager.registerEntity(it)
-                        markerRenderer.redraw()
-                    }
-                    internalSelectedMarker = null
-                    return
-                }
-                internalSelectedMarker = value
-                markerManager.removeEntity(value.state.id)
-                markerRenderer.dragLayer.selected = value
-                markerRenderer.dragLayer.updatePosition(GeoPoint.from(value.state.position))
-                markerRenderer.redraw()
-                markerRenderer.drawDragLayer()
-            }
-        }
-        get() = internalSelectedMarker
-
-    /**
-     * Sets the callback for RasterLayer operations.
-     * This must be called before using tiled marker rendering.
-     */
     fun setRasterLayerCallback(callback: MarkerTileRasterLayerCallback?) {
         rasterLayerCallback = callback
-    }
-
-    override fun find(position: GeoPointInterface): MarkerEntityInterface<MapboxActualMarker>? {
-        val nearest = markerManager.findNearest(position) ?: return null
-
-        val touchScreen = renderer.holder.toScreenOffset(position) ?: return null
-        val markerScreen = renderer.holder.toScreenOffset(nearest.state.position) ?: return null
-
-        return if (MarkerHitTest.hitsIcon(touchScreen, markerScreen, nearest.state)) {
-            nearest
-        } else {
-            null
-        }
     }
 
     override suspend fun add(data: List<MarkerState>) {

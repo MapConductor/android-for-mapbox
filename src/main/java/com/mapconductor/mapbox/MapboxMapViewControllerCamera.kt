@@ -1,13 +1,12 @@
 package com.mapconductor.mapbox
 
-import androidx.compose.ui.geometry.Offset
 import com.mapbox.maps.CameraBoundsOptions
 import com.mapbox.maps.plugin.animation.MapAnimationOptions
 import com.mapbox.maps.plugin.animation.flyTo
 import com.mapconductor.core.features.GeoRectBounds
 import com.mapconductor.core.map.CameraRestriction
 import com.mapconductor.core.map.MapCameraPosition
-import com.mapconductor.core.map.VisibleRegion
+import com.mapconductor.core.map.buildVisibleRegion
 import com.mapconductor.mapbox.zoom.ZoomAltitudeConverter
 import android.animation.Animator
 import kotlinx.coroutines.launch
@@ -20,45 +19,10 @@ import kotlinx.coroutines.withContext
  * [com.mapconductor.mapbox.zoom.ZoomAltitudeConverter] で吸収する。
  */
 internal fun MapboxMapViewController.getMapCameraPosition(): MapCameraPosition? {
-//        val options = cameraChanged.toMapCameraPosition()
     val camera = readLogicalCameraPosition()
-
-    val mapWidth = holder.mapView.width.toFloat()
-    val mapHeight = holder.mapView.height.toFloat()
-    val nearLeft =
-        holder.fromScreenOffsetSync(
-            Offset(0.0f, mapHeight),
-        ) ?: return null
-    val nearRight =
-        holder.fromScreenOffsetSync(
-            Offset(mapWidth, mapHeight),
-        ) ?: return null
-    val farLeft =
-        holder.fromScreenOffsetSync(
-            Offset(0.0f, 0.0f),
-        ) ?: return null
-    val farRight =
-        holder.fromScreenOffsetSync(
-            Offset(mapWidth, 0.0f),
-        ) ?: return null
-
-    val bounds = GeoRectBounds()
-    bounds.extend(nearLeft)
-    bounds.extend(nearRight)
-    bounds.extend(farLeft)
-    bounds.extend(farRight)
-    val visibleRegion =
-        VisibleRegion(
-            bounds = bounds,
-            nearLeft = nearLeft,
-            nearRight = nearRight,
-            farLeft = farLeft,
-            farRight = farRight,
-        )
-    val mapCameraPosition =
-        camera.copy(
-            visibleRegion = visibleRegion,
-        )
+    // 4 隅の逆投影は全プロバイダ共通なのでコアの buildVisibleRegion を使う。
+    val visibleRegion = holder.buildVisibleRegion() ?: return null
+    val mapCameraPosition = camera.copy(visibleRegion = visibleRegion)
     lastLogicalCameraPosition = mapCameraPosition
     return mapCameraPosition
 }
@@ -170,18 +134,7 @@ internal fun MapboxMapViewController.sendInitialCameraUpdate() {
         if (mapWidth <= 0 || mapHeight <= 0) return@launch
 
         val camera = readLogicalCameraPosition()
-        val nearLeft = holder.fromScreenOffsetSync(Offset(0f, mapHeight)) ?: return@launch
-        val nearRight = holder.fromScreenOffsetSync(Offset(mapWidth, mapHeight)) ?: return@launch
-        val farLeft = holder.fromScreenOffsetSync(Offset(0f, 0f)) ?: return@launch
-        val farRight = holder.fromScreenOffsetSync(Offset(mapWidth, 0f)) ?: return@launch
-
-        val bounds = GeoRectBounds()
-        bounds.extend(nearLeft)
-        bounds.extend(nearRight)
-        bounds.extend(farLeft)
-        bounds.extend(farRight)
-
-        val visibleRegion = VisibleRegion(bounds, nearLeft, nearRight, farLeft, farRight)
+        val visibleRegion = holder.buildVisibleRegion() ?: return@launch
         val mapCameraPosition = camera.copy(visibleRegion = visibleRegion)
         lastLogicalCameraPosition = mapCameraPosition
 
