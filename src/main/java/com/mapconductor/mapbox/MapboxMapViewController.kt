@@ -54,7 +54,16 @@ import kotlinx.coroutines.launch
 
 typealias MapboxMapDesignTypeChangeHandler = (MapboxDesignType) -> Unit
 
-internal class MapboxMapViewController(
+/**
+ * Mapbox のマップコントローラ。
+ *
+ * **型は公開、構築は非公開。** `createMapboxViewController()` の戻り型として、また
+ * React Native のような非 Compose ホストが `BaseMapViewController` として受けるために
+ * 型は見える必要がある（LongdoMapViewController / MapTilerMapViewController も公開）。
+ * 一方コンストラクタ引数は internal なコントローラ群なので、`internal constructor` に
+ * して**組み立てはファクトリ 1 か所に閉じる**。2 経路で組むと配線が片方だけ増える。
+ */
+class MapboxMapViewController internal constructor(
     override val holder: MapboxMapViewHolder,
     internal var projection: MapProjection,
     internal val markerController: MapboxMarkerController,

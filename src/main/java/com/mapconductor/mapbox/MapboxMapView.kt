@@ -21,6 +21,7 @@ import com.mapconductor.core.circle.CircleManager
 import com.mapconductor.core.map.CameraRestriction
 import com.mapconductor.core.map.MapCameraPositionInterface
 import com.mapconductor.core.map.MapProjection
+import com.mapconductor.core.map.MutableMapServiceRegistry
 import com.mapconductor.core.marker.MarkerEventControllerInterface
 import com.mapconductor.core.marker.MarkerManager
 import com.mapconductor.core.marker.MarkerOverlayRendererInterface
@@ -106,56 +107,15 @@ fun MapboxMapView(
         },
         holderProvider = { mapView -> MapboxMapViewHolder(mapView, mapView.mapboxMap) },
         controllerProvider = { holder ->
-
-            val markerController =
-                getMarkerController(
-                    holder = holder,
-                    markerTiling = markerTiling ?: MarkerTilingOptions.Default,
-                )
-            val polylineController = getPolylineController(holder)
-            val rasterLayerController = getRasterLayerController(holder)
-            val polygonController = getPolygonController(holder)
-            val groundImageController = getGroundImageController(holder)
-            val circleController = getCircleController(holder)
-
-            // Defer initial camera update until after controller is created and view is laid out
-
-            MapboxMapViewController(
+            // **組み立ては `createMapboxViewController` に一本化してある。**
+            // React Native のような非 Compose ホストも同じ関数を通るので、
+            // ここでコントローラを直接組み直さないこと（片方だけ配線が増えて食い違う）。
+            createMapboxViewController(
                 holder = holder,
+                markerTiling = markerTiling ?: MarkerTilingOptions.Default,
                 projection = projection,
-                markerController = markerController,
-                polylineController = polylineController,
-                polygonController = polygonController,
-                groundImageController = groundImageController,
-                circleController = circleController,
-                rasterLayerController = rasterLayerController,
+                serviceRegistry = state.serviceRegistry,
             ).also { mapController ->
-                state.serviceRegistry.put(
-                    MarkerRenderingSupportKey,
-                    object : MarkerRenderingSupport<MapboxActualMarker> {
-                        override fun createMarkerRenderer(
-                            strategy: MarkerRenderingStrategyInterface<MapboxActualMarker>,
-                        ): MarkerOverlayRendererInterface<MapboxActualMarker> =
-                            mapController.createMarkerRenderer(strategy)
-
-                        override fun createMarkerEventController(
-                            controller: StrategyMarkerController<MapboxActualMarker>,
-                            renderer: MarkerOverlayRendererInterface<MapboxActualMarker>,
-                        ): MarkerEventControllerInterface<MapboxActualMarker> =
-                            mapController.createMarkerEventController(controller = controller, renderer = renderer)
-
-                        override fun registerMarkerEventController(
-                            controller: MarkerEventControllerInterface<MapboxActualMarker>,
-                        ) {
-                            mapController.registerMarkerEventController(controller)
-                        }
-
-                        override fun onMarkerRenderingReady() {
-                            mapController.sendInitialCameraUpdate()
-                        }
-                    },
-                )
-
                 mapController.setCameraMoveStartListener {
                     cameraState.value = it
                     state.updateCameraPosition(it)
@@ -235,6 +195,65 @@ fun MapboxMapView(
             }
         },
     )
+}
+
+/**
+ * 命令的なコントローラ一式を組み立てる。Compose の [MapboxMapView] と、
+ * **Compose を通さないホスト（React Native / Cordova）の両方**から使う。
+ *
+ * ここに置くことで、UI 統合ごとにプロバイダ固有のレイヤ設定を書き写さずに済む。
+ * android-for-maplibre の `createMapLibreViewController()` と同じ役割・同じ形。
+ *
+ * @param serviceRegistry 登録先のサービスレジストリ。Compose からは `state.serviceRegistry` を渡す
+ *   （react-sdk / ios-sdk と同じく持ち主は state）。React Native のような非 Compose ホストは
+ *   state を持たないので、自前のレジストリを渡す。
+ *   **null にすると `MarkerRenderingSupportKey` が登録されず、クラスタリングが
+ *   エラーも出さずに何も描かなくなる。**
+ */
+fun createMapboxViewController(
+    holder: MapboxMapViewHolder,
+    markerTiling: MarkerTilingOptions = MarkerTilingOptions.Default,
+    projection: MapProjection = MapProjection.Mercator,
+    serviceRegistry: MutableMapServiceRegistry? = null,
+): MapboxMapViewController {
+    val mapController =
+        MapboxMapViewController(
+            holder = holder,
+            projection = projection,
+            markerController = getMarkerController(holder = holder, markerTiling = markerTiling),
+            polylineController = getPolylineController(holder),
+            polygonController = getPolygonController(holder),
+            groundImageController = getGroundImageController(holder),
+            circleController = getCircleController(holder),
+            rasterLayerController = getRasterLayerController(holder),
+        )
+
+    serviceRegistry?.put(
+        MarkerRenderingSupportKey,
+        object : MarkerRenderingSupport<MapboxActualMarker> {
+            override fun createMarkerRenderer(
+                strategy: MarkerRenderingStrategyInterface<MapboxActualMarker>,
+            ): MarkerOverlayRendererInterface<MapboxActualMarker> = mapController.createMarkerRenderer(strategy)
+
+            override fun createMarkerEventController(
+                controller: StrategyMarkerController<MapboxActualMarker>,
+                renderer: MarkerOverlayRendererInterface<MapboxActualMarker>,
+            ): MarkerEventControllerInterface<MapboxActualMarker> =
+                mapController.createMarkerEventController(controller = controller, renderer = renderer)
+
+            override fun registerMarkerEventController(
+                controller: MarkerEventControllerInterface<MapboxActualMarker>,
+            ) {
+                mapController.registerMarkerEventController(controller)
+            }
+
+            override fun onMarkerRenderingReady() {
+                mapController.sendInitialCameraUpdate()
+            }
+        },
+    )
+
+    return mapController
 }
 
 internal fun getPolygonController(holder: MapboxMapViewHolder): MapboxPolygonConductor {
