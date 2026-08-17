@@ -10,6 +10,16 @@ Even you use the wrapper API, but you can still access to the native Mapbox view
 
 https://mapconductor.com/setup/android/mapbox/
 
+### API key
+
+This module reads the key from an `AndroidManifest.xml` `<meta-data>` entry:
+
+```xml
+<meta-data android:name="MAPBOX_ACCESS_TOKEN" android:value="${MAPBOX_ACCESS_TOKEN}" />
+```
+
+Put the value in `secrets.properties` and let the Secrets Gradle Plugin inject it; keep that file out of source control.
+
 ## Usage
 
 ```kotlin
