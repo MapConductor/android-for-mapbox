@@ -6,6 +6,7 @@ import com.mapbox.maps.CameraState
 import com.mapbox.maps.EdgeInsets
 import com.mapconductor.core.features.GeoPoint
 import com.mapconductor.core.features.GeoPointInterface
+import com.mapconductor.core.map.CameraBearing
 import com.mapconductor.core.map.MapCameraPosition
 import com.mapconductor.core.map.MapCameraPositionInterface
 import com.mapconductor.core.map.MapPaddingsInterface
@@ -30,7 +31,7 @@ fun MapCameraPosition.toCameraOptions(): CameraOptions {
             .center(GeoPoint.from(position).toPoint())
             .zoom(ZoomAltitudeConverter.googleZoomToMapboxZoom(zoom))
             .pitch(tilt)
-            .bearing(bearing)
+            .bearing(CameraBearing.toNativeHeading(bearing))
             // TODO:
             //    .padding(paddings?.toEdgeInsects())
             .build()
@@ -43,7 +44,7 @@ fun MapCameraPosition.toCameraOptions(): CameraOptions {
         val mapboxZoomForAltitude = ZoomAltitudeConverter.googleZoomToMapboxZoom(zoom)
         val altitude = converter.zoomLevelToAltitude(mapboxZoomForAltitude, position.latitude, 0.0)
         val distanceForward = altitude * tan(tiltAbsRad)
-        val target = Spherical.computeOffset(position, distanceForward, bearing)
+        val target = Spherical.computeOffset(position, distanceForward, CameraBearing.toNativeHeading(bearing))
         val mapboxZoom = converter.altitudeToZoomLevel(altitude / cos(tiltAbsRad), target.latitude, 0.0)
 
         return CameraOptions
@@ -51,7 +52,7 @@ fun MapCameraPosition.toCameraOptions(): CameraOptions {
             .center(target.toPoint())
             .zoom(mapboxZoom)
             .pitch(tiltAbsDeg)
-            .bearing(bearing)
+            .bearing(CameraBearing.toNativeHeading(bearing))
             // TODO:
             //    .padding(paddings?.toEdgeInsects())
             .build()
@@ -63,7 +64,7 @@ fun MapCameraPosition.toCameraState(): CameraState =
         GeoPoint.from(position).toPoint(),
         EdgeInsets(0.0, 0.0, 0.0, 0.0),
         ZoomAltitudeConverter.googleZoomToMapboxZoom(zoom),
-        bearing,
+        CameraBearing.toNativeHeading(bearing),
         tilt,
     )
 
@@ -130,7 +131,7 @@ private fun toMapCameraPosition(
         return MapCameraPosition(
             position = center,
             zoom = ZoomAltitudeConverter.mapboxZoomToGoogleZoom(mapboxZoom),
-            bearing = bearing,
+            bearing = CameraBearing.bearingFromNativeHeading(bearing),
             tilt = pitch,
             paddings = paddings,
             visibleRegion = visibleRegion,
@@ -148,7 +149,7 @@ private fun toMapCameraPosition(
     return MapCameraPosition(
         position = originalCenter,
         zoom = ZoomAltitudeConverter.mapboxZoomToGoogleZoom(originalMapboxZoom),
-        bearing = bearing,
+        bearing = CameraBearing.bearingFromNativeHeading(bearing),
         tilt = -pitchAbsDeg,
         paddings = paddings,
         visibleRegion = visibleRegion,
