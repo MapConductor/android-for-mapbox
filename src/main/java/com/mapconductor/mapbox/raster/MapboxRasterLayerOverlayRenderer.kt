@@ -103,7 +103,7 @@ class MapboxRasterLayerOverlayRenderer(
             if (isMarkerTileRaster(state)) {
                 addLayerForMarkerTile(style, layer)
             } else {
-                style.addLayer(layer)
+                addBelowBasemapLabels(style, layer)
             }
         } catch (e: Exception) {
             Log.w("Mapbox", "Failed to add raster layer: ${e.message}")
@@ -134,7 +134,7 @@ class MapboxRasterLayerOverlayRenderer(
             if (isMarkerTileRaster(state)) {
                 addLayerForMarkerTile(style, layer)
             } else {
-                style.addLayer(layer)
+                addBelowBasemapLabels(style, layer)
             }
         } catch (_: Exception) {
         }
@@ -233,11 +233,53 @@ class MapboxRasterLayerOverlayRenderer(
                     rasterOpacity(opacity)
                 }
             try {
-                style.addLayer(layer)
+                addBelowBasemapLabels(style, layer)
             } catch (_: Exception) {
             }
         }
     }
+
+    /**
+     * Puts a raster layer above the basemap's geometry but **below its labels**.
+     *
+     * Appended at the top of the style instead, a raster overlay covers the
+     * place names, road names and shields the backend draws -- a vector tile
+     * layer's own roads run straight through them, which is what "the labels
+     * are under the lines" looks like. Every raster overlay we add has the
+     * same problem, so the rule lives here rather than in each of them.
+     *
+     * Inserting successive layers below the same anchor keeps their order:
+     * each one lands directly below the anchor, which is directly above the
+     * one inserted before it.
+     *
+     * Anything of ours is skipped when looking for the anchor. Markers are a
+     * symbol layer too, and anchoring to them would put the raster back above
+     * the labels -- with the added twist of only doing so once a marker exists.
+     */
+    private fun addBelowBasemapLabels(
+        style: com.mapbox.maps.Style,
+        layer: com.mapbox.maps.extension.style.layers.Layer,
+    ) {
+        val anchor =
+            style.styleLayers.firstOrNull { it.type == "symbol" && !isOursById(it.id) }
+        if (anchor == null) {
+            style.addLayer(layer)
+            return
+        }
+        try {
+            style.addLayerBelow(layer, anchor.id)
+        } catch (_: Exception) {
+            style.addLayer(layer)
+        }
+    }
+
+    /** True for layers this SDK adds, as opposed to the design's own. */
+    private fun isOursById(id: String): Boolean =
+        id.startsWith("raster-layer-") ||
+            id.startsWith(MARKERS_LAYER_ID) ||
+            id.startsWith("marker-drag-layer") ||
+            id.startsWith(POLYLINE_LAYER_ID) ||
+            id.startsWith("circle-layer")
 
     private companion object {
         private const val MARKER_TILE_RASTER_ID_PREFIX = "marker-tile-"
