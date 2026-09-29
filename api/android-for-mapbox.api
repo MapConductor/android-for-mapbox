@@ -75,6 +75,11 @@ public final class com.mapconductor.mapbox.MapboxMapDesign$NavigationDay extends
 public final class com.mapconductor.mapbox.MapboxMapDesign$NavigationNight extends com.mapconductor.mapbox.MapboxMapDesign {
   public static final com.mapconductor.mapbox.MapboxMapDesign$NavigationNight INSTANCE;
 }
+public final class com.mapconductor.mapbox.MapboxMapDesign$None extends com.mapconductor.mapbox.MapboxMapDesign {
+  public static final com.mapconductor.mapbox.MapboxMapDesign$None INSTANCE;
+  public java.lang.String getValue();
+  public java.lang.Object getValue();
+}
 public final class com.mapconductor.mapbox.MapboxMapDesign$Outdoors extends com.mapconductor.mapbox.MapboxMapDesign {
   public static final com.mapconductor.mapbox.MapboxMapDesign$Outdoors INSTANCE;
 }

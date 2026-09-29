@@ -2,6 +2,7 @@ package com.mapconductor.mapbox
 
 import com.mapbox.maps.Style
 import com.mapconductor.core.map.AttributionRule
+import com.mapconductor.core.map.BlankMapStyle
 import com.mapconductor.core.map.MapDesignTypeInterface
 import com.mapconductor.mapbox.MapboxMapDesign.Companion.MAPBOX_URL
 
@@ -11,6 +12,16 @@ sealed class MapboxMapDesign(
     override val id: String,
     override val attributionRules: List<AttributionRule> = emptyList(),
 ) : MapboxDesignType {
+    /**
+     * ベースマップ無し。背景色だけのスタイルで、タイルは何も取得しない。
+     *
+     * `getValue()` は URI ではなくスタイル JSON そのもの。Mapbox の `loadStyle` と
+     * `MapInitOptions.styleUri` はどちらも URI か JSON の文字列を受ける。
+     */
+    object None : MapboxMapDesign("none") {
+        override fun getValue(): String = BlankMapStyle.JSON
+    }
+
     object Standard : MapboxMapDesign("standard")
 
     object StandardSatellite : MapboxMapDesign("standard-satellite")
@@ -43,6 +54,7 @@ sealed class MapboxMapDesign(
 
         fun create(layerId: String): MapboxMapDesign =
             when (layerId) {
+                None.id -> None
                 Standard.id -> Standard
                 StandardSatellite.id -> StandardSatellite
                 Streets.id -> Streets
