@@ -47,6 +47,20 @@ sealed class MapboxMapDesign(
         attributionRules: List<AttributionRule> = emptyList(),
     ) : MapboxMapDesign(layerId, attributionRules)
 
+    /**
+     * A style at an arbitrary URI -- `http(s)://`, `asset://`, `file://` --
+     * rather than one of Mapbox's own. [Custom] cannot say this: its value is
+     * always prefixed with [MAPBOX_URL]. The id is the URI itself, so the
+     * design a loaded style reports back as (see [toMapDesignType]) compares
+     * equal to the one that was set.
+     */
+    class StyleUri(
+        val uri: String,
+        attributionRules: List<AttributionRule> = emptyList(),
+    ) : MapboxMapDesign(uri, attributionRules) {
+        override fun getValue(): String = uri
+    }
+
     override fun getValue(): String = "${MAPBOX_URL}/${this.id}"
 
     companion object {
@@ -83,7 +97,11 @@ fun Style.toMapDesignType(): MapboxDesignType =
         "$MAPBOX_URL/${MapboxMapDesign.NavigationDay.id}" -> MapboxMapDesign.NavigationDay
         "$MAPBOX_URL/${MapboxMapDesign.NavigationNight.id}" -> MapboxMapDesign.NavigationNight
         else ->
-            MapboxMapDesign.Custom(
-                layerId = this.styleURI.replaceFirst("${MAPBOX_URL}/", ""),
-            )
+            if (this.styleURI.startsWith("$MAPBOX_URL/")) {
+                MapboxMapDesign.Custom(
+                    layerId = this.styleURI.replaceFirst("${MAPBOX_URL}/", ""),
+                )
+            } else {
+                MapboxMapDesign.StyleUri(this.styleURI)
+            }
     }

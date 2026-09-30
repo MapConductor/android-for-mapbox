@@ -98,6 +98,11 @@ public final class com.mapconductor.mapbox.MapboxMapDesign$StandardSatellite ext
 public final class com.mapconductor.mapbox.MapboxMapDesign$Streets extends com.mapconductor.mapbox.MapboxMapDesign {
   public static final com.mapconductor.mapbox.MapboxMapDesign$Streets INSTANCE;
 }
+public final class com.mapconductor.mapbox.MapboxMapDesign$StyleUri extends com.mapconductor.mapbox.MapboxMapDesign {
+  public final java.lang.String getUri();
+  public java.lang.String getValue();
+  public java.lang.Object getValue();
+}
 public final class com.mapconductor.mapbox.MapboxMapDesignKt {
   public static final com.mapconductor.core.map.MapDesignTypeInterface<java.lang.String> toMapDesignType(com.mapbox.maps.Style);
 }

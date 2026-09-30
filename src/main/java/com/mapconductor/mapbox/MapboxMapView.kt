@@ -22,6 +22,8 @@ import com.mapconductor.core.map.CameraRestriction
 import com.mapconductor.core.map.MapCameraPositionInterface
 import com.mapconductor.core.map.MapProjection
 import com.mapconductor.core.map.MutableMapServiceRegistry
+import com.mapconductor.core.map.VectorStyleAsDesign
+import com.mapconductor.core.map.VectorStyleSupportKey
 import com.mapconductor.core.marker.MarkerEventControllerInterface
 import com.mapconductor.core.marker.MarkerManager
 import com.mapconductor.core.marker.MarkerOverlayRendererInterface
@@ -136,6 +138,14 @@ fun MapboxMapView(
                 mapController.setMapDesignTypeChangeListener(state::onMapDesignTypeChange)
                 cameraRestriction?.let { mapController.setCameraRestriction(it) }
                 state.setController(mapController)
+                // Mapbox draws vector styles natively: a layer with a style to
+                // show hands it over instead of rasterising it. On the state,
+                // not in `createMapboxViewController` -- it acts on the
+                // state's design, which non-Compose hosts do not have.
+                state.serviceRegistry.put(
+                    VectorStyleSupportKey,
+                    VectorStyleAsDesign(state) { url, rules -> MapboxMapDesign.StyleUri(url, rules) },
+                )
 
                 holderRef.value = holder
                 controllerRef.value = mapController
