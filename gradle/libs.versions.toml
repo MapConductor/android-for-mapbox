@@ -8,7 +8,7 @@ kotlin = "2.0.21"
 
 composeBom = "2025.02.00"
 lifecycleRuntimeKtx = "2.8.7"
-mapboxAndroid = "11.24.3"
+mapboxAndroid = "11.32.0"
 activityCompose = "1.9.3"
 ktLint = "14.2.0"
 
