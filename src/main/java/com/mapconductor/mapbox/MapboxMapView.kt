@@ -21,9 +21,13 @@ import com.mapconductor.core.circle.CircleManager
 import com.mapconductor.core.map.CameraRestriction
 import com.mapconductor.core.map.MapCameraPositionInterface
 import com.mapconductor.core.map.MapProjection
+import com.mapconductor.core.map.MapViewStyle
 import com.mapconductor.core.map.MutableMapServiceRegistry
+import com.mapconductor.core.map.StyleMutationStore
 import com.mapconductor.core.map.VectorStyleAsDesign
+import com.mapconductor.core.map.VectorStyleMutationSupportKey
 import com.mapconductor.core.map.VectorStyleSupportKey
+import com.mapconductor.core.map.applyStyleMutations
 import com.mapconductor.core.marker.MarkerEventControllerInterface
 import com.mapconductor.core.marker.MarkerManager
 import com.mapconductor.core.marker.MarkerOverlayRendererInterface
@@ -71,6 +75,15 @@ fun MapboxMapView(
     onCameraMove: OnCameraMoveHandler? = null,
     onCameraMoveEnd: OnCameraMoveHandler? = null,
     projection: MapProjection = MapProjection.Mercator,
+    /**
+     * How the map looks, when the app states it rather than naming a design.
+     *
+     * A vector style *is* the basemap. `com.mapconductor:vectorstyle` builds
+     * one; what happens underneath depends on this backend and the app does
+     * not have to know.
+     */
+    style: MapViewStyle? = null,
+    onStyleDiagnostics: ((List<String>) -> Unit)? = null,
     content: (@Composable MapboxMapViewScope.() -> Unit)? = null,
 ) {
     val holderRef = remember { Ref<MapboxMapViewHolder>() }
@@ -146,6 +159,29 @@ fun MapboxMapView(
                     VectorStyleSupportKey,
                     VectorStyleAsDesign(state) { url, rules -> MapboxMapDesign.StyleUri(url, rules) },
                 )
+                // Mapbox can also be told to change a loaded style in place,
+                // so adjusting one need not hand it a new document -- which
+                // would drop its tiles and rebuild every overlay the app
+                // added. `VectorStyle` looks this up and takes the cheap road
+                // when it is here.
+                //
+                // The style is read through a lambda rather than captured:
+                // every design change replaces it, and a target holding the
+                // old one would patch a style the map has already dropped.
+                val mutations =
+                    StyleMutationStore { list ->
+                        applyStyleMutations(
+                            MapboxStyleMutationTarget(
+                                style = { holder.map.style },
+                                ready = { mapController.isShowingRequestedStyle() },
+                            ),
+                            list,
+                        )
+                    }
+                state.serviceRegistry.put(VectorStyleMutationSupportKey, mutations)
+                // Whatever was applied is lost the moment the map loads a
+                // style again; this is where it goes back on.
+                mapController.styleLoadedListener = { mutations.onStyleLoaded() }
 
                 holderRef.value = holder
                 controllerRef.value = mapController
@@ -168,6 +204,8 @@ fun MapboxMapView(
         // Pass content if it needs to be rendered within the overlay providers in MapViewBase,
         // or handle it here if it's specific to MapboxMapView structure before calling MapViewBase.
         // For now, assuming content relates to overlay definitions.
+        style = style,
+        onStyleDiagnostics = onStyleDiagnostics,
         content = content, // This might need adjustment based on how overlays are handled
         customDisposableEffect = { _, holderRef ->
 

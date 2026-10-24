@@ -208,6 +208,11 @@ class MapboxMapViewController internal constructor(
                     this@MapboxMapViewController.mapDesignType = mapDesign
                     mapDesignTypeChangeListener?.invoke(mapDesign)
                 }
+
+                // Last, once the overlays are back on: a vector style
+                // adjustment lost everything it set with the old style, and
+                // this is the moment the new one is known to be complete.
+                styleLoadedListener?.invoke()
             }
         }
 
@@ -358,9 +363,39 @@ class MapboxMapViewController internal constructor(
 
     internal var mapDesignTypeChangeListener: MapboxMapDesignTypeChangeHandler? = null
 
+    /**
+     * Called once the map has a style up and the overlays are back on it.
+     *
+     * How a vector style adjustment survives a design change. Kept in step
+     * with `MapLibreViewController.styleLoadedListener`.
+     */
+    internal var styleLoadedListener: (() -> Unit)? = null
+
+    /** The document the map was last asked for, and the one it reported loading. */
+    private var requestedStyle: String? = null
+    private var loadedStyleValue: String? = null
+
+    /**
+     * Whether the style on screen is the document the map was last asked
+     * for.
+     *
+     * What [MapboxStyleMutationTarget] answers `isReady` with, and not the
+     * same question as "is a style loaded". A vector style hands the map a
+     * new document and then applies the deltas compiled for it; in between,
+     * the map still has the document being replaced, whose layers have
+     * other names, so every delta came back as a property this map "cannot
+     * set by name". Mirrors `MapLibreViewController.isShowingRequestedStyle`.
+     */
+    internal fun isShowingRequestedStyle(): Boolean =
+        holder.map.style != null && loadedStyleValue == requestedStyle
+
     override fun setMapDesignType(value: MapboxDesignType) {
+        val document = value.getValue()
+        requestedStyle = document
         mainCoroutine.launch {
-            holder.mapView.mapboxMap.loadStyle(value.getValue())
+            holder.mapView.mapboxMap.loadStyle(document) {
+                loadedStyleValue = document
+            }
         }
     }
 
