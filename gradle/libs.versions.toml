@@ -15,6 +15,7 @@ ktLint = "14.2.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
+runner = "1.7.0"
 
 [libraries]
 # Jetpack Compose (with BOM)
@@ -42,6 +43,9 @@ androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", vers
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+androidx-runner = { module = "androidx.test:runner", version.ref = "runner" }
+androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "composeLibs" }
+androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest", version.ref = "composeLibs" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
