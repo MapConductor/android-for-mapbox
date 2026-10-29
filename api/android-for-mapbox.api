@@ -487,7 +487,6 @@ public final class com.mapconductor.mapbox.polyline.MapboxPolylineOverlayRendere
 public final class com.mapconductor.mapbox.raster.MapboxRasterLayerController extends com.mapconductor.core.raster.RasterLayerController<com.mapconductor.mapbox.raster.MapboxRasterLayerHandle> {
   public com.mapconductor.mapbox.raster.MapboxRasterLayerController(com.mapconductor.core.raster.RasterLayerManagerInterface<com.mapconductor.mapbox.raster.MapboxRasterLayerHandle>, com.mapconductor.mapbox.raster.MapboxRasterLayerOverlayRenderer);
   public com.mapconductor.mapbox.raster.MapboxRasterLayerController(com.mapconductor.core.raster.RasterLayerManagerInterface, com.mapconductor.mapbox.raster.MapboxRasterLayerOverlayRenderer, int, kotlin.jvm.internal.DefaultConstructorMarker);
-  public final java.lang.Object reapplyStyle(kotlin.coroutines.Continuation<? super kotlin.Unit>);
 }
 public final class com.mapconductor.mapbox.raster.MapboxRasterLayerHandle {
   public com.mapconductor.mapbox.raster.MapboxRasterLayerHandle(java.lang.String, java.lang.String);
