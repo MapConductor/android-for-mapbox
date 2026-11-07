@@ -11,9 +11,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.findViewTreeLifecycleOwner
+import androidx.lifecycle.setViewTreeLifecycleOwner
 import com.mapbox.maps.MapInitOptions
 import com.mapbox.maps.MapView
 import com.mapconductor.compose.map.MapViewBase
+import com.mapconductor.compose.map.MapViewLifecycleOwner
 import com.mapconductor.core.OnCameraMoveHandler
 import com.mapconductor.core.OnMapEventHandler
 import com.mapconductor.core.OnMapLoadedHandler
@@ -116,6 +119,12 @@ fun MapboxMapView(
                 )
 
             MapView(context, mapOptions).also {
+                // Mapbox's lifecycle plugin follows the view tree's lifecycle and
+                // only lets go of the MapView (component callbacks, observers)
+                // when that lifecycle is destroyed. With the Activity's, every
+                // MapView the user switched away from would stay until the
+                // Activity goes, so it gets one of its own; see onDestroyMapView.
+                it.setViewTreeLifecycleOwner(MapViewLifecycleOwner(lifecycle))
                 it.onStart()
             }
         },
@@ -227,12 +236,18 @@ fun MapboxMapView(
                 }
             }
         },
-        // Started in viewProvider, so stopped before it is destroyed. A MapView
-        // left alive keeps its renderer and, through its listeners, the
-        // controller with every overlay.
+        // Ending the MapView's own lifecycle has the lifecycle plugin stop and
+        // destroy it and unregister what it registered. A MapView left alive
+        // keeps its renderer and, through its listeners, the controller with
+        // every overlay.
         onDestroyMapView = { mapView ->
-            mapView.onStop()
-            mapView.onDestroy()
+            val owner = mapView.findViewTreeLifecycleOwner() as? MapViewLifecycleOwner
+            if (owner != null) {
+                owner.destroy()
+            } else {
+                mapView.onStop()
+                mapView.onDestroy()
+            }
         },
     )
 }
