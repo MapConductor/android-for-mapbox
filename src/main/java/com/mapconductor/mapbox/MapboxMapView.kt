@@ -58,7 +58,6 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import android.view.ViewGroup
 
 @SuppressLint("Lifecycle")
 @Composable
@@ -221,26 +220,19 @@ fun MapboxMapView(
                             // Do not call here to keep the MapView instance
                             // holderRef.value?.mapView?.onPause()
                         }
-
-                        @SuppressLint("Lifecycle")
-                        override fun onDestroy(owner: LifecycleOwner) {
-                            val currentHolder = holderRef.value
-                            if (currentHolder != null) {
-                                val activity = context.findActivity()
-                                if (activity?.isChangingConfigurations == true) {
-                                    (currentHolder.mapView.parent as? ViewGroup)?.removeView(currentHolder.mapView)
-                                } else {
-                                    // Ensure these calls are safe if mapView might be null or already destroyed
-                                    currentHolder.mapView.onDestroy()
-                                }
-                            }
-                        }
                     }
                 lifecycle.addObserver(observer)
                 onDispose {
                     lifecycle.removeObserver(observer)
                 }
             }
+        },
+        // Started in viewProvider, so stopped before it is destroyed. A MapView
+        // left alive keeps its renderer and, through its listeners, the
+        // controller with every overlay.
+        onDestroyMapView = { mapView ->
+            mapView.onStop()
+            mapView.onDestroy()
         },
     )
 }
