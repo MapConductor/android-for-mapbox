@@ -405,6 +405,8 @@ public final class com.mapconductor.mapbox.polygon.MapboxPolygonConductor implem
   public final com.mapconductor.mapbox.polygon.MapboxPolygonOverlayRenderer getPolygonOverlay();
   public final com.mapconductor.mapbox.polyline.MapboxPolylineOverlayRenderer getPolylineOverlay();
   public int getZIndex();
+  public final com.mapconductor.core.polygon.PolygonTiler getTiler();
+  public final void setTiler(com.mapconductor.core.polygon.PolygonTiler);
   public java.lang.Object add(java.util.List<com.mapconductor.core.polygon.PolygonState>, kotlin.coroutines.Continuation<? super kotlin.Unit>);
   public java.lang.Object update(com.mapconductor.core.polygon.PolygonState, kotlin.coroutines.Continuation<? super kotlin.Unit>);
   public final void dispatchClick(com.mapconductor.core.polygon.PolygonEvent);

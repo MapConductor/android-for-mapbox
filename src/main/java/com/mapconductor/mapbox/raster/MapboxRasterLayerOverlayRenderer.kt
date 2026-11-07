@@ -6,6 +6,7 @@ import com.mapbox.maps.extension.style.layers.addLayerBelow
 import com.mapbox.maps.extension.style.layers.generated.rasterLayer
 import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.sources.generated.rasterSource
+import com.mapconductor.core.polygon.POLYGON_TILE_LAYER_ID
 import com.mapconductor.core.raster.RasterHeaderRuleSet
 import com.mapconductor.core.raster.RasterLayerEntityInterface
 import com.mapconductor.core.raster.RasterLayerOverlayRendererInterface
@@ -25,6 +26,8 @@ class MapboxRasterLayerOverlayRenderer(
     private val handleById: MutableMap<String, MapboxRasterLayerHandle> = mutableMapOf()
 
     private fun isMarkerTileRaster(state: RasterLayerState): Boolean = state.id.startsWith(MARKER_TILE_RASTER_ID_PREFIX)
+
+    private fun isPolygonTileRaster(state: RasterLayerState): Boolean = state.id == POLYGON_TILE_LAYER_ID
 
     /** Mapbox Android はタイル要求を書き換える公開 API を持たない。 */
     override suspend fun onAdd(
@@ -102,6 +105,8 @@ class MapboxRasterLayerOverlayRenderer(
         try {
             if (isMarkerTileRaster(state)) {
                 addLayerForMarkerTile(style, layer)
+            } else if (isPolygonTileRaster(state)) {
+                addLayerForPolygonTile(style, layer)
             } else {
                 addBelowBasemapLabels(style, layer)
             }
@@ -133,6 +138,8 @@ class MapboxRasterLayerOverlayRenderer(
         try {
             if (isMarkerTileRaster(state)) {
                 addLayerForMarkerTile(style, layer)
+            } else if (isPolygonTileRaster(state)) {
+                addLayerForPolygonTile(style, layer)
             } else {
                 addBelowBasemapLabels(style, layer)
             }
@@ -182,6 +189,26 @@ class MapboxRasterLayerOverlayRenderer(
         }
     }
 
+    /**
+     * The polygon tiles are polygons drawn as images, not imagery: they go
+     * where the SDK's own polygon layers do, over the basemap and under
+     * polylines and markers -- below the first of those in the style.
+     */
+    private fun addLayerForPolygonTile(
+        style: com.mapbox.maps.Style,
+        layer: com.mapbox.maps.extension.style.layers.Layer,
+    ) {
+        val anchor = style.styleLayers.map { it.id }.firstOrNull { id -> POLYGON_TILE_ANCHOR_PREFIXES.any { id.startsWith(it) } }
+        if (anchor != null) {
+            try {
+                style.addLayerBelow(layer, anchor)
+                return
+            } catch (_: Exception) {
+            }
+        }
+        style.addLayer(layer)
+    }
+
     private fun addLayerForMarkerTile(
         style: com.mapbox.maps.Style,
         layer: com.mapbox.maps.extension.style.layers.Layer,
@@ -208,7 +235,7 @@ class MapboxRasterLayerOverlayRenderer(
         val ordered =
             stateById.values
                 .asSequence()
-                .filter { !isMarkerTileRaster(it) }
+                .filter { !isMarkerTileRaster(it) && !isPolygonTileRaster(it) }
                 .sortedBy { it.zIndex }
                 .mapNotNull { state -> handleById[state.id]?.let { handle -> state to handle } }
                 .toList()
@@ -285,6 +312,10 @@ class MapboxRasterLayerOverlayRenderer(
         private const val MARKER_TILE_RASTER_ID_PREFIX = "marker-tile-"
         private const val MARKERS_LAYER_ID = "markers-layer"
         private const val POLYLINE_LAYER_ID = "polyline-layer"
+
+        /** The SDK's own layers the polygon tiles go below, whichever comes first in the style. */
+        private val POLYGON_TILE_ANCHOR_PREFIXES =
+            listOf("polygon-fill-layer", "polygon-outline-layer", POLYLINE_LAYER_ID, "raster-layer-marker-tile-", MARKERS_LAYER_ID)
     }
 }
 

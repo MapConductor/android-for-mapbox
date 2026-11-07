@@ -8,9 +8,12 @@ import com.mapconductor.core.polygon.PolygonEntity
 import com.mapconductor.core.polygon.PolygonEntityInterface
 import com.mapconductor.core.polygon.PolygonEvent
 import com.mapconductor.core.polygon.PolygonState
+import com.mapconductor.core.polygon.PolygonTiler
 import com.mapconductor.core.polyline.PolylineEntity
 import com.mapconductor.core.polyline.PolylineState
 import com.mapconductor.mapbox.polyline.MapboxPolylineOverlayRenderer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class MapboxPolygonConductor(
     val polygonOverlay: MapboxPolygonOverlayRenderer,
@@ -20,6 +23,13 @@ class MapboxPolygonConductor(
         PolygonEntityInterface<PolygonState>,
     > {
     override val zIndex: Int = 2
+
+    /**
+     * Set by the view controller to draw many polygons as tiles (see
+     * [PolygonTiler]). Tiled polygons stay in the manager, for taps, and give
+     * the GeoJSON layers nothing.
+     */
+    var tiler: PolygonTiler? = null
 
     override suspend fun add(data: List<PolygonState>) {
         val nextIds = data.asSequence().map { it.id }.toSet()
@@ -36,7 +46,19 @@ class MapboxPolygonConductor(
             polylineOverlay.polylineManager.removeEntity("outline-$id")
         }
 
+        val tiled = tiler?.route(data) ?: emptySet()
+        if (tiled.isNotEmpty()) {
+            // Still registered, so taps resolve against the original shape.
+            withContext(Dispatchers.Default) {
+                for (polygonState in data) {
+                    if (polygonState.id !in tiled) continue
+                    polygonOverlay.polygonManager.registerEntity(PolygonEntity(polygon = IN_TILES, state = polygonState))
+                    polylineOverlay.polylineManager.removeEntity("outline-${polygonState.id}")
+                }
+            }
+        }
         data.forEach { polygonState ->
+            if (polygonState.id in tiled) return@forEach
             polygonOverlay.createPolygon(polygonState)?.let { polygon ->
                 val polygonEntity =
                     PolygonEntity(
@@ -61,6 +83,13 @@ class MapboxPolygonConductor(
     }
 
     override suspend fun update(state: PolygonState) {
+        tiler?.let { tiler ->
+            if (tiler.isTiled(state.id)) {
+                polygonOverlay.polygonManager.registerEntity(PolygonEntity(polygon = IN_TILES, state = state))
+                tiler.update(state)
+                return
+            }
+        }
         polygonOverlay.createPolygon(state)?.let { polygon ->
             val polygonEntity =
                 PolygonEntity(
@@ -96,6 +125,7 @@ class MapboxPolygonConductor(
         polygonOverlay.polygonManager.find(position) as? PolygonEntityInterface<PolygonState>
 
     override suspend fun clear() {
+        tiler?.clear()
         polygonOverlay.polygonManager.clear()
         polylineOverlay.polylineManager.clear()
         polygonOverlay.onPostProcess()
@@ -132,6 +162,9 @@ class MapboxPolygonConductor(
         // No native resources to clean up for polygons
     }
 }
+
+/** What a tiled polygon hands the GeoJSON layers: nothing. It is in the tiles. */
+private val IN_TILES: List<com.mapbox.geojson.Feature> = emptyList()
 
 private fun PolygonState.toPolylineState(): PolylineState {
     val closedPoints =
