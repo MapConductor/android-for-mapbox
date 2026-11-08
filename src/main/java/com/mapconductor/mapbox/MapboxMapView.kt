@@ -49,7 +49,8 @@ import com.mapconductor.mapbox.groundimage.MapboxGroundImageOverlayRenderer
 import com.mapconductor.mapbox.marker.MapboxMarkerController
 import com.mapconductor.mapbox.marker.MarkerDragLayer
 import com.mapconductor.mapbox.marker.MarkerLayer
-import com.mapconductor.mapbox.polygon.MapboxPolygonConductor
+import com.mapconductor.mapbox.polygon.MapboxPolygonCompositeRenderer
+import com.mapconductor.mapbox.polygon.MapboxPolygonController
 import com.mapconductor.mapbox.polygon.MapboxPolygonLayer
 import com.mapconductor.mapbox.polygon.MapboxPolygonOverlayRenderer
 import com.mapconductor.mapbox.polyline.MapboxPolylineController
@@ -311,7 +312,7 @@ fun createMapboxViewController(
     return mapController
 }
 
-internal fun getPolygonController(holder: MapboxMapViewHolder): MapboxPolygonConductor {
+internal fun getPolygonController(holder: MapboxMapViewHolder): MapboxPolygonController {
     val polylineLayer =
         MapboxPolylineLayer(
             sourceId = "polygon-outline-source",
@@ -338,12 +339,15 @@ internal fun getPolygonController(holder: MapboxMapViewHolder): MapboxPolygonCon
             holder = holder,
         )
 
-    val conductor =
-        MapboxPolygonConductor(
-            polygonOverlay = polygonOverlayRenderer,
-            polylineOverlay = polylineOverlayRenderer,
+    val controller =
+        MapboxPolygonController(
+            renderer =
+                MapboxPolygonCompositeRenderer(
+                    fill = polygonOverlayRenderer,
+                    outline = polylineOverlayRenderer,
+                ),
         )
-    return conductor
+    return controller
 }
 
 internal fun getCircleController(holder: MapboxMapViewHolder): MapboxCircleController {

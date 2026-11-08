@@ -43,7 +43,7 @@ import com.mapconductor.mapbox.marker.MapboxMarkerController
 import com.mapconductor.mapbox.marker.MapboxMarkerOverlayRenderer
 import com.mapconductor.mapbox.marker.MarkerDragLayer
 import com.mapconductor.mapbox.marker.MarkerLayer
-import com.mapconductor.mapbox.polygon.MapboxPolygonConductor
+import com.mapconductor.mapbox.polygon.MapboxPolygonController
 import com.mapconductor.mapbox.polyline.MapboxPolylineController
 import com.mapconductor.mapbox.raster.MapboxRasterLayerController
 import java.util.UUID
@@ -68,7 +68,7 @@ class MapboxMapViewController internal constructor(
     internal var projection: MapProjection,
     internal val markerController: MapboxMarkerController,
     internal val polylineController: MapboxPolylineController,
-    internal val polygonController: MapboxPolygonConductor,
+    internal val polygonController: MapboxPolygonController,
     internal val groundImageController: MapboxGroundImageController,
     internal val circleController: MapboxCircleController,
     internal val rasterLayerController: MapboxRasterLayerController,
@@ -299,7 +299,7 @@ class MapboxMapViewController internal constructor(
             .hasEntity(state.id)
 
     override fun hasPolygon(state: PolygonState): Boolean =
-        this.polygonController.polygonOverlay.polygonManager
+        this.polygonController.polygonManager
             .hasEntity(state.id)
 
     override fun applyUISettings(settings: MapUISettings) {
