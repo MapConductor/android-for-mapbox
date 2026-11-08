@@ -268,6 +268,8 @@ class MapboxMapViewController internal constructor(
         groundImageController.clear()
         circleController.clear()
         rasterLayerController.clear()
+        // 拡張モジュール（クラスタリングなど）が登録した Strategy のマーカーも消す。
+        clearStrategyMarkerControllers()
     }
 
     override fun setMarkerAnimationOverlayHost(host: MarkerAnimationOverlayHost?) {
