@@ -1,11 +1,9 @@
 package com.mapconductor.mapbox.raster
 
-import com.mapbox.maps.extension.style.layers.addLayer
-import com.mapbox.maps.extension.style.layers.addLayerAbove
-import com.mapbox.maps.extension.style.layers.addLayerBelow
 import com.mapbox.maps.extension.style.layers.generated.rasterLayer
 import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.sources.generated.rasterSource
+import com.mapconductor.core.controller.OverlayKind
 import com.mapconductor.core.raster.RasterHeaderRuleSet
 import com.mapconductor.core.raster.RasterLayerEntityInterface
 import com.mapconductor.core.raster.RasterLayerOverlayRendererInterface
@@ -13,6 +11,7 @@ import com.mapconductor.core.raster.RasterLayerSource
 import com.mapconductor.core.raster.RasterLayerState
 import com.mapconductor.core.raster.TileScheme
 import com.mapconductor.mapbox.MapboxMapViewHolder
+import com.mapconductor.mapbox.MapboxOverlayStacking
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -99,15 +98,7 @@ class MapboxRasterLayerOverlayRenderer(
         } catch (e: Exception) {
             Log.w("Mapbox", "Failed to add raster source: ${e.message}")
         }
-        try {
-            if (isMarkerTileRaster(state)) {
-                addLayerForMarkerTile(style, layer)
-            } else {
-                addBelowBasemapLabels(style, layer)
-            }
-        } catch (e: Exception) {
-            Log.w("Mapbox", "Failed to add raster layer: ${e.message}")
-        }
+        addToStack(style, layer, state)
         return handle
     }
 
@@ -116,10 +107,7 @@ class MapboxRasterLayerOverlayRenderer(
         state: RasterLayerState,
     ) {
         val style = holder.map.style ?: return
-        try {
-            style.removeStyleLayer(handle.layerId)
-        } catch (_: Exception) {
-        }
+        MapboxOverlayStacking.remove(holder.map, style, handle.layerId)
         val opacity =
             if (state.visible) {
                 state.opacity.coerceIn(0.0f, 1.0f).toDouble()
@@ -130,23 +118,13 @@ class MapboxRasterLayerOverlayRenderer(
             rasterLayer(handle.layerId, handle.sourceId) {
                 rasterOpacity(opacity)
             }
-        try {
-            if (isMarkerTileRaster(state)) {
-                addLayerForMarkerTile(style, layer)
-            } else {
-                addBelowBasemapLabels(style, layer)
-            }
-        } catch (_: Exception) {
-        }
+        addToStack(style, layer, state)
     }
 
     private fun removeLayer(entity: RasterLayerEntityInterface<MapboxRasterLayerHandle>) {
         val style = holder.map.style ?: return
         val handle = entity.layer
-        try {
-            style.removeStyleLayer(handle.layerId)
-        } catch (_: Exception) {
-        }
+        MapboxOverlayStacking.remove(holder.map, style, handle.layerId)
         try {
             style.removeStyleSource(handle.sourceId)
         } catch (_: Exception) {
@@ -182,26 +160,22 @@ class MapboxRasterLayerOverlayRenderer(
         }
     }
 
-    private fun addLayerForMarkerTile(
+    /**
+     * 帯の順（[MapboxOverlayStacking]）で足す。アプリのラスターはラスターの帯
+     * （一番下、ベースマップのラベルの下）、マーカーのタイルはマーカーの帯の一番下。
+     */
+    private fun addToStack(
         style: com.mapbox.maps.Style,
         layer: com.mapbox.maps.extension.style.layers.Layer,
+        state: RasterLayerState,
     ) {
-        // Insert the raster tiles below the marker symbol layer so they don't cover markers,
-        // but remain above vector overlays that are anchored below markers (polyline/circle/etc).
-        try {
-            style.addLayerBelow(layer, MARKERS_LAYER_ID)
-            return
-        } catch (_: Exception) {
-        }
-
-        // Best-effort fallback: place above polylines if marker layer isn't present yet.
-        try {
-            style.addLayerAbove(layer, POLYLINE_LAYER_ID)
-            return
-        } catch (_: Exception) {
-        }
-
-        style.addLayer(layer)
+        val key =
+            if (isMarkerTileRaster(state)) {
+                MapboxOverlayStacking.MARKER_TILE
+            } else {
+                MapboxOverlayStacking.key(OverlayKind.RasterLayer, state.zIndex)
+            }
+        MapboxOverlayStacking.add(holder.map, style, layer, key)
     }
 
     private fun rebuildNonMarkerRasterLayers(style: com.mapbox.maps.Style) {
@@ -215,10 +189,7 @@ class MapboxRasterLayerOverlayRenderer(
 
         // Remove and re-add non-marker raster layers in zIndex order to ensure deterministic stacking.
         ordered.forEach { (_, handle) ->
-            try {
-                style.removeStyleLayer(handle.layerId)
-            } catch (_: Exception) {
-            }
+            MapboxOverlayStacking.remove(holder.map, style, handle.layerId)
         }
 
         ordered.forEach { (state, handle) ->
@@ -232,59 +203,12 @@ class MapboxRasterLayerOverlayRenderer(
                 rasterLayer(handle.layerId, handle.sourceId) {
                     rasterOpacity(opacity)
                 }
-            try {
-                addBelowBasemapLabels(style, layer)
-            } catch (_: Exception) {
-            }
+            addToStack(style, layer, state)
         }
     }
-
-    /**
-     * Puts a raster layer above the basemap's geometry but **below its labels**.
-     *
-     * Appended at the top of the style instead, a raster overlay covers the
-     * place names, road names and shields the backend draws -- a vector tile
-     * layer's own roads run straight through them, which is what "the labels
-     * are under the lines" looks like. Every raster overlay we add has the
-     * same problem, so the rule lives here rather than in each of them.
-     *
-     * Inserting successive layers below the same anchor keeps their order:
-     * each one lands directly below the anchor, which is directly above the
-     * one inserted before it.
-     *
-     * Anything of ours is skipped when looking for the anchor. Markers are a
-     * symbol layer too, and anchoring to them would put the raster back above
-     * the labels -- with the added twist of only doing so once a marker exists.
-     */
-    private fun addBelowBasemapLabels(
-        style: com.mapbox.maps.Style,
-        layer: com.mapbox.maps.extension.style.layers.Layer,
-    ) {
-        val anchor =
-            style.styleLayers.firstOrNull { it.type == "symbol" && !isOursById(it.id) }
-        if (anchor == null) {
-            style.addLayer(layer)
-            return
-        }
-        try {
-            style.addLayerBelow(layer, anchor.id)
-        } catch (_: Exception) {
-            style.addLayer(layer)
-        }
-    }
-
-    /** True for layers this SDK adds, as opposed to the design's own. */
-    private fun isOursById(id: String): Boolean =
-        id.startsWith("raster-layer-") ||
-            id.startsWith(MARKERS_LAYER_ID) ||
-            id.startsWith("marker-drag-layer") ||
-            id.startsWith(POLYLINE_LAYER_ID) ||
-            id.startsWith("circle-layer")
 
     private companion object {
         private const val MARKER_TILE_RASTER_ID_PREFIX = "marker-tile-"
-        private const val MARKERS_LAYER_ID = "markers-layer"
-        private const val POLYLINE_LAYER_ID = "polyline-layer"
     }
 }
 
