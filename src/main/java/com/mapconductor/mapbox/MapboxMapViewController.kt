@@ -266,6 +266,7 @@ class MapboxMapViewController internal constructor(
         polylineController.clear()
         polygonController.clear()
         groundImageController.clear()
+        circleController.clear()
         rasterLayerController.clear()
     }
 
