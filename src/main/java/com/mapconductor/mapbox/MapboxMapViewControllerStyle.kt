@@ -37,8 +37,8 @@ internal fun MapboxMapViewController.attachMarkerLayers(
 
 internal fun MapboxMapViewController.attachOverlaySourcesAndLayers(style: com.mapbox.maps.Style) {
     // Polygon sources only (z-indexed layers added below)
-    style.addSource(polygonController.polylineOverlay.layer.source)
-    style.addSource(polygonController.polygonOverlay.layer.source)
+    style.addSource(polygonController.renderer.outline.layer.source)
+    style.addSource(polygonController.renderer.fill.layer.source)
 
     // Circle fill (fill pass) then stroke (line pass) — both below general polyline
     style.addSource(circleController.renderer.layer.source)
@@ -61,12 +61,12 @@ internal fun MapboxMapViewController.attachOverlaySourcesAndLayers(style: com.ma
 }
 
 internal fun MapboxMapViewController.ensurePolygonZLayers(style: com.mapbox.maps.Style) {
-    val fillSourceId = polygonController.polygonOverlay.layer.sourceId
-    val outlineSourceId = polygonController.polylineOverlay.layer.sourceId
+    val fillSourceId = polygonController.renderer.fill.layer.sourceId
+    val outlineSourceId = polygonController.renderer.outline.layer.sourceId
     val anchorId = polylineController.renderer.layer.layerId
 
     val zSet =
-        polygonController.polygonOverlay.polygonManager
+        polygonController.polygonManager
             .allEntities()
             .map { it.state.zIndex }
             .toSet()
