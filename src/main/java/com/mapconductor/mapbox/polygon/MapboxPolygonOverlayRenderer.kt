@@ -62,13 +62,16 @@ class MapboxPolygonOverlayRenderer(
         return prev.polygon
     }
 
+    // Polygons drawn as tiles (PolygonController.tiler) stay in the manager, for
+    // taps, with no features: their entity's polygon is null.
+    @Suppress("USELESS_CAST")
     private fun getAllPolygonEntities(): List<PolygonEntityInterface<MapboxActualPolygon>> =
-        polygonManager.allEntities()
+        polygonManager.allEntities().filter { (it.polygon as MapboxActualPolygon?) != null }
 
     private fun getRemainingPolygonEntities(
         removed: List<PolygonEntityInterface<MapboxActualPolygon>>,
     ): List<PolygonEntityInterface<MapboxActualPolygon>> {
         val removedIds = removed.mapTo(HashSet()) { it.state.id }
-        return polygonManager.allEntities().filter { it.state.id !in removedIds }
+        return getAllPolygonEntities().filter { it.state.id !in removedIds }
     }
 }

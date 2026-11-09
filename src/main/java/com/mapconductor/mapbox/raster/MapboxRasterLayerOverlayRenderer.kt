@@ -4,6 +4,7 @@ import com.mapbox.maps.extension.style.layers.generated.rasterLayer
 import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.sources.generated.rasterSource
 import com.mapconductor.core.controller.OverlayKind
+import com.mapconductor.core.polygon.POLYGON_TILE_LAYER_ID
 import com.mapconductor.core.raster.RasterHeaderRuleSet
 import com.mapconductor.core.raster.RasterLayerEntityInterface
 import com.mapconductor.core.raster.RasterLayerOverlayRendererInterface
@@ -24,6 +25,8 @@ class MapboxRasterLayerOverlayRenderer(
     private val handleById: MutableMap<String, MapboxRasterLayerHandle> = mutableMapOf()
 
     private fun isMarkerTileRaster(state: RasterLayerState): Boolean = state.id.startsWith(MARKER_TILE_RASTER_ID_PREFIX)
+
+    private fun isPolygonTileRaster(state: RasterLayerState): Boolean = state.id == POLYGON_TILE_LAYER_ID
 
     /** Mapbox Android はタイル要求を書き換える公開 API を持たない。 */
     override suspend fun onAdd(
@@ -162,7 +165,8 @@ class MapboxRasterLayerOverlayRenderer(
 
     /**
      * 帯の順（[MapboxOverlayStacking]）で足す。アプリのラスターはラスターの帯
-     * （一番下、ベースマップのラベルの下）、マーカーのタイルはマーカーの帯の一番下。
+     * （一番下、ベースマップのラベルの下）、マーカーのタイルはマーカーの帯の一番下、
+     * ポリゴンのタイルはポリゴンの帯の一番下（画像になったポリゴンであって、地図の画像ではない）。
      */
     private fun addToStack(
         style: com.mapbox.maps.Style,
@@ -172,6 +176,8 @@ class MapboxRasterLayerOverlayRenderer(
         val key =
             if (isMarkerTileRaster(state)) {
                 MapboxOverlayStacking.MARKER_TILE
+            } else if (isPolygonTileRaster(state)) {
+                MapboxOverlayStacking.POLYGON_TILE
             } else {
                 MapboxOverlayStacking.key(OverlayKind.RasterLayer, state.zIndex)
             }
@@ -182,7 +188,7 @@ class MapboxRasterLayerOverlayRenderer(
         val ordered =
             stateById.values
                 .asSequence()
-                .filter { !isMarkerTileRaster(it) }
+                .filter { !isMarkerTileRaster(it) && !isPolygonTileRaster(it) }
                 .sortedBy { it.zIndex }
                 .mapNotNull { state -> handleById[state.id]?.let { handle -> state to handle } }
                 .toList()
