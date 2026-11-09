@@ -1,9 +1,7 @@
 package com.mapconductor.mapbox
 
-import com.mapbox.maps.extension.style.layers.addLayer
-import com.mapbox.maps.extension.style.layers.addLayerAbove
-import com.mapbox.maps.extension.style.layers.addLayerBelow
 import com.mapbox.maps.extension.style.sources.addSource
+import com.mapconductor.core.controller.OverlayKind
 import com.mapconductor.mapbox.marker.MapboxMarkerOverlayRenderer
 
 /**
@@ -21,35 +19,37 @@ internal fun MapboxMapViewController.attachMarkerLayers(
         style.addSource(renderer.markerLayer.source)
     } catch (_: Exception) {
     }
-    try {
-        style.addLayer(renderer.markerLayer.layer)
-    } catch (_: Exception) {
-    }
+    MapboxOverlayStacking.add(holder.map, style, renderer.markerLayer.layer, MapboxOverlayStacking.key(OverlayKind.Marker))
     try {
         style.addSource(renderer.dragLayer.source)
     } catch (_: Exception) {
     }
-    try {
-        style.addLayer(renderer.dragLayer.layer)
-    } catch (_: Exception) {
-    }
+    MapboxOverlayStacking.add(holder.map, style, renderer.dragLayer.layer, MapboxOverlayStacking.MARKER_DRAG)
 }
 
 internal fun MapboxMapViewController.attachOverlaySourcesAndLayers(style: com.mapbox.maps.Style) {
     // Polygon sources only (z-indexed layers added below)
-    style.addSource(polygonController.polylineOverlay.layer.source)
-    style.addSource(polygonController.polygonOverlay.layer.source)
+    style.addSource(polygonController.renderer.outline.layer.source)
+    style.addSource(polygonController.renderer.fill.layer.source)
 
     // Circle fill (fill pass) then stroke (line pass) — both below general polyline
     style.addSource(circleController.renderer.layer.source)
-    style.addLayer(circleController.renderer.layer.fillLayer)
-    style.addLayer(circleController.renderer.layer.strokeLayer)
+    // 層の位置は MapboxOverlayStacking が帯の順で決める（追加の順に依らない）。
+    // 線は塗りの直後（同じ鍵なら後から入れたものが上）。
+    val circleKey = MapboxOverlayStacking.key(OverlayKind.Circle)
+    MapboxOverlayStacking.add(holder.map, style, circleController.renderer.layer.fillLayer, circleKey)
+    MapboxOverlayStacking.add(holder.map, style, circleController.renderer.layer.strokeLayer, circleKey)
 
     // Polyline (general)
     style.addSource(polylineController.renderer.layer.source)
-    style.addLayer(polylineController.renderer.layer.layer)
+    MapboxOverlayStacking.add(
+        holder.map,
+        style,
+        polylineController.renderer.layer.layer,
+        MapboxOverlayStacking.key(OverlayKind.Polyline),
+    )
 
-    // Add z-indexed polygon layers below general polylines
+    // Polygon z-layers (polygon band: above ground images, below circles)
     ensurePolygonZLayers(style)
 
     // Marker + drag layers
@@ -61,12 +61,12 @@ internal fun MapboxMapViewController.attachOverlaySourcesAndLayers(style: com.ma
 }
 
 internal fun MapboxMapViewController.ensurePolygonZLayers(style: com.mapbox.maps.Style) {
-    val fillSourceId = polygonController.polygonOverlay.layer.sourceId
-    val outlineSourceId = polygonController.polylineOverlay.layer.sourceId
+    val fillSourceId = polygonController.renderer.fill.layer.sourceId
+    val outlineSourceId = polygonController.renderer.outline.layer.sourceId
     val anchorId = polylineController.renderer.layer.layerId
 
     val zSet =
-        polygonController.polygonOverlay.polygonManager
+        polygonController.polygonManager
             .allEntities()
             .map { it.state.zIndex }
             .toSet()
@@ -76,14 +76,8 @@ internal fun MapboxMapViewController.ensurePolygonZLayers(style: com.mapbox.maps
     toRemove.forEach { z ->
         val fillId = "polygon-fill-layer-$z"
         val outlineId = "polygon-outline-layer-$z"
-        try {
-            style.removeStyleLayer(outlineId)
-        } catch (_: Exception) {
-        }
-        try {
-            style.removeStyleLayer(fillId)
-        } catch (_: Exception) {
-        }
+        MapboxOverlayStacking.remove(holder.map, style, outlineId)
+        MapboxOverlayStacking.remove(holder.map, style, fillId)
     }
 
     val zList = zSet.toList().sorted()
@@ -108,11 +102,7 @@ internal fun MapboxMapViewController.ensurePolygonZLayers(style: com.mapbox.maps
                             .get("fillColor"),
                     )
                 }
-            try {
-                style.addLayerBelow(layer, anchorId)
-            } catch (_: Exception) {
-                style.addLayer(layer)
-            }
+            MapboxOverlayStacking.add(holder.map, style, layer, MapboxOverlayStacking.key(OverlayKind.Polygon, z))
         }
 
         // Outline layer above its fill
@@ -138,11 +128,8 @@ internal fun MapboxMapViewController.ensurePolygonZLayers(style: com.mapbox.maps
                             .get("strokeWidth"),
                     )
                 }
-            try {
-                style.addLayerAbove(layer, fillId)
-            } catch (_: Exception) {
-                style.addLayer(layer)
-            }
+            // 塗りの直後（同じ鍵なら後から入れたものが上）。
+            MapboxOverlayStacking.add(holder.map, style, layer, MapboxOverlayStacking.key(OverlayKind.Polygon, z))
         }
     }
     // Update tracked set

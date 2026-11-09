@@ -112,6 +112,10 @@ class MapboxMarkerController private constructor(
             markerManager.clear()
             tiledMarkerIds.clear()
             removeTileOverlay()
+            // onRemove はアイコンの参照数を減らすだけで、地図のソースは onPostProcess が
+            // manager の中身から描き直すまで変わらない。空にした後で呼ばないと、
+            // clearOverlays() の後もマーカーが地図に残る。
+            renderer.onPostProcess()
         }
         viewportSwitch.requestReapply()
     }

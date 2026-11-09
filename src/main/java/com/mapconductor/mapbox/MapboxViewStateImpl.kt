@@ -23,7 +23,10 @@ class MapboxViewState(
     cameraPosition: MapCameraPosition = MapCameraPosition.Default,
 ) : MapViewState<MapboxDesignType>(cameraPosition),
     MapboxViewStateInterface {
-    private var controller: MapboxMapViewControllerInterface? = null
+    // Read through the base so that letting go of the controller there (MapViewBase
+    // does it when the map is torn down) leaves nothing behind here.
+    private val controller: MapboxMapViewControllerInterface?
+        get() = attachedMapController as? MapboxMapViewControllerInterface
 
     private var _mapDesignType: MapboxDesignType = mapDesignType
 
@@ -35,7 +38,6 @@ class MapboxViewState(
         get() = _mapDesignType
 
     internal fun setController(controller: MapboxMapViewControllerInterface) {
-        this.controller = controller
         attachController(controller)
     }
 

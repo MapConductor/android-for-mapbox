@@ -3,13 +3,12 @@ package com.mapconductor.mapbox.groundimage
 import com.mapbox.bindgen.DataRef
 import com.mapbox.maps.Image
 import com.mapbox.maps.Style
-import com.mapbox.maps.extension.style.layers.addLayer
-import com.mapbox.maps.extension.style.layers.addLayerBelow
 import com.mapbox.maps.extension.style.layers.generated.rasterLayer
 import com.mapbox.maps.extension.style.layers.properties.generated.Visibility
 import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.sources.generated.imageSource
 import com.mapbox.maps.extension.style.utils.TypeUtils
+import com.mapconductor.core.controller.OverlayKind
 import com.mapconductor.core.features.GeoRectBounds
 import com.mapconductor.core.groundimage.AbstractGroundImageOverlayRenderer
 import com.mapconductor.core.groundimage.GroundImageEntityInterface
@@ -17,6 +16,7 @@ import com.mapconductor.core.groundimage.GroundImageFingerPrint
 import com.mapconductor.core.groundimage.GroundImageState
 import com.mapconductor.mapbox.MapboxActualGroundImage
 import com.mapconductor.mapbox.MapboxMapViewHolder
+import com.mapconductor.mapbox.MapboxOverlayStacking
 import java.nio.ByteBuffer
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
@@ -134,25 +134,15 @@ class MapboxGroundImageOverlayRenderer(
             Log.w("Mapbox", "Failed to add ground image source: ${e.message}")
         }
 
-        try {
-            style.addLayerBelow(layer, BELOW_LAYER_ID)
-        } catch (_: Exception) {
-            try {
-                style.addLayer(layer)
-            } catch (e: Exception) {
-                Log.w("Mapbox", "Failed to add ground image layer: ${e.message}")
-            }
-        }
+        // GroundImage の帯（ラスターの上、ポリゴンの下）。送り直しても同じ位置。
+        MapboxOverlayStacking.add(holder.map, style, layer, MapboxOverlayStacking.key(OverlayKind.GroundImage))
     }
 
     private fun removeSourceAndLayerIfExists(
         style: Style,
         handle: MapboxGroundImageHandle,
     ) {
-        try {
-            style.removeStyleLayer(handle.layerId)
-        } catch (_: Exception) {
-        }
+        MapboxOverlayStacking.remove(holder.map, style, handle.layerId)
         try {
             style.removeStyleSource(handle.sourceId)
         } catch (_: Exception) {
@@ -224,7 +214,6 @@ class MapboxGroundImageOverlayRenderer(
             opacity = opacity,
         )
 
-    companion object {
-        private const val BELOW_LAYER_ID = "polyline-layer"
-    }
+    // 公開 API（Companion）の互換のために残している。
+    companion object
 }
