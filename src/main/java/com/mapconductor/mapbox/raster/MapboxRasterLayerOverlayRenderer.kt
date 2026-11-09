@@ -5,6 +5,7 @@ import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.sources.generated.rasterSource
 import com.mapconductor.core.controller.OverlayKind
 import com.mapconductor.core.polygon.POLYGON_TILE_LAYER_ID
+import com.mapconductor.core.polyline.POLYLINE_TILE_LAYER_ID
 import com.mapconductor.core.raster.RasterHeaderRuleSet
 import com.mapconductor.core.raster.RasterLayerEntityInterface
 import com.mapconductor.core.raster.RasterLayerOverlayRendererInterface
@@ -27,6 +28,8 @@ class MapboxRasterLayerOverlayRenderer(
     private fun isMarkerTileRaster(state: RasterLayerState): Boolean = state.id.startsWith(MARKER_TILE_RASTER_ID_PREFIX)
 
     private fun isPolygonTileRaster(state: RasterLayerState): Boolean = state.id == POLYGON_TILE_LAYER_ID
+
+    private fun isPolylineTileRaster(state: RasterLayerState): Boolean = state.id == POLYLINE_TILE_LAYER_ID
 
     /** Mapbox Android はタイル要求を書き換える公開 API を持たない。 */
     override suspend fun onAdd(
@@ -178,6 +181,8 @@ class MapboxRasterLayerOverlayRenderer(
                 MapboxOverlayStacking.MARKER_TILE
             } else if (isPolygonTileRaster(state)) {
                 MapboxOverlayStacking.POLYGON_TILE
+            } else if (isPolylineTileRaster(state)) {
+                MapboxOverlayStacking.POLYLINE_TILE
             } else {
                 MapboxOverlayStacking.key(OverlayKind.RasterLayer, state.zIndex)
             }
@@ -188,7 +193,7 @@ class MapboxRasterLayerOverlayRenderer(
         val ordered =
             stateById.values
                 .asSequence()
-                .filter { !isMarkerTileRaster(it) && !isPolygonTileRaster(it) }
+                .filter { !isMarkerTileRaster(it) && !isPolygonTileRaster(it) && !isPolylineTileRaster(it) }
                 .sortedBy { it.zIndex }
                 .mapNotNull { state -> handleById[state.id]?.let { handle -> state to handle } }
                 .toList()
