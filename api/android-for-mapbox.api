@@ -217,6 +217,7 @@ public final class com.mapconductor.mapbox.MapboxOverlayStacking {
   public final com.mapconductor.core.controller.OverlayStacking$Key key(com.mapconductor.core.controller.OverlayKind, int);
   public final com.mapconductor.core.controller.OverlayStacking$Key getMARKER_TILE();
   public final com.mapconductor.core.controller.OverlayStacking$Key getPOLYGON_TILE();
+  public final com.mapconductor.core.controller.OverlayStacking$Key getPOLYLINE_TILE();
   public final com.mapconductor.core.controller.OverlayStacking$Key getMARKER_DRAG();
   public final void add(com.mapbox.maps.MapboxMap, com.mapbox.maps.Style, com.mapbox.maps.extension.style.layers.Layer, com.mapconductor.core.controller.OverlayStacking$Key);
   public final void remove(com.mapbox.maps.MapboxMap, com.mapbox.maps.Style, java.lang.String);

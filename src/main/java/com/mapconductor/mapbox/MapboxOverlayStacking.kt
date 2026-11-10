@@ -42,6 +42,9 @@ internal object MapboxOverlayStacking {
     /** ポリゴンのタイル（ラスター）: ポリゴンの帯の一番下。 */
     val POLYGON_TILE = key(OverlayKind.Polygon, Int.MIN_VALUE)
 
+    /** ポリラインのタイル（ラスター）: ポリラインの帯の一番下（サークルの上、ネイティブのポリラインの下）。 */
+    val POLYLINE_TILE = key(OverlayKind.Polyline, Int.MIN_VALUE)
+
     /** ドラッグ中のマーカーの層: マーカーの帯の一番上。 */
     val MARKER_DRAG = key(OverlayKind.Marker, Int.MAX_VALUE)
 
