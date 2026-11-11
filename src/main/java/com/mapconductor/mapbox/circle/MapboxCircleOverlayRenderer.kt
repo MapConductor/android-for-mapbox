@@ -65,7 +65,7 @@ class MapboxCircleOverlayRenderer(
     }
 
     override suspend fun onPostProcess() {
-        val circles = circleManager.allEntities()
+        val circles = circleManager.nativeEntities().filter { (it.circle as MapboxActualCircle?) != null }
         coroutine.launch {
             layer.draw(circles)
         }
