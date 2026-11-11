@@ -380,6 +380,7 @@ public final class com.mapconductor.mapbox.marker.MapboxMarkerOverlayRenderer ex
   public void setMarkerPosition(com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature>, com.mapconductor.core.features.GeoPoint);
   public java.lang.Object onAdd(java.util.List<? extends com.mapconductor.core.marker.MarkerOverlayRendererInterface$AddParamsInterface>, kotlin.coroutines.Continuation<? super java.util.List<com.mapbox.geojson.Feature>>);
   public java.lang.Object onRemove(java.util.List<? extends com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature>>, kotlin.coroutines.Continuation<? super kotlin.Unit>);
+  protected java.lang.Object applyDrawOrder(java.util.List<? extends com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature>>, kotlin.coroutines.Continuation<? super kotlin.Unit>);
   public java.lang.Object onPostProcess(kotlin.coroutines.Continuation<? super kotlin.Unit>);
   public java.lang.Object onChange(java.util.List<? extends com.mapconductor.core.marker.MarkerOverlayRendererInterface$ChangeParamsInterface<com.mapbox.geojson.Feature>>, kotlin.coroutines.Continuation<? super java.util.List<com.mapbox.geojson.Feature>>);
   public void onDragSelectionChanged(com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature>, com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature>);
