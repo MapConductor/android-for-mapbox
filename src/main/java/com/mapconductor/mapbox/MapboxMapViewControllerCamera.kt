@@ -31,7 +31,10 @@ internal fun MapboxMapViewController.readLogicalCameraPosition(): MapCameraPosit
     MapboxCameraStateSnapshot(
         cameraState = holder.map.cameraState,
         logicalTiltHint = lastLogicalCameraPosition?.tilt,
+        density = density(),
     ).toMapCameraPosition()
+
+internal fun MapboxMapViewController.density(): Float = holder.mapView.resources.displayMetrics.density
 
 /**
  * Async version of getMapCameraPosition that can be called from background threads.
@@ -43,7 +46,7 @@ internal suspend fun MapboxMapViewController.getMapCameraPositionAsync(): MapCam
     }
 
 internal fun MapboxMapViewController.handleMoveCamera(position: MapCameraPosition) {
-    val cameraOptions = position.toCameraOptions()
+    val cameraOptions = position.toCameraOptions(density())
     lastLogicalCameraPosition = position
     mainCoroutine.launch {
         holder.map.setCamera(cameraOptions)
@@ -54,7 +57,7 @@ internal fun MapboxMapViewController.handleAnimateCamera(
     position: MapCameraPosition,
     duration: Long,
 ) {
-    val targetCamera = position.toCameraOptions()
+    val targetCamera = position.toCameraOptions(density())
     lastLogicalCameraPosition = position
 
     val animationOptions =

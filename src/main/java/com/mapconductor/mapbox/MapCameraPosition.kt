@@ -9,6 +9,7 @@ import com.mapconductor.core.features.GeoPointInterface
 import com.mapconductor.core.map.CameraBearing
 import com.mapconductor.core.map.MapCameraPosition
 import com.mapconductor.core.map.MapCameraPositionInterface
+import com.mapconductor.core.map.MapPaddings
 import com.mapconductor.core.map.MapPaddingsInterface
 import com.mapconductor.core.map.VisibleRegion
 import com.mapconductor.core.spherical.Spherical
@@ -19,12 +20,34 @@ import kotlin.math.tan
 
 private val converter = ZoomAltitudeConverter()
 
+/**
+ * Mapbox のカメラの縦方向の視野角（度）。Mapbox Maps の既定値で、地図の大きさに
+ * よらず一定（焦点距離 = 地図の高さ × 1.5）。TB520FU で 36.9° を実測。
+ */
+internal const val MAPBOX_VERTICAL_FOV = 36.87
+
+/** dp のパディング → Mapbox の px のパディング。 */
+internal fun MapPaddingsInterface.toMapboxEdgeInsets(density: Float): EdgeInsets =
+    EdgeInsets(top * density, left * density, bottom * density, right * density)
+
+/** Mapbox の px のパディング → dp のパディング。 */
+internal fun EdgeInsets.toMapPaddings(density: Float): MapPaddings =
+    MapPaddings(top = top / density, left = left / density, bottom = bottom / density, right = right / density)
+
 fun CameraChanged.toMapCameraPosition() =
     cameraState
         .toMapCameraPosition()
         .copy(paddings = cameraState.padding.toPaddings())
 
-fun MapCameraPosition.toCameraOptions(): CameraOptions {
+fun MapCameraPosition.toCameraOptions(): CameraOptions = toCameraOptions(density = null)
+
+/**
+ * [density] があれば [MapCameraPosition.paddings] を Mapbox のパディングとして渡す。
+ * Mapbox はパディングを除いた領域の中央にカメラの中心を置き、tilt の遠近もエンジンが解く。
+ * パディングは次に変えるまで残るので、null（未指定）のときは渡さない。
+ */
+internal fun MapCameraPosition.toCameraOptions(density: Float?): CameraOptions {
+    val padding = if (density != null) paddings?.toMapboxEdgeInsets(density) else null
     if (this.tilt >= 0) {
         return CameraOptions
             .Builder()
@@ -32,8 +55,7 @@ fun MapCameraPosition.toCameraOptions(): CameraOptions {
             .zoom(ZoomAltitudeConverter.googleZoomToMapboxZoom(zoom))
             .pitch(tilt)
             .bearing(CameraBearing.toNativeHeading(bearing))
-            // TODO:
-            //    .padding(paddings?.toEdgeInsects())
+            .padding(padding)
             .build()
     } else {
         // tilt < 0: Mapbox cannot represent an upward pitch directly.
@@ -53,8 +75,7 @@ fun MapCameraPosition.toCameraOptions(): CameraOptions {
             .zoom(mapboxZoom)
             .pitch(tiltAbsDeg)
             .bearing(CameraBearing.toNativeHeading(bearing))
-            // TODO:
-            //    .padding(paddings?.toEdgeInsects())
+            .padding(padding)
             .build()
     }
 }
@@ -79,6 +100,7 @@ fun MapCameraPosition.Companion.from(cameraPosition: MapCameraPositionInterface)
                 tilt = cameraPosition.tilt,
                 paddings = MapboxPaddings.from(cameraPosition.paddings),
                 visibleRegion = cameraPosition.visibleRegion,
+                fov = cameraPosition.fov,
             )
     }
 
@@ -101,20 +123,24 @@ fun CameraState.toMapCameraPosition() =
         logicalTiltHint = null,
     )
 
-internal fun CameraState.toMapCameraPosition(logicalTiltHint: Double?) =
-    toMapCameraPosition(
-        center = center.toGeoPoint(),
-        mapboxZoom = zoom,
-        bearing = bearing,
-        pitch = pitch,
-        logicalTiltHint = logicalTiltHint,
-    )
+internal fun CameraState.toMapCameraPosition(
+    logicalTiltHint: Double?,
+    density: Float? = null,
+) = toMapCameraPosition(
+    center = center.toGeoPoint(),
+    mapboxZoom = zoom,
+    bearing = bearing,
+    pitch = pitch,
+    paddings = density?.let { padding.toMapPaddings(it) },
+    logicalTiltHint = logicalTiltHint,
+)
 
 internal data class MapboxCameraStateSnapshot(
     val cameraState: CameraState,
     val logicalTiltHint: Double?,
+    val density: Float? = null,
 ) {
-    fun toMapCameraPosition(): MapCameraPosition = cameraState.toMapCameraPosition(logicalTiltHint)
+    fun toMapCameraPosition(): MapCameraPosition = cameraState.toMapCameraPosition(logicalTiltHint, density)
 }
 
 private fun toMapCameraPosition(
@@ -135,6 +161,7 @@ private fun toMapCameraPosition(
             tilt = pitch,
             paddings = paddings,
             visibleRegion = visibleRegion,
+            fov = MAPBOX_VERTICAL_FOV,
         )
     }
 
@@ -153,5 +180,6 @@ private fun toMapCameraPosition(
         tilt = -pitchAbsDeg,
         paddings = paddings,
         visibleRegion = visibleRegion,
+        fov = MAPBOX_VERTICAL_FOV,
     )
 }
