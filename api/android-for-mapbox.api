@@ -20,22 +20,29 @@ public interface com.mapconductor.mapbox.IMapboxPaddingsInterface extends com.ma
   public abstract com.mapbox.maps.EdgeInsets toEdgeInsects();
 }
 public final class com.mapconductor.mapbox.MapCameraPositionKt {
+  public static final double MAPBOX_VERTICAL_FOV;
+  public static final com.mapbox.maps.EdgeInsets toMapboxEdgeInsets(com.mapconductor.core.map.MapPaddingsInterface, float);
+  public static final com.mapconductor.core.map.MapPaddings toMapPaddings(com.mapbox.maps.EdgeInsets, float);
   public static final com.mapconductor.core.map.MapCameraPosition toMapCameraPosition(com.mapbox.maps.CameraChanged);
   public static final com.mapbox.maps.CameraOptions toCameraOptions(com.mapconductor.core.map.MapCameraPosition);
+  public static final com.mapbox.maps.CameraOptions toCameraOptions(com.mapconductor.core.map.MapCameraPosition, java.lang.Float);
   public static final com.mapbox.maps.CameraState toCameraState(com.mapconductor.core.map.MapCameraPosition);
   public static final com.mapconductor.core.map.MapCameraPosition from(com.mapconductor.core.map.MapCameraPosition$Companion, com.mapconductor.core.map.MapCameraPositionInterface);
   public static final com.mapconductor.core.map.MapCameraPosition toMapCameraPosition(com.mapbox.maps.CameraOptions);
   public static final com.mapconductor.core.map.MapCameraPosition toMapCameraPosition(com.mapbox.maps.CameraState);
-  public static final com.mapconductor.core.map.MapCameraPosition toMapCameraPosition(com.mapbox.maps.CameraState, java.lang.Double);
+  public static final com.mapconductor.core.map.MapCameraPosition toMapCameraPosition(com.mapbox.maps.CameraState, java.lang.Double, java.lang.Float);
 }
 public final class com.mapconductor.mapbox.MapboxCameraStateSnapshot {
-  public com.mapconductor.mapbox.MapboxCameraStateSnapshot(com.mapbox.maps.CameraState, java.lang.Double);
+  public com.mapconductor.mapbox.MapboxCameraStateSnapshot(com.mapbox.maps.CameraState, java.lang.Double, java.lang.Float);
+  public com.mapconductor.mapbox.MapboxCameraStateSnapshot(com.mapbox.maps.CameraState, java.lang.Double, java.lang.Float, int, kotlin.jvm.internal.DefaultConstructorMarker);
   public final com.mapbox.maps.CameraState getCameraState();
   public final java.lang.Double getLogicalTiltHint();
+  public final java.lang.Float getDensity();
   public final com.mapconductor.core.map.MapCameraPosition toMapCameraPosition();
   public final com.mapbox.maps.CameraState component1();
   public final java.lang.Double component2();
-  public final com.mapconductor.mapbox.MapboxCameraStateSnapshot copy(com.mapbox.maps.CameraState, java.lang.Double);
+  public final java.lang.Float component3();
+  public final com.mapconductor.mapbox.MapboxCameraStateSnapshot copy(com.mapbox.maps.CameraState, java.lang.Double, java.lang.Float);
   public java.lang.String toString();
   public int hashCode();
   public boolean equals(java.lang.Object);
@@ -151,6 +158,7 @@ public final class com.mapconductor.mapbox.MapboxMapViewController extends com.m
 public final class com.mapconductor.mapbox.MapboxMapViewControllerCameraKt {
   public static final com.mapconductor.core.map.MapCameraPosition getMapCameraPosition(com.mapconductor.mapbox.MapboxMapViewController);
   public static final com.mapconductor.core.map.MapCameraPosition readLogicalCameraPosition(com.mapconductor.mapbox.MapboxMapViewController);
+  public static final float density(com.mapconductor.mapbox.MapboxMapViewController);
   public static final java.lang.Object getMapCameraPositionAsync(com.mapconductor.mapbox.MapboxMapViewController, kotlin.coroutines.Continuation<? super com.mapconductor.core.map.MapCameraPosition>);
   public static final void handleMoveCamera(com.mapconductor.mapbox.MapboxMapViewController, com.mapconductor.core.map.MapCameraPosition);
   public static final void handleAnimateCamera(com.mapconductor.mapbox.MapboxMapViewController, com.mapconductor.core.map.MapCameraPosition, long);

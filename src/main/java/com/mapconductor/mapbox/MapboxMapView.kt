@@ -107,7 +107,7 @@ fun MapboxMapView(
         modifier = modifier,
         viewProvider = {
             val cameraOptions =
-                state.cameraPosition.toCameraOptions()
+                state.cameraPosition.toCameraOptions(context.resources.displayMetrics.density)
 
             val styleUri = state.mapDesignType.getValue()
 
