@@ -29,6 +29,8 @@ import com.mapconductor.core.features.GeoRectBounds
 import com.mapconductor.core.groundimage.OnGroundImageEventHandler
 import com.mapconductor.core.map.CameraRestriction
 import com.mapconductor.core.map.MapCameraPosition
+import com.mapconductor.core.map.MapPaddingsInterface
+import com.mapconductor.core.map.MapPaddings
 import com.mapconductor.core.map.MapProjection
 import com.mapconductor.core.map.MapUISettings
 import com.mapconductor.core.marker.DefaultMarkerEventController
@@ -95,6 +97,9 @@ class MapboxMapViewController internal constructor(
 
     internal val cameraUpdateToken = AtomicInteger(0)
     internal var lastLogicalCameraPosition: MapCameraPosition? = null
+
+    /** アプリが指定したパディング（dp）。ネイティブには渡さず、中心のずらしで再現する。 */
+    internal var cameraPaddings: MapPaddingsInterface = MapPaddings.Zeros
 
     internal var markerClickListener: OnMarkerEventHandler? = null
     internal var markerDragStartListener: OnMarkerEventHandler? = null

@@ -158,6 +158,8 @@ public final class com.mapconductor.mapbox.MapboxMapViewController extends com.m
 public final class com.mapconductor.mapbox.MapboxMapViewControllerCameraKt {
   public static final com.mapconductor.core.map.MapCameraPosition getMapCameraPosition(com.mapconductor.mapbox.MapboxMapViewController);
   public static final com.mapconductor.core.map.MapCameraPosition readLogicalCameraPosition(com.mapconductor.mapbox.MapboxMapViewController);
+  public static final double viewportHeightDp(com.mapconductor.mapbox.MapboxMapViewController);
+  public static final com.mapconductor.core.map.MapCameraPosition toNativeCamera(com.mapconductor.mapbox.MapboxMapViewController, com.mapconductor.core.map.MapCameraPosition);
   public static final float density(com.mapconductor.mapbox.MapboxMapViewController);
   public static final java.lang.Object getMapCameraPositionAsync(com.mapconductor.mapbox.MapboxMapViewController, kotlin.coroutines.Continuation<? super com.mapconductor.core.map.MapCameraPosition>);
   public static final void handleMoveCamera(com.mapconductor.mapbox.MapboxMapViewController, com.mapconductor.core.map.MapCameraPosition);

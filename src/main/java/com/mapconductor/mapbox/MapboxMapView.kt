@@ -23,6 +23,7 @@ import com.mapconductor.core.OnMapLoadedHandler
 import com.mapconductor.core.circle.CircleManager
 import com.mapconductor.core.map.CameraRestriction
 import com.mapconductor.core.map.MapCameraPositionInterface
+import com.mapconductor.core.map.MapPaddings
 import com.mapconductor.core.map.MapProjection
 import com.mapconductor.core.map.MapViewStyle
 import com.mapconductor.core.map.MutableMapServiceRegistry
@@ -107,7 +108,8 @@ fun MapboxMapView(
         modifier = modifier,
         viewProvider = {
             val cameraOptions =
-                state.cameraPosition.toCameraOptions(context.resources.displayMetrics.density)
+                // パディングはネイティブに渡さない。接続時の moveCamera が中心のずらしで適用する。
+                state.cameraPosition.copy(paddings = MapPaddings.Zeros).toCameraOptions(context.resources.displayMetrics.density)
 
             val styleUri = state.mapDesignType.getValue()
 
