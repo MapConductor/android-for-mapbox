@@ -5,12 +5,12 @@ import com.google.gson.JsonObject
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
 import com.mapconductor.core.ResourceProvider
-import com.mapconductor.core.calculateZIndex
 import com.mapconductor.core.features.GeoPoint
 import com.mapconductor.core.features.GeoPointInterface
 import com.mapconductor.core.marker.AbstractMarkerOverlayRenderer
 import com.mapconductor.core.marker.BitmapIcon
 import com.mapconductor.core.marker.DefaultMarkerIcon
+import com.mapconductor.core.marker.MarkerDrawOrder
 import com.mapconductor.core.marker.MarkerEntityInterface
 import com.mapconductor.core.marker.MarkerIconInterface
 import com.mapconductor.core.marker.MarkerManager
@@ -184,7 +184,7 @@ class MapboxMarkerOverlayRenderer(
         val props = (markerEntity.marker?.properties() ?: JsonObject()).deepCopy()
         props.addProperty(
             Prop.Z_INDEX,
-            markerEntity.state.zIndex ?: calculateZIndex(position),
+            MarkerDrawOrder.of(markerEntity.state.zIndex, position, drawOrderFrame),
         )
         val feature =
             Feature.fromGeometry(
@@ -246,7 +246,7 @@ class MapboxMarkerOverlayRenderer(
                             add(Prop.ICON_ANCHOR, getDefaultIconOffsetProperty())
                         }
                         addProperty(Prop.SCALE, it.state.icon?.scale ?: 1.0)
-                        addProperty(Prop.Z_INDEX, it.state.zIndex ?: calculateZIndex(it.state.position))
+                        addProperty(Prop.Z_INDEX, drawOrderOf(it.state))
                     }
                 Feature.fromGeometry(position, properties, featureId)
             }
@@ -268,6 +268,17 @@ class MapboxMarkerOverlayRenderer(
                     decrementIconRef(iconKey)
                 }
             }
+        }
+    }
+
+    // 地図が回ったら、各フィーチャーの並び順キー（symbol-sort-key）を付け直して流し直す。
+    override suspend fun applyDrawOrder(entities: List<MarkerEntityInterface<MapboxActualMarker>>) {
+        val target = entities.filter { !it.tiling }
+        withContext(Dispatchers.Main) {
+            target.forEach { entity ->
+                entity.marker?.properties()?.addProperty(Prop.Z_INDEX, drawOrderOf(entity.state))
+            }
+            markerLayer.draw(target)
         }
     }
 
@@ -335,7 +346,7 @@ class MapboxMarkerOverlayRenderer(
                         )
                         addProperty(
                             Prop.Z_INDEX,
-                            params.current.state.zIndex ?: calculateZIndex(params.current.state.position),
+                            drawOrderOf(params.current.state),
                         )
                         if (currFinger.icon == prevFinger.icon) {
                             addProperty(
