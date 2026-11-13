@@ -11,17 +11,27 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.findViewTreeLifecycleOwner
+import androidx.lifecycle.setViewTreeLifecycleOwner
 import com.mapbox.maps.MapInitOptions
 import com.mapbox.maps.MapView
 import com.mapconductor.compose.map.MapViewBase
+import com.mapconductor.compose.map.MapViewLifecycleOwner
 import com.mapconductor.core.OnCameraMoveHandler
 import com.mapconductor.core.OnMapEventHandler
 import com.mapconductor.core.OnMapLoadedHandler
 import com.mapconductor.core.circle.CircleManager
 import com.mapconductor.core.map.CameraRestriction
 import com.mapconductor.core.map.MapCameraPositionInterface
+import com.mapconductor.core.map.MapPaddings
 import com.mapconductor.core.map.MapProjection
+import com.mapconductor.core.map.MapViewStyle
 import com.mapconductor.core.map.MutableMapServiceRegistry
+import com.mapconductor.core.map.StyleMutationStore
+import com.mapconductor.core.map.VectorStyleAsDesign
+import com.mapconductor.core.map.VectorStyleMutationSupportKey
+import com.mapconductor.core.map.VectorStyleSupportKey
+import com.mapconductor.core.map.applyStyleMutations
 import com.mapconductor.core.marker.MarkerEventControllerInterface
 import com.mapconductor.core.marker.MarkerManager
 import com.mapconductor.core.marker.MarkerOverlayRendererInterface
@@ -40,7 +50,8 @@ import com.mapconductor.mapbox.groundimage.MapboxGroundImageOverlayRenderer
 import com.mapconductor.mapbox.marker.MapboxMarkerController
 import com.mapconductor.mapbox.marker.MarkerDragLayer
 import com.mapconductor.mapbox.marker.MarkerLayer
-import com.mapconductor.mapbox.polygon.MapboxPolygonConductor
+import com.mapconductor.mapbox.polygon.MapboxPolygonCompositeRenderer
+import com.mapconductor.mapbox.polygon.MapboxPolygonController
 import com.mapconductor.mapbox.polygon.MapboxPolygonLayer
 import com.mapconductor.mapbox.polygon.MapboxPolygonOverlayRenderer
 import com.mapconductor.mapbox.polyline.MapboxPolylineController
@@ -52,7 +63,6 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import android.view.ViewGroup
 
 @SuppressLint("Lifecycle")
 @Composable
@@ -69,6 +79,15 @@ fun MapboxMapView(
     onCameraMove: OnCameraMoveHandler? = null,
     onCameraMoveEnd: OnCameraMoveHandler? = null,
     projection: MapProjection = MapProjection.Mercator,
+    /**
+     * How the map looks, when the app states it rather than naming a design.
+     *
+     * A vector style *is* the basemap. `com.mapconductor:vectorstyle` builds
+     * one; what happens underneath depends on this backend and the app does
+     * not have to know.
+     */
+    style: MapViewStyle? = null,
+    onStyleDiagnostics: ((List<String>) -> Unit)? = null,
     content: (@Composable MapboxMapViewScope.() -> Unit)? = null,
 ) {
     val holderRef = remember { Ref<MapboxMapViewHolder>() }
@@ -89,7 +108,8 @@ fun MapboxMapView(
         modifier = modifier,
         viewProvider = {
             val cameraOptions =
-                state.cameraPosition.toCameraOptions()
+                // パディングはネイティブに渡さない。接続時の moveCamera が中心のずらしで適用する。
+                state.cameraPosition.copy(paddings = MapPaddings.Zeros).toCameraOptions(context.resources.displayMetrics.density)
 
             val styleUri = state.mapDesignType.getValue()
 
@@ -102,6 +122,12 @@ fun MapboxMapView(
                 )
 
             MapView(context, mapOptions).also {
+                // Mapbox's lifecycle plugin follows the view tree's lifecycle and
+                // only lets go of the MapView (component callbacks, observers)
+                // when that lifecycle is destroyed. With the Activity's, every
+                // MapView the user switched away from would stay until the
+                // Activity goes, so it gets one of its own; see onDestroyMapView.
+                it.setViewTreeLifecycleOwner(MapViewLifecycleOwner(lifecycle))
                 it.onStart()
             }
         },
@@ -136,6 +162,37 @@ fun MapboxMapView(
                 mapController.setMapDesignTypeChangeListener(state::onMapDesignTypeChange)
                 cameraRestriction?.let { mapController.setCameraRestriction(it) }
                 state.setController(mapController)
+                // Mapbox draws vector styles natively: a layer with a style to
+                // show hands it over instead of rasterising it. On the state,
+                // not in `createMapboxViewController` -- it acts on the
+                // state's design, which non-Compose hosts do not have.
+                state.serviceRegistry.put(
+                    VectorStyleSupportKey,
+                    VectorStyleAsDesign(state) { url, rules -> MapboxMapDesign.StyleUri(url, rules) },
+                )
+                // Mapbox can also be told to change a loaded style in place,
+                // so adjusting one need not hand it a new document -- which
+                // would drop its tiles and rebuild every overlay the app
+                // added. `VectorStyle` looks this up and takes the cheap road
+                // when it is here.
+                //
+                // The style is read through a lambda rather than captured:
+                // every design change replaces it, and a target holding the
+                // old one would patch a style the map has already dropped.
+                val mutations =
+                    StyleMutationStore { list ->
+                        applyStyleMutations(
+                            MapboxStyleMutationTarget(
+                                style = { holder.map.style },
+                                ready = { mapController.isShowingRequestedStyle() },
+                            ),
+                            list,
+                        )
+                    }
+                state.serviceRegistry.put(VectorStyleMutationSupportKey, mutations)
+                // Whatever was applied is lost the moment the map loads a
+                // style again; this is where it goes back on.
+                mapController.styleLoadedListener = { mutations.onStyleLoaded() }
 
                 holderRef.value = holder
                 controllerRef.value = mapController
@@ -158,6 +215,8 @@ fun MapboxMapView(
         // Pass content if it needs to be rendered within the overlay providers in MapViewBase,
         // or handle it here if it's specific to MapboxMapView structure before calling MapViewBase.
         // For now, assuming content relates to overlay definitions.
+        style = style,
+        onStyleDiagnostics = onStyleDiagnostics,
         content = content, // This might need adjustment based on how overlays are handled
         customDisposableEffect = { _, holderRef ->
 
@@ -173,25 +232,24 @@ fun MapboxMapView(
                             // Do not call here to keep the MapView instance
                             // holderRef.value?.mapView?.onPause()
                         }
-
-                        @SuppressLint("Lifecycle")
-                        override fun onDestroy(owner: LifecycleOwner) {
-                            val currentHolder = holderRef.value
-                            if (currentHolder != null) {
-                                val activity = context.findActivity()
-                                if (activity?.isChangingConfigurations == true) {
-                                    (currentHolder.mapView.parent as? ViewGroup)?.removeView(currentHolder.mapView)
-                                } else {
-                                    // Ensure these calls are safe if mapView might be null or already destroyed
-                                    currentHolder.mapView.onDestroy()
-                                }
-                            }
-                        }
                     }
                 lifecycle.addObserver(observer)
                 onDispose {
                     lifecycle.removeObserver(observer)
                 }
+            }
+        },
+        // Ending the MapView's own lifecycle has the lifecycle plugin stop and
+        // destroy it and unregister what it registered. A MapView left alive
+        // keeps its renderer and, through its listeners, the controller with
+        // every overlay.
+        onDestroyMapView = { mapView ->
+            val owner = mapView.findViewTreeLifecycleOwner() as? MapViewLifecycleOwner
+            if (owner != null) {
+                owner.destroy()
+            } else {
+                mapView.onStop()
+                mapView.onDestroy()
             }
         },
     )
@@ -256,7 +314,7 @@ fun createMapboxViewController(
     return mapController
 }
 
-internal fun getPolygonController(holder: MapboxMapViewHolder): MapboxPolygonConductor {
+internal fun getPolygonController(holder: MapboxMapViewHolder): MapboxPolygonController {
     val polylineLayer =
         MapboxPolylineLayer(
             sourceId = "polygon-outline-source",
@@ -283,12 +341,15 @@ internal fun getPolygonController(holder: MapboxMapViewHolder): MapboxPolygonCon
             holder = holder,
         )
 
-    val conductor =
-        MapboxPolygonConductor(
-            polygonOverlay = polygonOverlayRenderer,
-            polylineOverlay = polylineOverlayRenderer,
+    val controller =
+        MapboxPolygonController(
+            renderer =
+                MapboxPolygonCompositeRenderer(
+                    fill = polygonOverlayRenderer,
+                    outline = polylineOverlayRenderer,
+                ),
         )
-    return conductor
+    return controller
 }
 
 internal fun getCircleController(holder: MapboxMapViewHolder): MapboxCircleController {

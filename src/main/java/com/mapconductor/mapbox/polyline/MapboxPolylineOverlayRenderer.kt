@@ -65,6 +65,6 @@ class MapboxPolylineOverlayRenderer(
     private fun getAllPolylineEntities(): List<PolylineEntityInterface<MapboxActualPolyline>> {
         // This would need access to the polyline manager
         // For now, we'll implement a simple workaround
-        return polylineManager.allEntities()
+        return polylineManager.allEntities().filter { (it.polyline as MapboxActualPolyline?) != null }
     }
 }

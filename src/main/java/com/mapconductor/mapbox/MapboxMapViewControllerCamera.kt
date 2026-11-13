@@ -3,9 +3,12 @@ package com.mapconductor.mapbox
 import com.mapbox.maps.CameraBoundsOptions
 import com.mapbox.maps.plugin.animation.MapAnimationOptions
 import com.mapbox.maps.plugin.animation.flyTo
+import android.view.View
 import com.mapconductor.core.features.GeoRectBounds
+import com.mapconductor.core.map.CameraPaddingEmulation
 import com.mapconductor.core.map.CameraRestriction
 import com.mapconductor.core.map.MapCameraPosition
+import com.mapconductor.core.map.MapPaddings
 import com.mapconductor.core.map.buildVisibleRegion
 import com.mapconductor.mapbox.zoom.ZoomAltitudeConverter
 import android.animation.Animator
@@ -28,10 +31,65 @@ internal fun MapboxMapViewController.getMapCameraPosition(): MapCameraPosition? 
 }
 
 internal fun MapboxMapViewController.readLogicalCameraPosition(): MapCameraPosition =
-    MapboxCameraStateSnapshot(
-        cameraState = holder.map.cameraState,
-        logicalTiltHint = lastLogicalCameraPosition?.tilt,
-    ).toMapCameraPosition()
+    CameraPaddingEmulation.fromNativeCamera(
+        MapboxCameraStateSnapshot(
+            cameraState = holder.map.cameraState,
+            logicalTiltHint = lastLogicalCameraPosition?.tilt,
+            density = density(),
+        ).toMapCameraPosition(),
+        cameraPaddings,
+        MAPBOX_VERTICAL_FOV,
+        viewportHeightDp(),
+    )
+
+/** 地図の高さ（dp）。パディングのエミュレーションで遠近を解くのに使う。 */
+internal fun MapboxMapViewController.viewportHeightDp(): Double = holder.mapView.height / density().toDouble()
+
+/**
+ * パディングを中心のずらしに置き換えたカメラ。Mapbox のパディングは常に 0 にする。
+ *
+ * ネイティブのパディングは視錐台を上へ広げる。tilt があると上のパディングが
+ * 大きいほど画面の上端が地平線の先まで届き、そこまでタイルを読みに行って固まる。
+ * 中心をずらせば、パディング無しと同じ視錐台のまま target をパディング中央に置ける。
+ * paddings が null なら今のパディングを使い続ける。
+ */
+internal fun MapboxMapViewController.toNativeCamera(position: MapCameraPosition): MapCameraPosition {
+    position.paddings?.let { cameraPaddings = it }
+    return CameraPaddingEmulation
+        .toNativeCamera(position.copy(paddings = cameraPaddings), MAPBOX_VERTICAL_FOV, viewportHeightDp())
+        .copy(paddings = MapPaddings.Zeros)
+}
+
+/** 地図がまだ大きさを持たない（レイアウト前）ときは、パディングを解けないので最初のレイアウトまで待つ。 */
+private fun MapboxMapViewController.needsLayoutFor(position: MapCameraPosition): Boolean {
+    val paddings = position.paddings ?: cameraPaddings
+    val padded = paddings.top != 0.0 || paddings.left != 0.0 || paddings.bottom != 0.0 || paddings.right != 0.0
+    return padded && holder.mapView.height <= 0
+}
+
+private fun MapboxMapViewController.afterFirstLayout(action: () -> Unit) {
+    holder.mapView.addOnLayoutChangeListener(
+        object : View.OnLayoutChangeListener {
+            override fun onLayoutChange(
+                v: View,
+                left: Int,
+                top: Int,
+                right: Int,
+                bottom: Int,
+                oldLeft: Int,
+                oldTop: Int,
+                oldRight: Int,
+                oldBottom: Int,
+            ) {
+                if (bottom - top <= 0) return
+                v.removeOnLayoutChangeListener(this)
+                action()
+            }
+        },
+    )
+}
+
+internal fun MapboxMapViewController.density(): Float = holder.mapView.resources.displayMetrics.density
 
 /**
  * Async version of getMapCameraPosition that can be called from background threads.
@@ -43,10 +101,13 @@ internal suspend fun MapboxMapViewController.getMapCameraPositionAsync(): MapCam
     }
 
 internal fun MapboxMapViewController.handleMoveCamera(position: MapCameraPosition) {
-    val cameraOptions = position.toCameraOptions()
     lastLogicalCameraPosition = position
     mainCoroutine.launch {
-        holder.map.setCamera(cameraOptions)
+        if (needsLayoutFor(position)) {
+            afterFirstLayout { handleMoveCamera(position) }
+            return@launch
+        }
+        holder.map.setCamera(toNativeCamera(position).toCameraOptions(density()))
     }
 }
 
@@ -54,7 +115,11 @@ internal fun MapboxMapViewController.handleAnimateCamera(
     position: MapCameraPosition,
     duration: Long,
 ) {
-    val targetCamera = position.toCameraOptions()
+    if (needsLayoutFor(position)) {
+        afterFirstLayout { handleAnimateCamera(position, duration) }
+        return
+    }
+    val targetCamera = toNativeCamera(position).toCameraOptions(density())
     lastLogicalCameraPosition = position
 
     val animationOptions =

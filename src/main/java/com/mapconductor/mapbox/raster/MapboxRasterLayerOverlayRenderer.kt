@@ -1,11 +1,12 @@
 package com.mapconductor.mapbox.raster
 
-import com.mapbox.maps.extension.style.layers.addLayer
-import com.mapbox.maps.extension.style.layers.addLayerAbove
-import com.mapbox.maps.extension.style.layers.addLayerBelow
 import com.mapbox.maps.extension.style.layers.generated.rasterLayer
 import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.sources.generated.rasterSource
+import com.mapconductor.core.circle.CIRCLE_TILE_LAYER_ID
+import com.mapconductor.core.controller.OverlayKind
+import com.mapconductor.core.polygon.POLYGON_TILE_LAYER_ID
+import com.mapconductor.core.polyline.POLYLINE_TILE_LAYER_ID
 import com.mapconductor.core.raster.RasterHeaderRuleSet
 import com.mapconductor.core.raster.RasterLayerEntityInterface
 import com.mapconductor.core.raster.RasterLayerOverlayRendererInterface
@@ -13,6 +14,7 @@ import com.mapconductor.core.raster.RasterLayerSource
 import com.mapconductor.core.raster.RasterLayerState
 import com.mapconductor.core.raster.TileScheme
 import com.mapconductor.mapbox.MapboxMapViewHolder
+import com.mapconductor.mapbox.MapboxOverlayStacking
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +27,12 @@ class MapboxRasterLayerOverlayRenderer(
     private val handleById: MutableMap<String, MapboxRasterLayerHandle> = mutableMapOf()
 
     private fun isMarkerTileRaster(state: RasterLayerState): Boolean = state.id.startsWith(MARKER_TILE_RASTER_ID_PREFIX)
+
+    private fun isPolygonTileRaster(state: RasterLayerState): Boolean = state.id == POLYGON_TILE_LAYER_ID
+
+    private fun isPolylineTileRaster(state: RasterLayerState): Boolean = state.id == POLYLINE_TILE_LAYER_ID
+
+    private fun isCircleTileRaster(state: RasterLayerState): Boolean = state.id == CIRCLE_TILE_LAYER_ID
 
     /** Mapbox Android はタイル要求を書き換える公開 API を持たない。 */
     override suspend fun onAdd(
@@ -99,15 +107,7 @@ class MapboxRasterLayerOverlayRenderer(
         } catch (e: Exception) {
             Log.w("Mapbox", "Failed to add raster source: ${e.message}")
         }
-        try {
-            if (isMarkerTileRaster(state)) {
-                addLayerForMarkerTile(style, layer)
-            } else {
-                style.addLayer(layer)
-            }
-        } catch (e: Exception) {
-            Log.w("Mapbox", "Failed to add raster layer: ${e.message}")
-        }
+        addToStack(style, layer, state)
         return handle
     }
 
@@ -116,10 +116,7 @@ class MapboxRasterLayerOverlayRenderer(
         state: RasterLayerState,
     ) {
         val style = holder.map.style ?: return
-        try {
-            style.removeStyleLayer(handle.layerId)
-        } catch (_: Exception) {
-        }
+        MapboxOverlayStacking.remove(holder.map, style, handle.layerId)
         val opacity =
             if (state.visible) {
                 state.opacity.coerceIn(0.0f, 1.0f).toDouble()
@@ -130,23 +127,13 @@ class MapboxRasterLayerOverlayRenderer(
             rasterLayer(handle.layerId, handle.sourceId) {
                 rasterOpacity(opacity)
             }
-        try {
-            if (isMarkerTileRaster(state)) {
-                addLayerForMarkerTile(style, layer)
-            } else {
-                style.addLayer(layer)
-            }
-        } catch (_: Exception) {
-        }
+        addToStack(style, layer, state)
     }
 
     private fun removeLayer(entity: RasterLayerEntityInterface<MapboxRasterLayerHandle>) {
         val style = holder.map.style ?: return
         val handle = entity.layer
-        try {
-            style.removeStyleLayer(handle.layerId)
-        } catch (_: Exception) {
-        }
+        MapboxOverlayStacking.remove(holder.map, style, handle.layerId)
         try {
             style.removeStyleSource(handle.sourceId)
         } catch (_: Exception) {
@@ -182,43 +169,43 @@ class MapboxRasterLayerOverlayRenderer(
         }
     }
 
-    private fun addLayerForMarkerTile(
+    /**
+     * 帯の順（[MapboxOverlayStacking]）で足す。アプリのラスターはラスターの帯
+     * （一番下、ベースマップのラベルの下）、マーカーのタイルはマーカーの帯の一番下、
+     * ポリゴンのタイルはポリゴンの帯の一番下（画像になったポリゴンであって、地図の画像ではない）。
+     */
+    private fun addToStack(
         style: com.mapbox.maps.Style,
         layer: com.mapbox.maps.extension.style.layers.Layer,
+        state: RasterLayerState,
     ) {
-        // Insert the raster tiles below the marker symbol layer so they don't cover markers,
-        // but remain above vector overlays that are anchored below markers (polyline/circle/etc).
-        try {
-            style.addLayerBelow(layer, MARKERS_LAYER_ID)
-            return
-        } catch (_: Exception) {
-        }
-
-        // Best-effort fallback: place above polylines if marker layer isn't present yet.
-        try {
-            style.addLayerAbove(layer, POLYLINE_LAYER_ID)
-            return
-        } catch (_: Exception) {
-        }
-
-        style.addLayer(layer)
+        val key =
+            if (isMarkerTileRaster(state)) {
+                MapboxOverlayStacking.MARKER_TILE
+            } else if (isPolygonTileRaster(state)) {
+                MapboxOverlayStacking.POLYGON_TILE
+            } else if (isCircleTileRaster(state)) {
+                MapboxOverlayStacking.CIRCLE_TILE
+            } else if (isPolylineTileRaster(state)) {
+                MapboxOverlayStacking.POLYLINE_TILE
+            } else {
+                MapboxOverlayStacking.key(OverlayKind.RasterLayer, state.zIndex)
+            }
+        MapboxOverlayStacking.add(holder.map, style, layer, key)
     }
 
     private fun rebuildNonMarkerRasterLayers(style: com.mapbox.maps.Style) {
         val ordered =
             stateById.values
                 .asSequence()
-                .filter { !isMarkerTileRaster(it) }
+                .filter { !isMarkerTileRaster(it) && !isPolygonTileRaster(it) && !isPolylineTileRaster(it) && !isCircleTileRaster(it) }
                 .sortedBy { it.zIndex }
                 .mapNotNull { state -> handleById[state.id]?.let { handle -> state to handle } }
                 .toList()
 
         // Remove and re-add non-marker raster layers in zIndex order to ensure deterministic stacking.
         ordered.forEach { (_, handle) ->
-            try {
-                style.removeStyleLayer(handle.layerId)
-            } catch (_: Exception) {
-            }
+            MapboxOverlayStacking.remove(holder.map, style, handle.layerId)
         }
 
         ordered.forEach { (state, handle) ->
@@ -232,17 +219,12 @@ class MapboxRasterLayerOverlayRenderer(
                 rasterLayer(handle.layerId, handle.sourceId) {
                     rasterOpacity(opacity)
                 }
-            try {
-                style.addLayer(layer)
-            } catch (_: Exception) {
-            }
+            addToStack(style, layer, state)
         }
     }
 
     private companion object {
         private const val MARKER_TILE_RASTER_ID_PREFIX = "marker-tile-"
-        private const val MARKERS_LAYER_ID = "markers-layer"
-        private const val POLYLINE_LAYER_ID = "polyline-layer"
     }
 }
 

@@ -2,6 +2,7 @@ package com.mapconductor.mapbox
 
 import com.mapbox.maps.Style
 import com.mapconductor.core.map.AttributionRule
+import com.mapconductor.core.map.BlankMapStyle
 import com.mapconductor.core.map.MapDesignTypeInterface
 import com.mapconductor.mapbox.MapboxMapDesign.Companion.MAPBOX_URL
 
@@ -11,6 +12,16 @@ sealed class MapboxMapDesign(
     override val id: String,
     override val attributionRules: List<AttributionRule> = emptyList(),
 ) : MapboxDesignType {
+    /**
+     * ベースマップ無し。背景色だけのスタイルで、タイルは何も取得しない。
+     *
+     * `getValue()` は URI ではなくスタイル JSON そのもの。Mapbox の `loadStyle` と
+     * `MapInitOptions.styleUri` はどちらも URI か JSON の文字列を受ける。
+     */
+    object None : MapboxMapDesign("none") {
+        override fun getValue(): String = BlankMapStyle.JSON
+    }
+
     object Standard : MapboxMapDesign("standard")
 
     object StandardSatellite : MapboxMapDesign("standard-satellite")
@@ -36,6 +47,20 @@ sealed class MapboxMapDesign(
         attributionRules: List<AttributionRule> = emptyList(),
     ) : MapboxMapDesign(layerId, attributionRules)
 
+    /**
+     * A style at an arbitrary URI -- `http(s)://`, `asset://`, `file://` --
+     * rather than one of Mapbox's own. [Custom] cannot say this: its value is
+     * always prefixed with [MAPBOX_URL]. The id is the URI itself, so the
+     * design a loaded style reports back as (see [toMapDesignType]) compares
+     * equal to the one that was set.
+     */
+    class StyleUri(
+        val uri: String,
+        attributionRules: List<AttributionRule> = emptyList(),
+    ) : MapboxMapDesign(uri, attributionRules) {
+        override fun getValue(): String = uri
+    }
+
     override fun getValue(): String = "${MAPBOX_URL}/${this.id}"
 
     companion object {
@@ -43,6 +68,7 @@ sealed class MapboxMapDesign(
 
         fun create(layerId: String): MapboxMapDesign =
             when (layerId) {
+                None.id -> None
                 Standard.id -> Standard
                 StandardSatellite.id -> StandardSatellite
                 Streets.id -> Streets
@@ -71,7 +97,11 @@ fun Style.toMapDesignType(): MapboxDesignType =
         "$MAPBOX_URL/${MapboxMapDesign.NavigationDay.id}" -> MapboxMapDesign.NavigationDay
         "$MAPBOX_URL/${MapboxMapDesign.NavigationNight.id}" -> MapboxMapDesign.NavigationNight
         else ->
-            MapboxMapDesign.Custom(
-                layerId = this.styleURI.replaceFirst("${MAPBOX_URL}/", ""),
-            )
+            if (this.styleURI.startsWith("$MAPBOX_URL/")) {
+                MapboxMapDesign.Custom(
+                    layerId = this.styleURI.replaceFirst("${MAPBOX_URL}/", ""),
+                )
+            } else {
+                MapboxMapDesign.StyleUri(this.styleURI)
+            }
     }

@@ -23,6 +23,9 @@ import com.mapconductor.mapbox.MapboxActualMarker
 import com.mapconductor.mapbox.MapboxMapViewHolder
 import com.mapconductor.mapbox.toMapCameraPosition
 import java.util.UUID
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.withPermit
 
@@ -109,6 +112,10 @@ class MapboxMarkerController private constructor(
             markerManager.clear()
             tiledMarkerIds.clear()
             removeTileOverlay()
+            // onRemove はアイコンの参照数を減らすだけで、地図のソースは onPostProcess が
+            // manager の中身から描き直すまで変わらない。空にした後で呼ばないと、
+            // clearOverlays() の後もマーカーが地図に残る。
+            renderer.onPostProcess()
         }
         viewportSwitch.requestReapply()
     }
@@ -126,11 +133,12 @@ class MapboxMarkerController private constructor(
         if (currentFinger == prevFinger) return
 
         semaphore.withPermit {
+            // 件数だけが要る。allEntities() は全件の写しを作るので、ラベルの付け替えのように
+            // 数十本が続けて変わると、そのたびに 14 万件を写すことになる。
             val tilingEnabled =
-                markerTiling.enabled && markerManager.allEntities().size >= markerManager.minMarkerCount
+                markerTiling.enabled && markerManager.getMemoryStats().entityCount >= markerManager.minMarkerCount
             val wantsTiled = tilingEnabled && !state.draggable && state.getAnimation() == null
             val wasTiled = tiledMarkerIds.contains(state.id)
-            val markerIcon = state.icon?.toBitmapIcon() ?: defaultMarkerIcon
 
             if (wantsTiled) {
                 if (!wasTiled) {
@@ -148,14 +156,19 @@ class MapboxMarkerController private constructor(
                         tiling = true,
                     ),
                 )
-                renderer.onPostProcess()
-                syncTiledOverlay()
+                // タイル担当のままなら、ネイティブのマーカーには何も起きていない。onPostProcess は
+                // 全件を写してネイティブ分を描き直すので（14 万件で 1 回 50ms）、ネイティブから
+                // タイルへ移ったときだけ呼ぶ。
+                if (!wasTiled) renderer.onPostProcess()
+                scheduleTileRefresh()
                 return@withPermit
             }
 
             if (wasTiled) {
                 tiledMarkerIds.remove(state.id)
             }
+            // ネイティブマーカーとして描くときだけ焼き込む。タイル担当なら要らない。
+            val markerIcon = state.icon?.toBitmapIcon() ?: defaultMarkerIcon
 
             val params =
                 object : MarkerOverlayRendererInterface.ChangeParamsInterface<MapboxActualMarker> {
@@ -186,11 +199,30 @@ class MapboxMarkerController private constructor(
             renderer.onPostProcess()
 
             if (tiledMarkerIds.isNotEmpty()) {
-                syncTiledOverlay()
+                scheduleTileRefresh()
             } else {
                 removeTileOverlay()
             }
         }
+    }
+
+    private var tileRefreshJob: Job? = null
+
+    /**
+     * 1 本ずつの変更からの描き直しを 1 回にまとめる。
+     *
+     * ラベルの付け替えのように数十本が続けて変わると、1 本ごとにラスターソースを差し替え、
+     * そのたびに地図が見えているタイルを全部取り直していた（MapLibre・Pixel 5a で 45 回、
+     * 描き直したタイル 494 枚、最後のタイルまで 6 秒）。続けて来た変更は
+     * [TILE_REFRESH_COALESCE] の間に受けて、まとめて 1 回だけ差し替える。
+     */
+    private fun scheduleTileRefresh() {
+        if (tileRefreshJob?.isActive == true) return
+        tileRefreshJob =
+            (renderer as MapboxMarkerOverlayRenderer).coroutine.launch {
+                delay(TILE_REFRESH_COALESCE)
+                semaphore.withPermit { syncTiledOverlay() }
+            }
     }
 
     override suspend fun onCameraChanged(mapCameraPosition: MapCameraPosition) {
@@ -215,6 +247,8 @@ class MapboxMarkerController private constructor(
 
     override fun destroy() {
         viewportSwitch.destroy()
+        // 待っている描き直しが後から走ると、外したタイル経路をまた登録してしまう。
+        tileRefreshJob?.cancel()
         // Clean up tile server registration
         // Unregister this map's route only. Never stop the server here: it is
         // a process-wide singleton shared by all map controllers and overlay
@@ -282,6 +316,7 @@ class MapboxMarkerController private constructor(
                 cacheSizeBytes = markerTiling.cacheSize,
                 debugTileOverlay = markerTiling.debugTileOverlay,
                 iconScaleCallback = markerTiling.iconScaleCallback,
+                declutterPx = markerTiling.declutterPx,
             )
         markerTileRenderer = tileRenderer
 
@@ -316,6 +351,9 @@ class MapboxMarkerController private constructor(
     }
 
     companion object {
+        /** 続けて来る変更を 1 回の描き直しにまとめる窓。1 フレーム分。 */
+        private val TILE_REFRESH_COALESCE = 16.milliseconds
+
         fun create(
             holder: MapboxMapViewHolder,
             markerManager: MarkerManager<MapboxActualMarker>,

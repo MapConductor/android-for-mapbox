@@ -17,7 +17,10 @@ class MapboxPolygonOverlayRenderer(
     override val holder: MapboxMapViewHolder,
     override val coroutine: CoroutineScope = CoroutineScope(Dispatchers.Main),
 ) : AbstractPolygonOverlayRenderer<MapboxActualPolygon>() {
+    // 消えた分を除いた残りで描き直す。コントローラはこの呼び出しの後で polygonManager から
+    // 外すので（clear() では onPostProcess も来ない）、ここで除外しておかないと消えずに残る。
     override suspend fun onRemove(data: List<PolygonEntityInterface<MapboxActualPolygon>>) {
+        layer.draw(getRemainingPolygonEntities(data))
     }
 
     override suspend fun onPostProcess() {
@@ -59,6 +62,16 @@ class MapboxPolygonOverlayRenderer(
         return prev.polygon
     }
 
+    // Polygons drawn as tiles (PolygonController.tiler) stay in the manager, for
+    // taps, with no features: their entity's polygon is null.
+    @Suppress("USELESS_CAST")
     private fun getAllPolygonEntities(): List<PolygonEntityInterface<MapboxActualPolygon>> =
-        polygonManager.allEntities()
+        polygonManager.allEntities().filter { (it.polygon as MapboxActualPolygon?) != null }
+
+    private fun getRemainingPolygonEntities(
+        removed: List<PolygonEntityInterface<MapboxActualPolygon>>,
+    ): List<PolygonEntityInterface<MapboxActualPolygon>> {
+        val removedIds = removed.mapTo(HashSet()) { it.state.id }
+        return getAllPolygonEntities().filter { it.state.id !in removedIds }
+    }
 }

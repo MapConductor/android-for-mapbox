@@ -20,22 +20,29 @@ public interface com.mapconductor.mapbox.IMapboxPaddingsInterface extends com.ma
   public abstract com.mapbox.maps.EdgeInsets toEdgeInsects();
 }
 public final class com.mapconductor.mapbox.MapCameraPositionKt {
+  public static final double MAPBOX_VERTICAL_FOV;
+  public static final com.mapbox.maps.EdgeInsets toMapboxEdgeInsets(com.mapconductor.core.map.MapPaddingsInterface, float);
+  public static final com.mapconductor.core.map.MapPaddings toMapPaddings(com.mapbox.maps.EdgeInsets, float);
   public static final com.mapconductor.core.map.MapCameraPosition toMapCameraPosition(com.mapbox.maps.CameraChanged);
   public static final com.mapbox.maps.CameraOptions toCameraOptions(com.mapconductor.core.map.MapCameraPosition);
+  public static final com.mapbox.maps.CameraOptions toCameraOptions(com.mapconductor.core.map.MapCameraPosition, java.lang.Float);
   public static final com.mapbox.maps.CameraState toCameraState(com.mapconductor.core.map.MapCameraPosition);
   public static final com.mapconductor.core.map.MapCameraPosition from(com.mapconductor.core.map.MapCameraPosition$Companion, com.mapconductor.core.map.MapCameraPositionInterface);
   public static final com.mapconductor.core.map.MapCameraPosition toMapCameraPosition(com.mapbox.maps.CameraOptions);
   public static final com.mapconductor.core.map.MapCameraPosition toMapCameraPosition(com.mapbox.maps.CameraState);
-  public static final com.mapconductor.core.map.MapCameraPosition toMapCameraPosition(com.mapbox.maps.CameraState, java.lang.Double);
+  public static final com.mapconductor.core.map.MapCameraPosition toMapCameraPosition(com.mapbox.maps.CameraState, java.lang.Double, java.lang.Float);
 }
 public final class com.mapconductor.mapbox.MapboxCameraStateSnapshot {
-  public com.mapconductor.mapbox.MapboxCameraStateSnapshot(com.mapbox.maps.CameraState, java.lang.Double);
+  public com.mapconductor.mapbox.MapboxCameraStateSnapshot(com.mapbox.maps.CameraState, java.lang.Double, java.lang.Float);
+  public com.mapconductor.mapbox.MapboxCameraStateSnapshot(com.mapbox.maps.CameraState, java.lang.Double, java.lang.Float, int, kotlin.jvm.internal.DefaultConstructorMarker);
   public final com.mapbox.maps.CameraState getCameraState();
   public final java.lang.Double getLogicalTiltHint();
+  public final java.lang.Float getDensity();
   public final com.mapconductor.core.map.MapCameraPosition toMapCameraPosition();
   public final com.mapbox.maps.CameraState component1();
   public final java.lang.Double component2();
-  public final com.mapconductor.mapbox.MapboxCameraStateSnapshot copy(com.mapbox.maps.CameraState, java.lang.Double);
+  public final java.lang.Float component3();
+  public final com.mapconductor.mapbox.MapboxCameraStateSnapshot copy(com.mapbox.maps.CameraState, java.lang.Double, java.lang.Float);
   public java.lang.String toString();
   public int hashCode();
   public boolean equals(java.lang.Object);
@@ -75,6 +82,11 @@ public final class com.mapconductor.mapbox.MapboxMapDesign$NavigationDay extends
 public final class com.mapconductor.mapbox.MapboxMapDesign$NavigationNight extends com.mapconductor.mapbox.MapboxMapDesign {
   public static final com.mapconductor.mapbox.MapboxMapDesign$NavigationNight INSTANCE;
 }
+public final class com.mapconductor.mapbox.MapboxMapDesign$None extends com.mapconductor.mapbox.MapboxMapDesign {
+  public static final com.mapconductor.mapbox.MapboxMapDesign$None INSTANCE;
+  public java.lang.String getValue();
+  public java.lang.Object getValue();
+}
 public final class com.mapconductor.mapbox.MapboxMapDesign$Outdoors extends com.mapconductor.mapbox.MapboxMapDesign {
   public static final com.mapconductor.mapbox.MapboxMapDesign$Outdoors INSTANCE;
 }
@@ -93,12 +105,17 @@ public final class com.mapconductor.mapbox.MapboxMapDesign$StandardSatellite ext
 public final class com.mapconductor.mapbox.MapboxMapDesign$Streets extends com.mapconductor.mapbox.MapboxMapDesign {
   public static final com.mapconductor.mapbox.MapboxMapDesign$Streets INSTANCE;
 }
+public final class com.mapconductor.mapbox.MapboxMapDesign$StyleUri extends com.mapconductor.mapbox.MapboxMapDesign {
+  public final java.lang.String getUri();
+  public java.lang.String getValue();
+  public java.lang.Object getValue();
+}
 public final class com.mapconductor.mapbox.MapboxMapDesignKt {
   public static final com.mapconductor.core.map.MapDesignTypeInterface<java.lang.String> toMapDesignType(com.mapbox.maps.Style);
 }
 public final class com.mapconductor.mapbox.MapboxMapViewController extends com.mapconductor.core.controller.BaseMapViewController implements MapboxMapViewControllerInterface,com.mapbox.maps.plugin.gestures.OnMapClickListener,com.mapbox.maps.plugin.gestures.OnMapLongClickListener,com.mapbox.maps.plugin.gestures.OnMoveListener {
-  public com.mapconductor.mapbox.MapboxMapViewController(com.mapconductor.mapbox.MapboxMapViewHolder, com.mapconductor.core.map.MapProjection, com.mapconductor.mapbox.marker.MapboxMarkerController, com.mapconductor.mapbox.polyline.MapboxPolylineController, com.mapconductor.mapbox.polygon.MapboxPolygonConductor, com.mapconductor.mapbox.groundimage.MapboxGroundImageController, com.mapconductor.mapbox.circle.MapboxCircleController, com.mapconductor.mapbox.raster.MapboxRasterLayerController, kotlinx.coroutines.CoroutineScope, kotlinx.coroutines.CoroutineScope);
-  public com.mapconductor.mapbox.MapboxMapViewController(com.mapconductor.mapbox.MapboxMapViewHolder, com.mapconductor.core.map.MapProjection, com.mapconductor.mapbox.marker.MapboxMarkerController, com.mapconductor.mapbox.polyline.MapboxPolylineController, com.mapconductor.mapbox.polygon.MapboxPolygonConductor, com.mapconductor.mapbox.groundimage.MapboxGroundImageController, com.mapconductor.mapbox.circle.MapboxCircleController, com.mapconductor.mapbox.raster.MapboxRasterLayerController, kotlinx.coroutines.CoroutineScope, kotlinx.coroutines.CoroutineScope, int, kotlin.jvm.internal.DefaultConstructorMarker);
+  public com.mapconductor.mapbox.MapboxMapViewController(com.mapconductor.mapbox.MapboxMapViewHolder, com.mapconductor.core.map.MapProjection, com.mapconductor.mapbox.marker.MapboxMarkerController, com.mapconductor.mapbox.polyline.MapboxPolylineController, com.mapconductor.mapbox.polygon.MapboxPolygonController, com.mapconductor.mapbox.groundimage.MapboxGroundImageController, com.mapconductor.mapbox.circle.MapboxCircleController, com.mapconductor.mapbox.raster.MapboxRasterLayerController, kotlinx.coroutines.CoroutineScope, kotlinx.coroutines.CoroutineScope);
+  public com.mapconductor.mapbox.MapboxMapViewController(com.mapconductor.mapbox.MapboxMapViewHolder, com.mapconductor.core.map.MapProjection, com.mapconductor.mapbox.marker.MapboxMarkerController, com.mapconductor.mapbox.polyline.MapboxPolylineController, com.mapconductor.mapbox.polygon.MapboxPolygonController, com.mapconductor.mapbox.groundimage.MapboxGroundImageController, com.mapconductor.mapbox.circle.MapboxCircleController, com.mapconductor.mapbox.raster.MapboxRasterLayerController, kotlinx.coroutines.CoroutineScope, kotlinx.coroutines.CoroutineScope, int, kotlin.jvm.internal.DefaultConstructorMarker);
   public com.mapconductor.mapbox.MapboxMapViewHolder getHolder();
   public kotlinx.coroutines.CoroutineScope getMainCoroutine();
   public kotlinx.coroutines.CoroutineScope getDefaultCoroutine();
@@ -141,6 +158,9 @@ public final class com.mapconductor.mapbox.MapboxMapViewController extends com.m
 public final class com.mapconductor.mapbox.MapboxMapViewControllerCameraKt {
   public static final com.mapconductor.core.map.MapCameraPosition getMapCameraPosition(com.mapconductor.mapbox.MapboxMapViewController);
   public static final com.mapconductor.core.map.MapCameraPosition readLogicalCameraPosition(com.mapconductor.mapbox.MapboxMapViewController);
+  public static final double viewportHeightDp(com.mapconductor.mapbox.MapboxMapViewController);
+  public static final com.mapconductor.core.map.MapCameraPosition toNativeCamera(com.mapconductor.mapbox.MapboxMapViewController, com.mapconductor.core.map.MapCameraPosition);
+  public static final float density(com.mapconductor.mapbox.MapboxMapViewController);
   public static final java.lang.Object getMapCameraPositionAsync(com.mapconductor.mapbox.MapboxMapViewController, kotlin.coroutines.Continuation<? super com.mapconductor.core.map.MapCameraPosition>);
   public static final void handleMoveCamera(com.mapconductor.mapbox.MapboxMapViewController, com.mapconductor.core.map.MapCameraPosition);
   public static final void handleAnimateCamera(com.mapconductor.mapbox.MapboxMapViewController, com.mapconductor.core.map.MapCameraPosition, long);
@@ -174,14 +194,17 @@ public final class com.mapconductor.mapbox.MapboxMapViewHolder implements com.ma
   public void onLowMemory();
   public void onStart();
   public void onStop();
+  public com.mapconductor.core.projection.ProjectedPoint toProjectedPoint(com.mapconductor.core.features.GeoPointInterface);
+  public com.mapconductor.core.features.GeoPoint fromProjectedPoint(com.mapconductor.core.projection.ProjectedPoint);
+  public com.mapconductor.core.projection.MapCoordinateSystem getCoordinateSystem();
   public void onResume();
   public java.lang.Object getMapView();
   public java.lang.Object getMap();
 }
 public final class com.mapconductor.mapbox.MapboxMapViewKt {
-  public static final void MapboxMapView(com.mapconductor.mapbox.MapboxViewState, androidx.compose.ui.Modifier, com.mapconductor.core.marker.MarkerTilingOptions, com.mapconductor.core.map.CameraRestriction, kotlin.jvm.functions.Function2<? super android.content.Context, ? super kotlin.coroutines.Continuation<? super java.lang.Boolean>, ? extends java.lang.Object>, kotlin.jvm.functions.Function1<? super com.mapconductor.core.map.MapViewStateInterface<?>, kotlin.Unit>, kotlin.jvm.functions.Function1<? super com.mapconductor.core.features.GeoPoint, kotlin.Unit>, kotlin.jvm.functions.Function1<? super com.mapconductor.core.features.GeoPoint, kotlin.Unit>, kotlin.jvm.functions.Function1<? super com.mapconductor.core.map.MapCameraPosition, kotlin.Unit>, kotlin.jvm.functions.Function1<? super com.mapconductor.core.map.MapCameraPosition, kotlin.Unit>, kotlin.jvm.functions.Function1<? super com.mapconductor.core.map.MapCameraPosition, kotlin.Unit>, com.mapconductor.core.map.MapProjection, kotlin.jvm.functions.Function3<? super com.mapconductor.mapbox.MapboxMapViewScope, ? super androidx.compose.runtime.Composer, ? super java.lang.Integer, kotlin.Unit>, androidx.compose.runtime.Composer, int, int, int);
+  public static final void MapboxMapView(com.mapconductor.mapbox.MapboxViewState, androidx.compose.ui.Modifier, com.mapconductor.core.marker.MarkerTilingOptions, com.mapconductor.core.map.CameraRestriction, kotlin.jvm.functions.Function2<? super android.content.Context, ? super kotlin.coroutines.Continuation<? super java.lang.Boolean>, ? extends java.lang.Object>, kotlin.jvm.functions.Function1<? super com.mapconductor.core.map.MapViewStateInterface<?>, kotlin.Unit>, kotlin.jvm.functions.Function1<? super com.mapconductor.core.features.GeoPoint, kotlin.Unit>, kotlin.jvm.functions.Function1<? super com.mapconductor.core.features.GeoPoint, kotlin.Unit>, kotlin.jvm.functions.Function1<? super com.mapconductor.core.map.MapCameraPosition, kotlin.Unit>, kotlin.jvm.functions.Function1<? super com.mapconductor.core.map.MapCameraPosition, kotlin.Unit>, kotlin.jvm.functions.Function1<? super com.mapconductor.core.map.MapCameraPosition, kotlin.Unit>, com.mapconductor.core.map.MapProjection, com.mapconductor.core.map.MapViewStyle, kotlin.jvm.functions.Function1<? super java.util.List<java.lang.String>, kotlin.Unit>, kotlin.jvm.functions.Function3<? super com.mapconductor.mapbox.MapboxMapViewScope, ? super androidx.compose.runtime.Composer, ? super java.lang.Integer, kotlin.Unit>, androidx.compose.runtime.Composer, int, int, int);
   public static final com.mapconductor.mapbox.MapboxMapViewController createMapboxViewController(com.mapconductor.mapbox.MapboxMapViewHolder, com.mapconductor.core.marker.MarkerTilingOptions, com.mapconductor.core.map.MapProjection, com.mapconductor.core.map.MutableMapServiceRegistry);
-  public static final com.mapconductor.mapbox.polygon.MapboxPolygonConductor getPolygonController(com.mapconductor.mapbox.MapboxMapViewHolder);
+  public static final com.mapconductor.mapbox.polygon.MapboxPolygonController getPolygonController(com.mapconductor.mapbox.MapboxMapViewHolder);
   public static final com.mapconductor.mapbox.circle.MapboxCircleController getCircleController(com.mapconductor.mapbox.MapboxMapViewHolder);
   public static final com.mapconductor.mapbox.polyline.MapboxPolylineController getPolylineController(com.mapconductor.mapbox.MapboxMapViewHolder);
   public static final com.mapconductor.mapbox.marker.MapboxMarkerController getMarkerController(com.mapconductor.mapbox.MapboxMapViewHolder, com.mapconductor.core.marker.MarkerTilingOptions);
@@ -200,6 +223,18 @@ public final class com.mapconductor.mapbox.MapboxMapViewSaver extends com.mapcon
 }
 public final class com.mapconductor.mapbox.MapboxMapViewScope extends com.mapconductor.compose.MapViewScope {
   public com.mapconductor.mapbox.MapboxMapViewScope();
+}
+public final class com.mapconductor.mapbox.MapboxOverlayStacking {
+  public static final com.mapconductor.mapbox.MapboxOverlayStacking INSTANCE;
+  public final com.mapconductor.core.controller.OverlayLayerStack stackOf(com.mapbox.maps.MapboxMap);
+  public final com.mapconductor.core.controller.OverlayStacking$Key key(com.mapconductor.core.controller.OverlayKind, int);
+  public final com.mapconductor.core.controller.OverlayStacking$Key getMARKER_TILE();
+  public final com.mapconductor.core.controller.OverlayStacking$Key getPOLYGON_TILE();
+  public final com.mapconductor.core.controller.OverlayStacking$Key getCIRCLE_TILE();
+  public final com.mapconductor.core.controller.OverlayStacking$Key getPOLYLINE_TILE();
+  public final com.mapconductor.core.controller.OverlayStacking$Key getMARKER_DRAG();
+  public final void add(com.mapbox.maps.MapboxMap, com.mapbox.maps.Style, com.mapbox.maps.extension.style.layers.Layer, com.mapconductor.core.controller.OverlayStacking$Key);
+  public final void remove(com.mapbox.maps.MapboxMap, com.mapbox.maps.Style, java.lang.String);
 }
 public final class com.mapconductor.mapbox.MapboxPaddings extends com.mapconductor.core.map.MapPaddings implements com.mapconductor.mapbox.IMapboxPaddingsInterface {
   public static final com.mapconductor.mapbox.MapboxPaddings$Companion Companion;
@@ -359,6 +394,7 @@ public final class com.mapconductor.mapbox.marker.MapboxMarkerOverlayRenderer ex
   public void setMarkerPosition(com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature>, com.mapconductor.core.features.GeoPoint);
   public java.lang.Object onAdd(java.util.List<? extends com.mapconductor.core.marker.MarkerOverlayRendererInterface$AddParamsInterface>, kotlin.coroutines.Continuation<? super java.util.List<com.mapbox.geojson.Feature>>);
   public java.lang.Object onRemove(java.util.List<? extends com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature>>, kotlin.coroutines.Continuation<? super kotlin.Unit>);
+  protected java.lang.Object applyDrawOrder(java.util.List<? extends com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature>>, kotlin.coroutines.Continuation<? super kotlin.Unit>);
   public java.lang.Object onPostProcess(kotlin.coroutines.Continuation<? super kotlin.Unit>);
   public java.lang.Object onChange(java.util.List<? extends com.mapconductor.core.marker.MarkerOverlayRendererInterface$ChangeParamsInterface<com.mapbox.geojson.Feature>>, kotlin.coroutines.Continuation<? super java.util.List<com.mapbox.geojson.Feature>>);
   public void onDragSelectionChanged(com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature>, com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature>);
@@ -390,27 +426,23 @@ public class com.mapconductor.mapbox.marker.MarkerLayer {
   public final boolean wouldSkipDraw(java.util.List<? extends com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature>>);
   public final void draw(java.util.List<? extends com.mapconductor.core.marker.MarkerEntityInterface<com.mapbox.geojson.Feature>>);
 }
-public final class com.mapconductor.mapbox.polygon.MapboxPolygonConductor implements com.mapconductor.core.controller.SlottedOverlayController<com.mapconductor.core.polygon.PolygonState, com.mapconductor.core.polygon.PolygonEntityInterface<com.mapconductor.core.polygon.PolygonState>> {
-  public com.mapconductor.mapbox.polygon.MapboxPolygonConductor(com.mapconductor.mapbox.polygon.MapboxPolygonOverlayRenderer, com.mapconductor.mapbox.polyline.MapboxPolylineOverlayRenderer);
-  public final com.mapconductor.mapbox.polygon.MapboxPolygonOverlayRenderer getPolygonOverlay();
-  public final com.mapconductor.mapbox.polyline.MapboxPolylineOverlayRenderer getPolylineOverlay();
-  public int getZIndex();
-  public java.lang.Object add(java.util.List<com.mapconductor.core.polygon.PolygonState>, kotlin.coroutines.Continuation<? super kotlin.Unit>);
-  public java.lang.Object update(com.mapconductor.core.polygon.PolygonState, kotlin.coroutines.Continuation<? super kotlin.Unit>);
-  public final void dispatchClick(com.mapconductor.core.polygon.PolygonEvent);
-  public final kotlin.jvm.functions.Function1<com.mapconductor.core.polygon.PolygonEvent, kotlin.Unit> getClickListener();
-  public final void setClickListener(kotlin.jvm.functions.Function1<? super com.mapconductor.core.polygon.PolygonEvent, kotlin.Unit>);
-  public com.mapconductor.core.polygon.PolygonEntityInterface<com.mapconductor.core.polygon.PolygonState> find(com.mapconductor.core.features.GeoPointInterface);
-  public java.lang.Object clear(kotlin.coroutines.Continuation<? super kotlin.Unit>);
-  public com.mapconductor.core.controller.OverlayKind getKind();
-  public boolean has(java.lang.String);
-  public void setClickListenerAny(java.lang.Object);
-  public com.mapconductor.core.controller.OverlayHit resolveTap(com.mapconductor.core.features.GeoPointInterface);
-  public void destroy();
-  public java.lang.Object update(java.lang.Object, kotlin.coroutines.Continuation);
-  public java.lang.Object find(com.mapconductor.core.features.GeoPointInterface);
+public final class com.mapconductor.mapbox.polygon.MapboxPolygonCompositeRenderer implements com.mapconductor.core.polygon.PolygonOverlayRendererInterface<java.util.List<? extends com.mapbox.geojson.Feature>> {
+  public com.mapconductor.mapbox.polygon.MapboxPolygonCompositeRenderer(com.mapconductor.mapbox.polygon.MapboxPolygonOverlayRenderer, com.mapconductor.mapbox.polyline.MapboxPolylineOverlayRenderer);
+  public final com.mapconductor.mapbox.polygon.MapboxPolygonOverlayRenderer getFill();
+  public final com.mapconductor.mapbox.polyline.MapboxPolylineOverlayRenderer getOutline();
+  public java.lang.Object onAdd(java.util.List<? extends com.mapconductor.core.polygon.PolygonOverlayRendererInterface$AddParamsInterface>, kotlin.coroutines.Continuation<? super java.util.List<? extends java.util.List<com.mapbox.geojson.Feature>>>);
+  public java.lang.Object onChange(java.util.List<? extends com.mapconductor.core.polygon.PolygonOverlayRendererInterface$ChangeParamsInterface<java.util.List<com.mapbox.geojson.Feature>>>, kotlin.coroutines.Continuation<? super java.util.List<? extends java.util.List<com.mapbox.geojson.Feature>>>);
+  public java.lang.Object onRemove(java.util.List<? extends com.mapconductor.core.polygon.PolygonEntityInterface<java.util.List<com.mapbox.geojson.Feature>>>, kotlin.coroutines.Continuation<? super kotlin.Unit>);
+  public java.lang.Object onPostProcess(kotlin.coroutines.Continuation<? super kotlin.Unit>);
 }
-public final class com.mapconductor.mapbox.polygon.MapboxPolygonConductorKt {
+public final class com.mapconductor.mapbox.polygon.MapboxPolygonCompositeRendererKt {
+}
+public final class com.mapconductor.mapbox.polygon.MapboxPolygonController extends com.mapconductor.core.polygon.PolygonController<java.util.List<? extends com.mapbox.geojson.Feature>> {
+  public com.mapconductor.mapbox.polygon.MapboxPolygonController(com.mapconductor.mapbox.polygon.MapboxPolygonCompositeRenderer);
+  public com.mapconductor.mapbox.polygon.MapboxPolygonCompositeRenderer getRenderer();
+  public int getZIndex();
+  public void destroy();
+  public com.mapconductor.core.polygon.PolygonOverlayRendererInterface getRenderer();
 }
 public final class com.mapconductor.mapbox.polygon.MapboxPolygonLayer {
   public com.mapconductor.mapbox.polygon.MapboxPolygonLayer(java.lang.String, java.lang.String);
@@ -477,7 +509,6 @@ public final class com.mapconductor.mapbox.polyline.MapboxPolylineOverlayRendere
 public final class com.mapconductor.mapbox.raster.MapboxRasterLayerController extends com.mapconductor.core.raster.RasterLayerController<com.mapconductor.mapbox.raster.MapboxRasterLayerHandle> {
   public com.mapconductor.mapbox.raster.MapboxRasterLayerController(com.mapconductor.core.raster.RasterLayerManagerInterface<com.mapconductor.mapbox.raster.MapboxRasterLayerHandle>, com.mapconductor.mapbox.raster.MapboxRasterLayerOverlayRenderer);
   public com.mapconductor.mapbox.raster.MapboxRasterLayerController(com.mapconductor.core.raster.RasterLayerManagerInterface, com.mapconductor.mapbox.raster.MapboxRasterLayerOverlayRenderer, int, kotlin.jvm.internal.DefaultConstructorMarker);
-  public final java.lang.Object reapplyStyle(kotlin.coroutines.Continuation<? super kotlin.Unit>);
 }
 public final class com.mapconductor.mapbox.raster.MapboxRasterLayerHandle {
   public com.mapconductor.mapbox.raster.MapboxRasterLayerHandle(java.lang.String, java.lang.String);

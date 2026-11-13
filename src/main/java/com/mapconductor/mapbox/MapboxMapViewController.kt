@@ -1,5 +1,11 @@
 package com.mapconductor.mapbox
 
+import com.mapconductor.core.circle.CIRCLE_TILE_LAYER_ID
+import com.mapconductor.core.circle.CircleTiler
+import com.mapconductor.core.circle.circleTileRasterLayerState
+import com.mapconductor.core.polygon.POLYGON_TILE_LAYER_ID
+import com.mapconductor.core.polygon.PolygonTiler
+import com.mapconductor.core.polygon.polygonTileRasterLayerState
 import MapboxMapViewControllerInterface
 import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.geojson.Point
@@ -23,6 +29,8 @@ import com.mapconductor.core.features.GeoRectBounds
 import com.mapconductor.core.groundimage.OnGroundImageEventHandler
 import com.mapconductor.core.map.CameraRestriction
 import com.mapconductor.core.map.MapCameraPosition
+import com.mapconductor.core.map.MapPaddingsInterface
+import com.mapconductor.core.map.MapPaddings
 import com.mapconductor.core.map.MapProjection
 import com.mapconductor.core.map.MapUISettings
 import com.mapconductor.core.marker.DefaultMarkerEventController
@@ -36,14 +44,17 @@ import com.mapconductor.core.marker.dispatchGeoMarkerClick
 import com.mapconductor.core.polygon.OnPolygonEventHandler
 import com.mapconductor.core.polygon.PolygonState
 import com.mapconductor.core.polyline.OnPolylineEventHandler
+import com.mapconductor.core.polyline.POLYLINE_TILE_LAYER_ID
 import com.mapconductor.core.polyline.PolylineState
+import com.mapconductor.core.polyline.PolylineTiler
+import com.mapconductor.core.polyline.polylineTileRasterLayerState
 import com.mapconductor.mapbox.circle.MapboxCircleController
 import com.mapconductor.mapbox.groundimage.MapboxGroundImageController
 import com.mapconductor.mapbox.marker.MapboxMarkerController
 import com.mapconductor.mapbox.marker.MapboxMarkerOverlayRenderer
 import com.mapconductor.mapbox.marker.MarkerDragLayer
 import com.mapconductor.mapbox.marker.MarkerLayer
-import com.mapconductor.mapbox.polygon.MapboxPolygonConductor
+import com.mapconductor.mapbox.polygon.MapboxPolygonController
 import com.mapconductor.mapbox.polyline.MapboxPolylineController
 import com.mapconductor.mapbox.raster.MapboxRasterLayerController
 import java.util.UUID
@@ -68,7 +79,7 @@ class MapboxMapViewController internal constructor(
     internal var projection: MapProjection,
     internal val markerController: MapboxMarkerController,
     internal val polylineController: MapboxPolylineController,
-    internal val polygonController: MapboxPolygonConductor,
+    internal val polygonController: MapboxPolygonController,
     internal val groundImageController: MapboxGroundImageController,
     internal val circleController: MapboxCircleController,
     internal val rasterLayerController: MapboxRasterLayerController,
@@ -86,6 +97,9 @@ class MapboxMapViewController internal constructor(
 
     internal val cameraUpdateToken = AtomicInteger(0)
     internal var lastLogicalCameraPosition: MapCameraPosition? = null
+
+    /** アプリが指定したパディング（dp）。ネイティブには渡さず、中心のずらしで再現する。 */
+    internal var cameraPaddings: MapPaddingsInterface = MapPaddings.Zeros
 
     internal var markerClickListener: OnMarkerEventHandler? = null
     internal var markerDragStartListener: OnMarkerEventHandler? = null
@@ -116,6 +130,43 @@ class MapboxMapViewController internal constructor(
                 markerTileLayers.forEach { entity -> rasterLayerController.removeById(entity.state.id) }
             }
         }
+
+        // Many polygons are drawn as raster tiles, shown through the same RasterLayer
+        // controller as the marker tiles (upsert / removeById, never the app's layers).
+        polygonController.tiler =
+            PolygonTiler().apply {
+                onTemplate = { template, tileSize ->
+                    if (template != null) {
+                        rasterLayerController.upsert(polygonTileRasterLayerState(template, tileSize))
+                    } else {
+                        rasterLayerController.removeById(POLYGON_TILE_LAYER_ID)
+                    }
+                }
+            }
+
+        // Many circles too: the same raster layer path, in the circle band.
+        circleController.tiler =
+            CircleTiler().apply {
+                onTemplate = { template, tileSize ->
+                    if (template != null) {
+                        rasterLayerController.upsert(circleTileRasterLayerState(template, tileSize))
+                    } else {
+                        rasterLayerController.removeById(CIRCLE_TILE_LAYER_ID)
+                    }
+                }
+            }
+
+        // Many polylines too: the same raster layer path, in the polyline band.
+        polylineController.tiler =
+            PolylineTiler().apply {
+                onTemplate = { template, tileSize ->
+                    if (template != null) {
+                        rasterLayerController.upsert(polylineTileRasterLayerState(template, tileSize))
+                    } else {
+                        rasterLayerController.removeById(POLYLINE_TILE_LAYER_ID)
+                    }
+                }
+            }
     }
 
     override fun moveCamera(position: MapCameraPosition) = handleMoveCamera(position)
@@ -208,6 +259,11 @@ class MapboxMapViewController internal constructor(
                     this@MapboxMapViewController.mapDesignType = mapDesign
                     mapDesignTypeChangeListener?.invoke(mapDesign)
                 }
+
+                // Last, once the overlays are back on: a vector style
+                // adjustment lost everything it set with the old style, and
+                // this is the moment the new one is known to be complete.
+                styleLoadedListener?.invoke()
             }
         }
 
@@ -261,7 +317,10 @@ class MapboxMapViewController internal constructor(
         polylineController.clear()
         polygonController.clear()
         groundImageController.clear()
+        circleController.clear()
         rasterLayerController.clear()
+        // 拡張モジュール（クラスタリングなど）が登録した Strategy のマーカーも消す。
+        clearStrategyMarkerControllers()
     }
 
     override fun setMarkerAnimationOverlayHost(host: MarkerAnimationOverlayHost?) {
@@ -293,7 +352,7 @@ class MapboxMapViewController internal constructor(
             .hasEntity(state.id)
 
     override fun hasPolygon(state: PolygonState): Boolean =
-        this.polygonController.polygonOverlay.polygonManager
+        this.polygonController.polygonManager
             .hasEntity(state.id)
 
     override fun applyUISettings(settings: MapUISettings) {
@@ -358,9 +417,39 @@ class MapboxMapViewController internal constructor(
 
     internal var mapDesignTypeChangeListener: MapboxMapDesignTypeChangeHandler? = null
 
+    /**
+     * Called once the map has a style up and the overlays are back on it.
+     *
+     * How a vector style adjustment survives a design change. Kept in step
+     * with `MapLibreViewController.styleLoadedListener`.
+     */
+    internal var styleLoadedListener: (() -> Unit)? = null
+
+    /** The document the map was last asked for, and the one it reported loading. */
+    private var requestedStyle: String? = null
+    private var loadedStyleValue: String? = null
+
+    /**
+     * Whether the style on screen is the document the map was last asked
+     * for.
+     *
+     * What [MapboxStyleMutationTarget] answers `isReady` with, and not the
+     * same question as "is a style loaded". A vector style hands the map a
+     * new document and then applies the deltas compiled for it; in between,
+     * the map still has the document being replaced, whose layers have
+     * other names, so every delta came back as a property this map "cannot
+     * set by name". Mirrors `MapLibreViewController.isShowingRequestedStyle`.
+     */
+    internal fun isShowingRequestedStyle(): Boolean =
+        holder.map.style != null && loadedStyleValue == requestedStyle
+
     override fun setMapDesignType(value: MapboxDesignType) {
+        val document = value.getValue()
+        requestedStyle = document
         mainCoroutine.launch {
-            holder.mapView.mapboxMap.loadStyle(value.getValue())
+            holder.mapView.mapboxMap.loadStyle(document) {
+                loadedStyleValue = document
+            }
         }
     }
 
