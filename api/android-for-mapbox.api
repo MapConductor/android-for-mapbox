@@ -194,6 +194,9 @@ public final class com.mapconductor.mapbox.MapboxMapViewHolder implements com.ma
   public void onLowMemory();
   public void onStart();
   public void onStop();
+  public com.mapconductor.core.projection.ProjectedPoint toProjectedPoint(com.mapconductor.core.features.GeoPointInterface);
+  public com.mapconductor.core.features.GeoPoint fromProjectedPoint(com.mapconductor.core.projection.ProjectedPoint);
+  public com.mapconductor.core.projection.MapCoordinateSystem getCoordinateSystem();
   public void onResume();
   public java.lang.Object getMapView();
   public java.lang.Object getMap();
@@ -227,6 +230,7 @@ public final class com.mapconductor.mapbox.MapboxOverlayStacking {
   public final com.mapconductor.core.controller.OverlayStacking$Key key(com.mapconductor.core.controller.OverlayKind, int);
   public final com.mapconductor.core.controller.OverlayStacking$Key getMARKER_TILE();
   public final com.mapconductor.core.controller.OverlayStacking$Key getPOLYGON_TILE();
+  public final com.mapconductor.core.controller.OverlayStacking$Key getCIRCLE_TILE();
   public final com.mapconductor.core.controller.OverlayStacking$Key getPOLYLINE_TILE();
   public final com.mapconductor.core.controller.OverlayStacking$Key getMARKER_DRAG();
   public final void add(com.mapbox.maps.MapboxMap, com.mapbox.maps.Style, com.mapbox.maps.extension.style.layers.Layer, com.mapconductor.core.controller.OverlayStacking$Key);
